@@ -1,0 +1,38 @@
+
+# Visual studio
+*.user
+*.obj
+*.log
+*.pdb
+*.tlog
+*.lastbuildstate
+*.exe
+*.iobj
+*.ipdb
+*.ipch
+*.suo
+*.db
+*.db-shm
+*.db-wal
+*.opendb
+*.ilk
+*.idb
+*.exe.recipe
+
+# OpenWatcom
+*.lk1
+*.map
+*.mk
+*.mk1
+*.sym
+
+# DjvuLibre
+c44.exe
+cjb2.exe
+djvm.exe
+libdjvulibre.dll
+libjpeg.dll
+libtiff.dll
+libz.dll
+
+

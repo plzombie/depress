@@ -65,6 +65,7 @@ int wmain(int argc, wchar_t **argv)
 
 	setlocale(LC_ALL, "");
 
+	// Reading options
 	argsc = argc - 1;
 	argsp = argv + 1;
 	while(argsc > 0) {
@@ -90,6 +91,7 @@ int wmain(int argc, wchar_t **argv)
 		return 0;
 	}
 
+	// Creating task list from file
 	wprintf(L"Opening list: \"%ls\"\n", *argsp);
 
 	if(!depressCreateTasks(*argsp, *(argsp + 1), &tasks, &tasks_num)) {
@@ -98,6 +100,7 @@ int wmain(int argc, wchar_t **argv)
 		return 0;
 	}
 
+	// Creating djvu
 	for(filecount = 0; filecount < tasks_num; filecount++) {
 		wprintf(L"Processing file \"%ls\"\n", tasks[filecount].inputfile);
 
@@ -130,7 +133,6 @@ int wmain(int argc, wchar_t **argv)
 bool depressCreateTasks(wchar_t *textfile, wchar_t *outputfile, depress_task_type **tasks_out, size_t *tasks_num_out)
 {
 	FILE *f;
-	wchar_t filename[32770];
 	depress_task_type *tasks = 0;
 	size_t tasks_num = 0, tasks_max = 0;;
 
@@ -143,32 +145,12 @@ bool depressCreateTasks(wchar_t *textfile, wchar_t *outputfile, depress_task_typ
 	while(1) {
 		wchar_t *eol;
 
-		if(!fgetws(filename, 32770, f)) {
-			if(feof(f))
-				break;
-			else {
-				if(tasks) free(tasks);
-
-				return false;
-			}
-		}
-		if(wcslen(filename) == 32769) {
-			if(tasks) free(tasks);
-
-			return false;
-		}
-
-		eol = wcsrchr(filename, '\n');
-		if(eol) *eol = 0;
-
-		if(*filename == 0)
-			continue;
-
 		if(tasks_max == 0) {
 			tasks = malloc(sizeof(depress_task_type) * 2);
 			if(tasks) {
 				tasks_max = 2;
-			} else {
+			}
+			else {
 				return false;
 			}
 		}
@@ -187,7 +169,29 @@ bool depressCreateTasks(wchar_t *textfile, wchar_t *outputfile, depress_task_typ
 			tasks_max = _tasks_max;
 		}
 
-		wcscpy(tasks[tasks_num].inputfile, filename);
+		// Reading line
+		if(!fgetws(tasks[tasks_num].inputfile, 32770, f)) {
+			if(feof(f))
+				break;
+			else {
+				if(tasks) free(tasks);
+
+				return false;
+			}
+		}
+		if(wcslen(tasks[tasks_num].inputfile) == 32769) {
+			if(tasks) free(tasks);
+
+			return false;
+		}
+
+		eol = wcsrchr(tasks[tasks_num].inputfile, '\n');
+		if(eol) *eol = 0;
+
+		if(*tasks[tasks_num].inputfile == 0)
+			continue;
+
+		// Filling task
 		swprintf(tasks[tasks_num].tempfile, 32770, L"temp%lld.ppm", (long long)tasks_num);
 		if(tasks_num == 0)
 			wcscpy(tasks[tasks_num].outputfile, outputfile);
@@ -195,6 +199,11 @@ bool depressCreateTasks(wchar_t *textfile, wchar_t *outputfile, depress_task_typ
 			swprintf(tasks[tasks_num].outputfile, 32770, L"temp%lld.djvu", (long long)tasks_num);
 
 		tasks_num++;
+	}
+
+	if(tasks_num == 0 && tasks_max > 0) {
+		free(tasks);
+		tasks = 0;
 	}
 
 	*tasks_out = tasks;

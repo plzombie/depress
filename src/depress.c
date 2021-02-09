@@ -28,6 +28,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "../include/ppm_save.h"
 
+#include <Windows.h>
+
 #include <stdlib.h>
 
 #include <locale.h>
@@ -46,11 +48,21 @@ typedef struct {
 	wchar_t inputfile[32770];
 	wchar_t tempfile[32770];
 	wchar_t outputfile[32770];
+	bool is_error;
 } depress_task_type;
+
+typedef struct {
+	depress_task_type *tasks;
+	depress_flags_type flags;
+	size_t tasks_num;
+	int thread_id;
+	int threads_num;
+} depress_thread_arg_type;
 
 bool depressConvertPage(bool is_bw, wchar_t *inputfile, wchar_t *tempfile, wchar_t *outputfile);
 bool depressCreateTasks(wchar_t *textfile, wchar_t *outputfile, depress_task_type **tasks_out, size_t *tasks_num_out);
-
+int depressGetNumberOfThreads(void);
+unsigned int __stdcall depressThreadProc(void *args);
 
 int wmain(int argc, wchar_t **argv)
 {
@@ -59,7 +71,12 @@ int wmain(int argc, wchar_t **argv)
 	depress_flags_type flags;
 	size_t filecount = 0;
 	depress_task_type *tasks = 0;
-	size_t tasks_num = 0, tasks_max = 0;;
+	size_t tasks_num = 0, tasks_max = 0;
+	int threads_num = 0;
+	HANDLE *threads;
+	depress_thread_arg_type *thread_args;
+	bool is_error = false;
+	int i;
 
 	flags.bw = false;
 
@@ -100,32 +117,102 @@ int wmain(int argc, wchar_t **argv)
 		return 0;
 	}
 
+	threads_num = depressGetNumberOfThreads();
+	if(threads_num > 64) threads_num = 64;
+
+	threads = malloc(sizeof(HANDLE) * threads_num);
+	thread_args = malloc(sizeof(depress_thread_arg_type) * threads_num);
+	if(!threads || !thread_args) {
+		if(threads) free(threads);
+		if(thread_args) free(thread_args);
+
+		wprintf(L"Can't allocate memory\n");
+
+		return 0;
+	}
+
+	for(i = 0; i < threads_num; i++) {
+		thread_args[i].tasks = tasks;
+		thread_args[i].flags = flags;
+		thread_args[i].tasks_num = tasks_num;
+		thread_args[i].thread_id = i;
+		thread_args[i].threads_num = threads_num;
+
+		threads[i] = (HANDLE)_beginthreadex(0, 0, depressThreadProc, thread_args + i, 0, 0);
+		if(!threads[i]) {
+			int j;
+
+			WaitForMultipleObjects(i, threads, TRUE, INFINITE);
+			
+			for(j = 0; j < i; j++)
+				CloseHandle(threads[j]);
+
+			is_error = true;
+
+			break;
+		}
+	}
+
+	if(!is_error) {
+		WaitForMultipleObjects(threads_num, threads, TRUE, INFINITE);
+
+		for(i = 0; i < threads_num; i++)
+			CloseHandle(threads[i]);
+	}
+
+	free(threads);
+	free(thread_args);
+
 	// Creating djvu
 	for(filecount = 0; filecount < tasks_num; filecount++) {
-		wprintf(L"Processing file \"%ls\"\n", tasks[filecount].inputfile);
+		if(tasks[filecount].is_error) {
+			wprintf(L"Error while converting file \"%ls\"\n", tasks[filecount].inputfile);
+			is_error = true;
+		} else {
+			if(is_error == false && filecount > 0) {
+				wprintf(L"Merging file \"%ls\"\n", tasks[filecount].inputfile);
 
-		if(!filecount) {
-			if(!depressConvertPage(flags.bw, tasks[filecount].inputfile, tasks[filecount].tempfile, tasks[filecount].outputfile)) {
-				wprintf(L"Can't save djvu\n");
-				break;
+				if(_wspawnl(_P_WAIT, L"djvm.exe", L"djvu.exe", L"-i", *(argsp + 1), tasks[filecount].outputfile, 0)) {
+					wprintf(L"Can't merge djvu files\n");
+					is_error = true;
+				}
 			}
-		}
-		else {
-			if(!depressConvertPage(flags.bw, tasks[filecount].inputfile, tasks[filecount].tempfile, tasks[filecount].outputfile)) {
-				wprintf(L"Can't save djvu\n");
-				break;
-			}
-			if(_wspawnl(_P_WAIT, L"djvm.exe", L"djvu.exe", L"-i", *(argsp + 1), tasks[filecount].outputfile, 0)) {
-				wprintf(L"Can't merge djvu files\n");
+			if(filecount > 0)
 				_wremove(tasks[filecount].outputfile);
-				break;
-			}
-			_wremove(tasks[filecount].outputfile);
 		}
+	}
+
+	if(is_error) {
+		wprintf(L"Can't create djvu file\n");
+		_wremove(*(argsp + 1));
 	}
 
 	if(tasks)
 		free(tasks);
+
+	return 0;
+}
+
+unsigned int __stdcall depressThreadProc(void *args)
+{
+	size_t i;
+	depress_thread_arg_type arg;
+
+	arg = *((depress_thread_arg_type *)args);
+
+	for(i = arg.thread_id; i < arg.tasks_num; i += arg.threads_num) {
+		if(!i) {
+			if(!depressConvertPage(arg.flags.bw, arg.tasks[i].inputfile, arg.tasks[i].tempfile, arg.tasks[i].outputfile)) {
+				arg.tasks[i].is_error = true;
+				break;
+			}
+		} else {
+			if(!depressConvertPage(arg.flags.bw, arg.tasks[i].inputfile, arg.tasks[i].tempfile, arg.tasks[i].outputfile)) {
+				arg.tasks[i].is_error = true;
+				break;
+			}
+		}
+	}
 
 	return 0;
 }
@@ -263,9 +350,15 @@ EXIT:
 	if(f_temp) fclose(f_temp);
 	if(buffer) free(buffer);
 
-	_wremove(tempfile);
+	while(_wremove(tempfile) == -1)
+		Sleep(0);
 
 	return result;
 
+}
+
+int depressGetNumberOfThreads(void)
+{
+	return 16;
 }
 

@@ -18,6 +18,7 @@
 *.ilk
 *.idb
 *.exe.recipe
+*.FileListAbsolute.txt
 
 # OpenWatcom
 *.lk1

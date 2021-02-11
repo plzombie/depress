@@ -178,13 +178,15 @@ int wmain(int argc, wchar_t **argv)
 				}
 			}
 			if(filecount > 0)
-				_wremove(tasks[filecount].outputfile);
+				if(!_waccess(tasks[filecount].outputfile, 06))
+					_wremove(tasks[filecount].outputfile);
 		}
 	}
 
 	if(is_error) {
 		wprintf(L"Can't create djvu file\n");
-		_wremove(*(argsp + 1));
+		if(!_waccess(*(argsp + 1), 06))
+			_wremove(*(argsp + 1));
 	}
 
 	if(tasks)
@@ -350,8 +352,12 @@ EXIT:
 	if(f_temp) fclose(f_temp);
 	if(buffer) free(buffer);
 
-	while(_wremove(tempfile) == -1)
-		Sleep(0);
+	while(1) {
+		if(!_waccess(tempfile, 06)) {
+			if(_wremove(tempfile) == -1)
+				Sleep(0);
+		} else break;
+	}
 
 	return result;
 

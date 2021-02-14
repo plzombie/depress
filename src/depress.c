@@ -51,9 +51,9 @@ typedef struct {
 } depress_flags_type;
 
 typedef struct {
-	wchar_t inputfile[32770];
-	wchar_t tempfile[32770];
-	wchar_t outputfile[32770];
+	wchar_t inputfile[32768];
+	wchar_t tempfile[32768];
+	wchar_t outputfile[32768];
 	bool is_error;
 } depress_task_type;
 
@@ -67,7 +67,7 @@ typedef struct {
 } depress_thread_arg_type;
 
 bool depressConvertPage(bool is_bw, wchar_t *inputfile, wchar_t *tempfile, wchar_t *outputfile, depress_djvulibre_paths_type *djvulibre_paths);
-bool depressCreateTasks(wchar_t *textfile, wchar_t *outputfile, depress_task_type **tasks_out, size_t *tasks_num_out);
+bool depressCreateTasks(wchar_t *textfile, wchar_t *textfilepath, wchar_t *outputfile, depress_task_type **tasks_out, size_t *tasks_num_out);
 int depressGetNumberOfThreads(void);
 bool depressGetDjvulibrePaths(depress_djvulibre_paths_type *djvulibre_paths);
 unsigned int __stdcall depressThreadProc(void *args);
@@ -75,11 +75,14 @@ unsigned int __stdcall depressThreadProc(void *args);
 int wmain(int argc, wchar_t **argv)
 {
 	wchar_t **argsp;
+	wchar_t text_list_filename[32768], text_list_path[32768], *text_list_name_start;
+	size_t text_list_path_size;
 	int argsc;
 	depress_flags_type flags;
 	size_t filecount = 0;
 	depress_task_type *tasks = 0;
 	size_t tasks_num = 0, tasks_max = 0;
+	DWORD text_list_fn_length;
 	int threads_num = 0;
 	HANDLE *threads;
 	depress_djvulibre_paths_type djvulibre_paths;
@@ -117,6 +120,28 @@ int wmain(int argc, wchar_t **argv)
 		return 0;
 	}
 
+	// Searching for files list with picture names
+	text_list_fn_length = SearchPathW(NULL, *argsp, L".txt", 32768, text_list_filename, &text_list_name_start);
+	if(!text_list_fn_length) {
+		wprintf(L"Can't find files list\n");
+
+		return 0;
+	}
+	if(text_list_fn_length > 32768) {
+		wprintf(L"Error: path for files list is too long\n");
+
+		return 0;
+	}
+	text_list_path_size = text_list_name_start - text_list_filename;
+	wcsncpy(text_list_path, text_list_filename, text_list_path_size);
+	text_list_path[text_list_path_size] = 0;
+
+	wprintf(L"Path to files: %ls\n", text_list_path);
+
+	// Enabling safe search mode
+	SetSearchPathMode(BASE_SEARCH_PATH_ENABLE_SAFE_SEARCHMODE | BASE_SEARCH_PATH_PERMANENT);
+
+	// Get paths to djvulibre files
 	if(!depressGetDjvulibrePaths(&djvulibre_paths)) {
 		wprintf(L"Can't find djvulibre files\n");
 
@@ -124,9 +149,9 @@ int wmain(int argc, wchar_t **argv)
 	}
 
 	// Creating task list from file
-	wprintf(L"Opening list: \"%ls\"\n", *argsp);
+	wprintf(L"Opening list: \"%ls\"\n", text_list_filename);
 
-	if(!depressCreateTasks(*argsp, *(argsp + 1), &tasks, &tasks_num)) {
+	if(!depressCreateTasks(text_list_filename, text_list_path, *(argsp + 1), &tasks, &tasks_num)) {
 		wprintf(L"Can't create files list\n");
 
 		return 0;
@@ -235,11 +260,13 @@ unsigned int __stdcall depressThreadProc(void *args)
 	return 0;
 }
 
-bool depressCreateTasks(wchar_t *textfile, wchar_t *outputfile, depress_task_type **tasks_out, size_t *tasks_num_out)
+bool depressCreateTasks(wchar_t *textfile, wchar_t *textfilepath, wchar_t *outputfile, depress_task_type **tasks_out, size_t *tasks_num_out)
 {
 	FILE *f;
+	size_t task_inputfile_length;
+	wchar_t inputfile[32770];
 	depress_task_type *tasks = 0;
-	size_t tasks_num = 0, tasks_max = 0;;
+	size_t tasks_num = 0, tasks_max = 0;
 
 	*tasks_out = 0;
 	*tasks_num_out = 0;
@@ -275,7 +302,7 @@ bool depressCreateTasks(wchar_t *textfile, wchar_t *outputfile, depress_task_typ
 		}
 
 		// Reading line
-		if(!fgetws(tasks[tasks_num].inputfile, 32770, f)) {
+		if(!fgetws(inputfile, 32770, f)) {
 			if(feof(f))
 				break;
 			else {
@@ -284,24 +311,32 @@ bool depressCreateTasks(wchar_t *textfile, wchar_t *outputfile, depress_task_typ
 				return false;
 			}
 		}
-		if(wcslen(tasks[tasks_num].inputfile) == 32769) {
-			if(tasks) free(tasks);
+		if(wcslen(inputfile) == 32769) {
+			free(tasks);
 
 			return false;
 		}
 
-		eol = wcsrchr(tasks[tasks_num].inputfile, '\n');
+		eol = wcsrchr(inputfile, '\n');
 		if(eol) *eol = 0;
 
-		if(*tasks[tasks_num].inputfile == 0)
+		if(*inputfile == 0)
 			continue;
 
+		// Adding textfile path to inputfile
+		task_inputfile_length = SearchPathW(textfilepath, inputfile, NULL, 32768, tasks[tasks_num].inputfile, NULL);
+		if(task_inputfile_length > 32768 || task_inputfile_length == 0) {
+			free(tasks);
+
+			return false;
+		}
+
 		// Filling task
-		swprintf(tasks[tasks_num].tempfile, 32770, L"temp%lld.ppm", (long long)tasks_num);
+		swprintf(tasks[tasks_num].tempfile, 32768, L"temp%lld.ppm", (long long)tasks_num);
 		if(tasks_num == 0)
 			wcscpy(tasks[tasks_num].outputfile, outputfile);
 		else
-			swprintf(tasks[tasks_num].outputfile, 32770, L"temp%lld.djvu", (long long)tasks_num);
+			swprintf(tasks[tasks_num].outputfile, 32768, L"temp%lld.djvu", (long long)tasks_num);
 
 		tasks_num++;
 	}
@@ -334,6 +369,8 @@ bool depressConvertPage(bool is_bw, wchar_t *inputfile, wchar_t *tempfile, wchar
 	buffer = stbi_load_from_file(f_in, &sizex, &sizey, &channels, is_bw?1:0);
 	if(!buffer)
 		goto EXIT;
+
+	wprintf(L"file opened: %ls\n", inputfile);
 
 	fclose(f_in); f_in = 0;
 

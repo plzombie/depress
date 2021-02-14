@@ -365,6 +365,10 @@ EXIT:
 
 int depressGetNumberOfThreads(void)
 {
-	return 16;
+	SYSTEM_INFO si;
+
+	GetSystemInfo(&si);
+
+	return si.dwNumberOfProcessors;
 }
 

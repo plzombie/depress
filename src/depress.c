@@ -428,9 +428,16 @@ int depressGetNumberOfThreads(void)
 
 bool depressGetDjvulibrePaths(depress_djvulibre_paths_type *djvulibre_paths)
 {
-	wcscpy(djvulibre_paths->c44_path, L"c44.exe");
-	wcscpy(djvulibre_paths->cjb2_path, L"cjb2.exe");
-	wcscpy(djvulibre_paths->djvm_path, L"djvm.exe");
+	DWORD filename_len;
+
+	filename_len = SearchPathW(NULL, L"c44.exe", NULL, 32768, djvulibre_paths->c44_path, NULL);
+	if(filename_len == 0 || filename_len > 32768) return false;
+
+	filename_len = SearchPathW(NULL, L"cjb2.exe", NULL, 32768, djvulibre_paths->cjb2_path, NULL);
+	if(filename_len == 0 || filename_len > 32768) return false;
+
+	filename_len = SearchPathW(NULL, L"djvm.exe", NULL, 32768, djvulibre_paths->djvm_path, NULL);
+	if(filename_len == 0 || filename_len > 32768) return false;
 
 	return true;
 }

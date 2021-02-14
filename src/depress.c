@@ -41,6 +41,12 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "third_party/stb_image.h"
 
 typedef struct {
+	wchar_t cjb2_path[32768];
+	wchar_t c44_path[32768];
+	wchar_t djvm_path[32768];
+} depress_djvulibre_paths_type;
+
+typedef struct {
 	bool bw;
 } depress_flags_type;
 
@@ -53,15 +59,17 @@ typedef struct {
 
 typedef struct {
 	depress_task_type *tasks;
+	depress_djvulibre_paths_type *djvulibre_paths;
 	depress_flags_type flags;
 	size_t tasks_num;
 	int thread_id;
 	int threads_num;
 } depress_thread_arg_type;
 
-bool depressConvertPage(bool is_bw, wchar_t *inputfile, wchar_t *tempfile, wchar_t *outputfile);
+bool depressConvertPage(bool is_bw, wchar_t *inputfile, wchar_t *tempfile, wchar_t *outputfile, depress_djvulibre_paths_type *djvulibre_paths);
 bool depressCreateTasks(wchar_t *textfile, wchar_t *outputfile, depress_task_type **tasks_out, size_t *tasks_num_out);
 int depressGetNumberOfThreads(void);
+bool depressGetDjvulibrePaths(depress_djvulibre_paths_type *djvulibre_paths);
 unsigned int __stdcall depressThreadProc(void *args);
 
 int wmain(int argc, wchar_t **argv)
@@ -74,6 +82,7 @@ int wmain(int argc, wchar_t **argv)
 	size_t tasks_num = 0, tasks_max = 0;
 	int threads_num = 0;
 	HANDLE *threads;
+	depress_djvulibre_paths_type djvulibre_paths;
 	depress_thread_arg_type *thread_args;
 	bool is_error = false;
 	int i;
@@ -108,6 +117,12 @@ int wmain(int argc, wchar_t **argv)
 		return 0;
 	}
 
+	if(!depressGetDjvulibrePaths(&djvulibre_paths)) {
+		wprintf(L"Can't find djvulibre files\n");
+
+		return 0;
+	}
+
 	// Creating task list from file
 	wprintf(L"Opening list: \"%ls\"\n", *argsp);
 
@@ -133,6 +148,7 @@ int wmain(int argc, wchar_t **argv)
 
 	for(i = 0; i < threads_num; i++) {
 		thread_args[i].tasks = tasks;
+		thread_args[i].djvulibre_paths = &djvulibre_paths;
 		thread_args[i].flags = flags;
 		thread_args[i].tasks_num = tasks_num;
 		thread_args[i].thread_id = i;
@@ -172,7 +188,7 @@ int wmain(int argc, wchar_t **argv)
 			if(is_error == false && filecount > 0) {
 				wprintf(L"Merging file \"%ls\"\n", tasks[filecount].inputfile);
 
-				if(_wspawnl(_P_WAIT, L"djvm.exe", L"djvu.exe", L"-i", *(argsp + 1), tasks[filecount].outputfile, 0)) {
+				if(_wspawnl(_P_WAIT, djvulibre_paths.djvm_path, djvulibre_paths.djvm_path, L"-i", *(argsp + 1), tasks[filecount].outputfile, 0)) {
 					wprintf(L"Can't merge djvu files\n");
 					is_error = true;
 				}
@@ -204,12 +220,12 @@ unsigned int __stdcall depressThreadProc(void *args)
 
 	for(i = arg.thread_id; i < arg.tasks_num; i += arg.threads_num) {
 		if(!i) {
-			if(!depressConvertPage(arg.flags.bw, arg.tasks[i].inputfile, arg.tasks[i].tempfile, arg.tasks[i].outputfile)) {
+			if(!depressConvertPage(arg.flags.bw, arg.tasks[i].inputfile, arg.tasks[i].tempfile, arg.tasks[i].outputfile, arg.djvulibre_paths)) {
 				arg.tasks[i].is_error = true;
 				break;
 			}
 		} else {
-			if(!depressConvertPage(arg.flags.bw, arg.tasks[i].inputfile, arg.tasks[i].tempfile, arg.tasks[i].outputfile)) {
+			if(!depressConvertPage(arg.flags.bw, arg.tasks[i].inputfile, arg.tasks[i].tempfile, arg.tasks[i].outputfile, arg.djvulibre_paths)) {
 				arg.tasks[i].is_error = true;
 				break;
 			}
@@ -303,7 +319,7 @@ bool depressCreateTasks(wchar_t *textfile, wchar_t *outputfile, depress_task_typ
 	return true;
 }
 
-bool depressConvertPage(bool is_bw, wchar_t *inputfile, wchar_t *tempfile, wchar_t *outputfile)
+bool depressConvertPage(bool is_bw, wchar_t *inputfile, wchar_t *tempfile, wchar_t *outputfile, depress_djvulibre_paths_type *djvulibre_paths)
 {
 	FILE *f_in = 0, *f_temp = 0;
 	int sizex, sizey, channels;
@@ -315,10 +331,7 @@ bool depressConvertPage(bool is_bw, wchar_t *inputfile, wchar_t *tempfile, wchar
 	if(!f_in || !f_temp)
 		goto EXIT;
 
-	if(is_bw)
-		buffer = stbi_load_from_file(f_in, &sizex, &sizey, &channels, 1);
-	else
-		buffer = stbi_load_from_file(f_in, &sizex, &sizey, &channels, 0);
+	buffer = stbi_load_from_file(f_in, &sizex, &sizey, &channels, is_bw?1:0);
 	if(!buffer)
 		goto EXIT;
 
@@ -336,11 +349,11 @@ bool depressConvertPage(bool is_bw, wchar_t *inputfile, wchar_t *tempfile, wchar
 	fclose(f_temp); f_temp = 0;
 
 	if(is_bw) {
-		if(_wspawnl(_P_WAIT, L"cjb2.exe", L"cjb2.exe", tempfile, outputfile, 0)) {
+		if(_wspawnl(_P_WAIT, djvulibre_paths->cjb2_path, djvulibre_paths->cjb2_path, tempfile, outputfile, 0)) {
 			goto EXIT;
 		}
 	} else {
-		if(_wspawnl(_P_WAIT, L"c44.exe", L"c44.exe", tempfile, outputfile, 0)) {
+		if(_wspawnl(_P_WAIT, djvulibre_paths->c44_path, djvulibre_paths->c44_path, tempfile, outputfile, 0)) {
 			goto EXIT;
 		}
 	}
@@ -370,5 +383,14 @@ int depressGetNumberOfThreads(void)
 	GetSystemInfo(&si);
 
 	return si.dwNumberOfProcessors;
+}
+
+bool depressGetDjvulibrePaths(depress_djvulibre_paths_type *djvulibre_paths)
+{
+	wcscpy(djvulibre_paths->c44_path, L"c44.exe");
+	wcscpy(djvulibre_paths->cjb2_path, L"cjb2.exe");
+	wcscpy(djvulibre_paths->djvm_path, L"djvm.exe");
+
+	return true;
 }
 

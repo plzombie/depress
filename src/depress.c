@@ -55,6 +55,7 @@ typedef struct {
 	wchar_t tempfile[32768];
 	wchar_t outputfile[32768];
 	bool is_error;
+	bool is_completed;
 } depress_task_type;
 
 typedef struct {
@@ -136,8 +137,6 @@ int wmain(int argc, wchar_t **argv)
 	wcsncpy(text_list_path, text_list_filename, text_list_path_size);
 	text_list_path[text_list_path_size] = 0;
 
-	wprintf(L"Path to files: %ls\n", text_list_path);
-
 	// Enabling safe search mode
 	SetSearchPathMode(BASE_SEARCH_PATH_ENABLE_SAFE_SEARCHMODE | BASE_SEARCH_PATH_PERMANENT);
 
@@ -206,6 +205,9 @@ int wmain(int argc, wchar_t **argv)
 
 	// Creating djvu
 	for(filecount = 0; filecount < tasks_num; filecount++) {
+		if(!tasks[filecount].is_completed)
+			continue;
+
 		if(tasks[filecount].is_error) {
 			wprintf(L"Error while converting file \"%ls\"\n", tasks[filecount].inputfile);
 			is_error = true;
@@ -255,6 +257,7 @@ unsigned int __stdcall depressThreadProc(void *args)
 				break;
 			}
 		}
+		arg.tasks[i].is_completed = true;
 	}
 
 	return 0;
@@ -338,6 +341,9 @@ bool depressCreateTasks(wchar_t *textfile, wchar_t *textfilepath, wchar_t *outpu
 		else
 			swprintf(tasks[tasks_num].outputfile, 32768, L"temp%lld.djvu", (long long)tasks_num);
 
+		tasks[tasks_num].is_error = false;
+		tasks[tasks_num].is_completed = false;
+
 		tasks_num++;
 	}
 
@@ -369,8 +375,6 @@ bool depressConvertPage(bool is_bw, wchar_t *inputfile, wchar_t *tempfile, wchar
 	buffer = stbi_load_from_file(f_in, &sizex, &sizey, &channels, is_bw?1:0);
 	if(!buffer)
 		goto EXIT;
-
-	wprintf(L"file opened: %ls\n", inputfile);
 
 	fclose(f_in); f_in = 0;
 

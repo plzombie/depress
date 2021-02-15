@@ -76,9 +76,10 @@ unsigned int __stdcall depressThreadProc(void *args);
 int wmain(int argc, wchar_t **argv)
 {
 	wchar_t **argsp;
+	int argsc;
 	wchar_t text_list_filename[32768], text_list_path[32768], *text_list_name_start;
 	size_t text_list_path_size;
-	int argsc;
+	wchar_t arg1[32770], arg2[32770];
 	depress_flags_type flags;
 	size_t filecount = 0;
 	depress_task_type *tasks = 0;
@@ -118,6 +119,12 @@ int wmain(int argc, wchar_t **argv)
 			L"\t\toptions:\n"
 			L"\t\t\t-bw - create black and white document\n\n"
 		);
+		return 0;
+	}
+
+	if(wcslen(*(argsp + 1)) > 32767) {
+		wprintf(L"Error: output file name is too long\n");
+
 		return 0;
 	}
 
@@ -204,6 +211,8 @@ int wmain(int argc, wchar_t **argv)
 	free(thread_args);
 
 	// Creating djvu
+	swprintf(arg1, 32770, L"\"%ls\"", *(argsp + 1));
+
 	for(filecount = 0; filecount < tasks_num; filecount++) {
 		if(!tasks[filecount].is_completed)
 			continue;
@@ -215,7 +224,9 @@ int wmain(int argc, wchar_t **argv)
 			if(is_error == false && filecount > 0) {
 				wprintf(L"Merging file \"%ls\"\n", tasks[filecount].inputfile);
 
-				if(_wspawnl(_P_WAIT, djvulibre_paths.djvm_path, djvulibre_paths.djvm_path, L"-i", *(argsp + 1), tasks[filecount].outputfile, 0)) {
+				swprintf(arg2, 32770, L"\"%ls\"", tasks[filecount].outputfile);
+
+				if(_wspawnl(_P_WAIT, djvulibre_paths.djvm_path, djvulibre_paths.djvm_path, L"-i", arg1, arg2, 0)) {
 					wprintf(L"Can't merge djvu files\n");
 					is_error = true;
 				}
@@ -249,11 +260,13 @@ unsigned int __stdcall depressThreadProc(void *args)
 		if(!i) {
 			if(!depressConvertPage(arg.flags.bw, arg.tasks[i].inputfile, arg.tasks[i].tempfile, arg.tasks[i].outputfile, arg.djvulibre_paths)) {
 				arg.tasks[i].is_error = true;
+				arg.tasks[i].is_completed = true;
 				break;
 			}
 		} else {
 			if(!depressConvertPage(arg.flags.bw, arg.tasks[i].inputfile, arg.tasks[i].tempfile, arg.tasks[i].outputfile, arg.djvulibre_paths)) {
 				arg.tasks[i].is_error = true;
+				arg.tasks[i].is_completed = true;
 				break;
 			}
 		}
@@ -364,6 +377,7 @@ bool depressConvertPage(bool is_bw, wchar_t *inputfile, wchar_t *tempfile, wchar
 {
 	FILE *f_in = 0, *f_temp = 0;
 	int sizex, sizey, channels;
+	wchar_t arg1[32770], arg2[32770];
 	unsigned char *buffer = 0;
 	bool result = false;
 
@@ -389,12 +403,15 @@ bool depressConvertPage(bool is_bw, wchar_t *inputfile, wchar_t *tempfile, wchar
 	free(buffer); buffer = 0;
 	fclose(f_temp); f_temp = 0;
 
+	swprintf(arg1, 32770, L"\"%ls\"", tempfile);
+	swprintf(arg2, 32770, L"\"%ls\"", outputfile);
+
 	if(is_bw) {
-		if(_wspawnl(_P_WAIT, djvulibre_paths->cjb2_path, djvulibre_paths->cjb2_path, tempfile, outputfile, 0)) {
+		if(_wspawnl(_P_WAIT, djvulibre_paths->cjb2_path, djvulibre_paths->cjb2_path, arg1, arg2, 0)) {
 			goto EXIT;
 		}
 	} else {
-		if(_wspawnl(_P_WAIT, djvulibre_paths->c44_path, djvulibre_paths->c44_path, tempfile, outputfile, 0)) {
+		if(_wspawnl(_P_WAIT, djvulibre_paths->c44_path, djvulibre_paths->c44_path, arg1, arg2, 0)) {
 			goto EXIT;
 		}
 	}

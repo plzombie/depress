@@ -36,6 +36,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <process.h>
 #include <wchar.h>
+#include <time.h>
 
 #define STB_IMAGE_IMPLEMENTATION
 #include "third_party/stb_image.h"
@@ -65,6 +66,7 @@ typedef struct {
 	size_t tasks_num;
 	int thread_id;
 	int threads_num;
+	HANDLE global_error_event;
 } depress_thread_arg_type;
 
 bool depressConvertPage(bool is_bw, wchar_t *inputfile, wchar_t *tempfile, wchar_t *outputfile, depress_djvulibre_paths_type *djvulibre_paths);
@@ -87,10 +89,12 @@ int wmain(int argc, wchar_t **argv)
 	DWORD text_list_fn_length;
 	int threads_num = 0;
 	HANDLE *threads;
+	HANDLE global_error_event;
 	depress_djvulibre_paths_type djvulibre_paths;
 	depress_thread_arg_type *thread_args;
 	bool is_error = false;
 	int i;
+	clock_t time_start;
 
 	flags.bw = false;
 
@@ -121,6 +125,8 @@ int wmain(int argc, wchar_t **argv)
 		);
 		return 0;
 	}
+
+	time_start = clock();
 
 	if(wcslen(*(argsp + 1)) > 32767) {
 		wprintf(L"Error: output file name is too long\n");
@@ -177,6 +183,16 @@ int wmain(int argc, wchar_t **argv)
 		return 0;
 	}
 
+	global_error_event = CreateEventW(NULL, TRUE, FALSE, NULL);
+	if(global_error_event == NULL) {
+		free(threads);
+		free(thread_args);
+
+		wprintf(L"Can't create event\n");
+
+		return 0;
+	}
+
 	for(i = 0; i < threads_num; i++) {
 		thread_args[i].tasks = tasks;
 		thread_args[i].djvulibre_paths = &djvulibre_paths;
@@ -184,6 +200,7 @@ int wmain(int argc, wchar_t **argv)
 		thread_args[i].tasks_num = tasks_num;
 		thread_args[i].thread_id = i;
 		thread_args[i].threads_num = threads_num;
+		thread_args[i].global_error_event = global_error_event;
 
 		threads[i] = (HANDLE)_beginthreadex(0, 0, depressThreadProc, thread_args + i, 0, 0);
 		if(!threads[i]) {
@@ -211,37 +228,46 @@ int wmain(int argc, wchar_t **argv)
 	free(thread_args);
 
 	// Creating djvu
-	swprintf(arg1, 32770, L"\"%ls\"", *(argsp + 1));
+	if(!is_error) {
+		swprintf(arg1, 32770, L"\"%ls\"", *(argsp + 1));
 
-	for(filecount = 0; filecount < tasks_num; filecount++) {
-		if(!tasks[filecount].is_completed)
-			continue;
-
-		if(tasks[filecount].is_error) {
-			wprintf(L"Error while converting file \"%ls\"\n", tasks[filecount].inputfile);
-			is_error = true;
-		} else {
-			if(is_error == false && filecount > 0) {
-				wprintf(L"Merging file \"%ls\"\n", tasks[filecount].inputfile);
-
-				swprintf(arg2, 32770, L"\"%ls\"", tasks[filecount].outputfile);
-
-				if(_wspawnl(_P_WAIT, djvulibre_paths.djvm_path, djvulibre_paths.djvm_path, L"-i", arg1, arg2, 0)) {
-					wprintf(L"Can't merge djvu files\n");
+		for(filecount = 0; filecount < tasks_num; filecount++) {
+			if(!is_error)
+				if(WaitForSingleObject(global_error_event, 0) == WAIT_OBJECT_0)
 					is_error = true;
+
+			if(!tasks[filecount].is_completed)
+				continue;
+
+			if(tasks[filecount].is_error) {
+				wprintf(L"Error while converting file \"%ls\"\n", tasks[filecount].inputfile);
+				is_error = true;
+			} else {
+				if(is_error == false && filecount > 0) {
+					wprintf(L"Merging file \"%ls\"\n", tasks[filecount].inputfile);
+
+					swprintf(arg2, 32770, L"\"%ls\"", tasks[filecount].outputfile);
+
+					if(_wspawnl(_P_WAIT, djvulibre_paths.djvm_path, djvulibre_paths.djvm_path, L"-i", arg1, arg2, 0)) {
+						wprintf(L"Can't merge djvu files\n");
+						is_error = true;
+					}
 				}
+				if(filecount > 0)
+					if(!_waccess(tasks[filecount].outputfile, 06))
+						_wremove(tasks[filecount].outputfile);
 			}
-			if(filecount > 0)
-				if(!_waccess(tasks[filecount].outputfile, 06))
-					_wremove(tasks[filecount].outputfile);
 		}
 	}
+
+	CloseHandle(global_error_event);
 
 	if(is_error) {
 		wprintf(L"Can't create djvu file\n");
 		if(!_waccess(*(argsp + 1), 06))
 			_wremove(*(argsp + 1));
-	}
+	} else
+		wprintf(L"Converted in %f s\n", (float)(clock()-time_start)/CLOCKS_PER_SEC);
 
 	if(tasks)
 		free(tasks);
@@ -253,24 +279,29 @@ unsigned int __stdcall depressThreadProc(void *args)
 {
 	size_t i;
 	depress_thread_arg_type arg;
+	bool global_error = false;
 
 	arg = *((depress_thread_arg_type *)args);
 
 	for(i = arg.thread_id; i < arg.tasks_num; i += arg.threads_num) {
-		if(!i) {
-			if(!depressConvertPage(arg.flags.bw, arg.tasks[i].inputfile, arg.tasks[i].tempfile, arg.tasks[i].outputfile, arg.djvulibre_paths)) {
-				arg.tasks[i].is_error = true;
-				arg.tasks[i].is_completed = true;
-				break;
+		if(global_error == false)
+			if(WaitForSingleObject(arg.global_error_event, 0) == WAIT_OBJECT_0)
+				global_error = true;
+
+		if(global_error == false) {
+			if(!i) {
+				if(!depressConvertPage(arg.flags.bw, arg.tasks[i].inputfile, arg.tasks[i].tempfile, arg.tasks[i].outputfile, arg.djvulibre_paths))
+					arg.tasks[i].is_error = true;
+			} else {
+				if(!depressConvertPage(arg.flags.bw, arg.tasks[i].inputfile, arg.tasks[i].tempfile, arg.tasks[i].outputfile, arg.djvulibre_paths))
+					arg.tasks[i].is_error = true;
 			}
-		} else {
-			if(!depressConvertPage(arg.flags.bw, arg.tasks[i].inputfile, arg.tasks[i].tempfile, arg.tasks[i].outputfile, arg.djvulibre_paths)) {
-				arg.tasks[i].is_error = true;
-				arg.tasks[i].is_completed = true;
-				break;
-			}
+
+			if(arg.tasks[i].is_error == true)
+				SetEvent(arg.global_error_event);
+
+			arg.tasks[i].is_completed = true;
 		}
-		arg.tasks[i].is_completed = true;
 	}
 
 	return 0;

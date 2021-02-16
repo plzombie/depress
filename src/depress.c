@@ -57,6 +57,7 @@ typedef struct {
 	wchar_t outputfile[32768];
 	bool is_error;
 	bool is_completed;
+	HANDLE finished;
 } depress_task_type;
 
 typedef struct {
@@ -94,6 +95,7 @@ int wmain(int argc, wchar_t **argv)
 	depress_thread_arg_type *thread_args;
 	bool is_error = false;
 	int i;
+	size_t j;
 	clock_t time_start;
 
 	flags.bw = false;
@@ -177,6 +179,9 @@ int wmain(int argc, wchar_t **argv)
 	if(!threads || !thread_args) {
 		if(threads) free(threads);
 		if(thread_args) free(thread_args);
+		for(j = 0; j < tasks_num; j++)
+			CloseHandle(tasks[j].finished);
+		free(tasks);
 
 		wprintf(L"Can't allocate memory\n");
 
@@ -187,6 +192,9 @@ int wmain(int argc, wchar_t **argv)
 	if(global_error_event == NULL) {
 		free(threads);
 		free(thread_args);
+		for(j = 0; j < tasks_num; j++)
+			CloseHandle(tasks[j].finished);
+		free(tasks);
 
 		wprintf(L"Can't create event\n");
 
@@ -217,16 +225,6 @@ int wmain(int argc, wchar_t **argv)
 		}
 	}
 
-	if(!is_error) {
-		WaitForMultipleObjects(threads_num, threads, TRUE, INFINITE);
-
-		for(i = 0; i < threads_num; i++)
-			CloseHandle(threads[i]);
-	}
-
-	free(threads);
-	free(thread_args);
-
 	// Creating djvu
 	if(!is_error) {
 		swprintf(arg1, 32770, L"\"%ls\"", *(argsp + 1));
@@ -235,6 +233,8 @@ int wmain(int argc, wchar_t **argv)
 			if(!is_error)
 				if(WaitForSingleObject(global_error_event, 0) == WAIT_OBJECT_0)
 					is_error = true;
+
+			while(WaitForSingleObject(tasks[filecount].finished, INFINITE) != WAIT_OBJECT_0);
 
 			if(!tasks[filecount].is_completed)
 				continue;
@@ -260,6 +260,16 @@ int wmain(int argc, wchar_t **argv)
 		}
 	}
 
+	if(!is_error) {
+		WaitForMultipleObjects(threads_num, threads, TRUE, INFINITE);
+
+		for(i = 0; i < threads_num; i++)
+			CloseHandle(threads[i]);
+	}
+
+	free(threads);
+	free(thread_args);
+
 	CloseHandle(global_error_event);
 
 	if(is_error) {
@@ -269,8 +279,9 @@ int wmain(int argc, wchar_t **argv)
 	} else
 		wprintf(L"Converted in %f s\n", (float)(clock()-time_start)/CLOCKS_PER_SEC);
 
-	if(tasks)
-		free(tasks);
+	for(j = 0; j < tasks_num; j++)
+		CloseHandle(tasks[j].finished);
+	free(tasks);
 
 	return 0;
 }
@@ -302,6 +313,8 @@ unsigned int __stdcall depressThreadProc(void *args)
 
 			arg.tasks[i].is_completed = true;
 		}
+		
+		SetEvent(arg.tasks[i].finished);
 	}
 
 	return 0;
@@ -387,6 +400,18 @@ bool depressCreateTasks(wchar_t *textfile, wchar_t *textfilepath, wchar_t *outpu
 
 		tasks[tasks_num].is_error = false;
 		tasks[tasks_num].is_completed = false;
+
+		tasks[tasks_num].finished = CreateEvent(NULL, TRUE, FALSE, NULL);
+		if(!tasks[tasks_num].finished) {
+			size_t i;
+
+			for(i = 0; i < tasks_num; i++)
+				CloseHandle(tasks[i].finished);
+
+			free(tasks);
+
+			return false;
+		}
 
 		tasks_num++;
 	}

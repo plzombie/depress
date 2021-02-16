@@ -72,6 +72,7 @@ typedef struct {
 
 bool depressConvertPage(bool is_bw, wchar_t *inputfile, wchar_t *tempfile, wchar_t *outputfile, depress_djvulibre_paths_type *djvulibre_paths);
 bool depressCreateTasks(wchar_t *textfile, wchar_t *textfilepath, wchar_t *outputfile, depress_task_type **tasks_out, size_t *tasks_num_out);
+void depressDestroyTasks(depress_task_type *tasks, size_t tasks_num);
 int depressGetNumberOfThreads(void);
 bool depressGetDjvulibrePaths(depress_djvulibre_paths_type *djvulibre_paths);
 unsigned int __stdcall depressThreadProc(void *args);
@@ -95,7 +96,6 @@ int wmain(int argc, wchar_t **argv)
 	depress_thread_arg_type *thread_args;
 	bool is_error = false;
 	int i;
-	size_t j;
 	clock_t time_start;
 
 	flags.bw = false;
@@ -172,6 +172,7 @@ int wmain(int argc, wchar_t **argv)
 	}
 
 	threads_num = depressGetNumberOfThreads();
+	if(threads_num <= 0) threads_num = 1;
 	if(threads_num > 64) threads_num = 64;
 
 	threads = malloc(sizeof(HANDLE) * threads_num);
@@ -179,9 +180,7 @@ int wmain(int argc, wchar_t **argv)
 	if(!threads || !thread_args) {
 		if(threads) free(threads);
 		if(thread_args) free(thread_args);
-		for(j = 0; j < tasks_num; j++)
-			CloseHandle(tasks[j].finished);
-		free(tasks);
+		depressDestroyTasks(tasks, tasks_num);
 
 		wprintf(L"Can't allocate memory\n");
 
@@ -192,9 +191,7 @@ int wmain(int argc, wchar_t **argv)
 	if(global_error_event == NULL) {
 		free(threads);
 		free(thread_args);
-		for(j = 0; j < tasks_num; j++)
-			CloseHandle(tasks[j].finished);
-		free(tasks);
+		depressDestroyTasks(tasks, tasks_num);
 
 		wprintf(L"Can't create event\n");
 
@@ -279,9 +276,7 @@ int wmain(int argc, wchar_t **argv)
 	} else
 		wprintf(L"Converted in %f s\n", (float)(clock()-time_start)/CLOCKS_PER_SEC);
 
-	for(j = 0; j < tasks_num; j++)
-		CloseHandle(tasks[j].finished);
-	free(tasks);
+	depressDestroyTasks(tasks, tasks_num);
 
 	return 0;
 }
@@ -427,6 +422,16 @@ bool depressCreateTasks(wchar_t *textfile, wchar_t *textfilepath, wchar_t *outpu
 	fclose(f);
 
 	return true;
+}
+
+void depressDestroyTasks(depress_task_type *tasks, size_t tasks_num)
+{
+	size_t i;
+
+	for(i = 0; i < tasks_num; i++)
+		CloseHandle(tasks[i].finished);
+
+	free(tasks);
 }
 
 bool depressConvertPage(bool is_bw, wchar_t *inputfile, wchar_t *tempfile, wchar_t *outputfile, depress_djvulibre_paths_type *djvulibre_paths)

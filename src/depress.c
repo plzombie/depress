@@ -29,6 +29,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../include/ppm_save.h"
 
 #include <Windows.h>
+#include <ShlObj.h>
 
 #include <stdlib.h>
 
@@ -71,10 +72,12 @@ typedef struct {
 } depress_thread_arg_type;
 
 bool depressConvertPage(bool is_bw, wchar_t *inputfile, wchar_t *tempfile, wchar_t *outputfile, depress_djvulibre_paths_type *djvulibre_paths);
-bool depressCreateTasks(wchar_t *textfile, wchar_t *textfilepath, wchar_t *outputfile, depress_task_type **tasks_out, size_t *tasks_num_out);
+bool depressCreateTasks(wchar_t *textfile, wchar_t *textfilepath, wchar_t *outputfile, wchar_t *temppath, depress_task_type **tasks_out, size_t *tasks_num_out);
 void depressDestroyTasks(depress_task_type *tasks, size_t tasks_num);
 int depressGetNumberOfThreads(void);
 bool depressGetDjvulibrePaths(depress_djvulibre_paths_type *djvulibre_paths);
+bool depressGetTempFolder(wchar_t *temp_path);
+void depressDestroyTempFolder(wchar_t *temp_path);
 unsigned int __stdcall depressThreadProc(void *args);
 
 int wmain(int argc, wchar_t **argv)
@@ -83,6 +86,7 @@ int wmain(int argc, wchar_t **argv)
 	int argsc;
 	wchar_t text_list_filename[32768], text_list_path[32768], *text_list_name_start;
 	size_t text_list_path_size;
+	wchar_t temp_path[32768];
 	wchar_t arg1[32770], arg2[32770];
 	depress_flags_type flags;
 	size_t filecount = 0;
@@ -165,7 +169,13 @@ int wmain(int argc, wchar_t **argv)
 	// Creating task list from file
 	wprintf(L"Opening list: \"%ls\"\n", text_list_filename);
 
-	if(!depressCreateTasks(text_list_filename, text_list_path, *(argsp + 1), &tasks, &tasks_num)) {
+	if(!depressGetTempFolder(temp_path)) {
+		wprintf(L"Can't get path for temporary files\n");
+
+		return 0;
+	}
+
+	if(!depressCreateTasks(text_list_filename, text_list_path, *(argsp + 1), temp_path, &tasks, &tasks_num)) {
 		wprintf(L"Can't create files list\n");
 
 		return 0;
@@ -181,6 +191,7 @@ int wmain(int argc, wchar_t **argv)
 		if(threads) free(threads);
 		if(thread_args) free(thread_args);
 		depressDestroyTasks(tasks, tasks_num);
+		depressDestroyTempFolder(temp_path);
 
 		wprintf(L"Can't allocate memory\n");
 
@@ -192,6 +203,7 @@ int wmain(int argc, wchar_t **argv)
 		free(threads);
 		free(thread_args);
 		depressDestroyTasks(tasks, tasks_num);
+		depressDestroyTempFolder(temp_path);
 
 		wprintf(L"Can't create event\n");
 
@@ -264,6 +276,8 @@ int wmain(int argc, wchar_t **argv)
 			CloseHandle(threads[i]);
 	}
 
+	depressDestroyTempFolder(temp_path);
+
 	free(threads);
 	free(thread_args);
 
@@ -315,11 +329,12 @@ unsigned int __stdcall depressThreadProc(void *args)
 	return 0;
 }
 
-bool depressCreateTasks(wchar_t *textfile, wchar_t *textfilepath, wchar_t *outputfile, depress_task_type **tasks_out, size_t *tasks_num_out)
+bool depressCreateTasks(wchar_t *textfile, wchar_t *textfilepath, wchar_t *outputfile, wchar_t *temppath, depress_task_type **tasks_out, size_t *tasks_num_out)
 {
 	FILE *f;
 	size_t task_inputfile_length;
 	wchar_t inputfile[32770];
+	wchar_t tempstr[32];
 	depress_task_type *tasks = 0;
 	size_t tasks_num = 0, tasks_max = 0;
 
@@ -387,11 +402,17 @@ bool depressCreateTasks(wchar_t *textfile, wchar_t *textfilepath, wchar_t *outpu
 		}
 
 		// Filling task
-		swprintf(tasks[tasks_num].tempfile, 32768, L"temp%lld.ppm", (long long)tasks_num);
+		
+		swprintf(tempstr, 32, L"\\temp%lld.ppm", (long long)tasks_num);
+		wcscpy(tasks[tasks_num].tempfile, temppath);
+		wcscat(tasks[tasks_num].tempfile, tempstr);
 		if(tasks_num == 0)
 			wcscpy(tasks[tasks_num].outputfile, outputfile);
-		else
-			swprintf(tasks[tasks_num].outputfile, 32768, L"temp%lld.djvu", (long long)tasks_num);
+		else {
+			swprintf(tempstr, 32, L"\\temp%lld.djvu", (long long)tasks_num);
+			wcscpy(tasks[tasks_num].outputfile, temppath);
+			wcscat(tasks[tasks_num].outputfile, tempstr);
+		}
 
 		tasks[tasks_num].is_error = false;
 		tasks[tasks_num].is_completed = false;
@@ -520,3 +541,35 @@ bool depressGetDjvulibrePaths(depress_djvulibre_paths_type *djvulibre_paths)
 	return true;
 }
 
+bool depressGetTempFolder(wchar_t *temp_path)
+{
+	wchar_t appdatalocalpath[MAX_PATH], tempstr[30];
+	long long counter = 0;
+
+	SHGetFolderPath(NULL, CSIDL_LOCAL_APPDATA, NULL, SHGFP_TYPE_CURRENT, appdatalocalpath);
+
+	// 260 is much greater than 32768, no checks needed
+
+	while(1) {
+		wcscpy(temp_path, appdatalocalpath);
+		wcscat(temp_path, L"\\Temp");
+		if(_waccess(temp_path, 06))
+			return false;
+
+		swprintf(tempstr, 30, L"\\depress%lld", counter);
+		
+		wcscat(temp_path, tempstr);
+
+		if(_waccess(temp_path, 06)) { // Folder doesnt exist
+			if(!_wmkdir(temp_path)) 
+				return true;
+		}
+		
+		counter++;
+	}
+}
+
+void depressDestroyTempFolder(wchar_t *temp_path)
+{
+	_wrmdir(temp_path);
+}

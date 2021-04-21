@@ -341,7 +341,7 @@ bool depressCreateTasks(wchar_t *textfile, wchar_t *textfilepath, wchar_t *outpu
 	*tasks_out = 0;
 	*tasks_num_out = 0;
 
-	f = _wfopen(textfile, L"r");
+	f = _wfopen(textfile, L"rt, ccs=UTF-8");
 	if(!f) return false;
 
 	while(1) {

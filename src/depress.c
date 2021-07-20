@@ -87,7 +87,7 @@ int wmain(int argc, wchar_t **argv)
 	wchar_t text_list_filename[32768], text_list_path[32768], *text_list_name_start;
 	size_t text_list_path_size;
 	wchar_t temp_path[32768];
-	wchar_t arg1[32770], arg2[32770];
+	wchar_t arg0[32770], arg1[32770], arg2[32770];
 	depress_flags_type flags;
 	size_t filecount = 0;
 	depress_task_type *tasks = 0;
@@ -256,8 +256,9 @@ int wmain(int argc, wchar_t **argv)
 					wprintf(L"Merging file \"%ls\"\n", tasks[filecount].inputfile);
 
 					swprintf(arg2, 32770, L"\"%ls\"", tasks[filecount].outputfile);
+					swprintf(arg0, 32770, L"\"%ls\"", djvulibre_paths.djvm_path);
 
-					if(_wspawnl(_P_WAIT, djvulibre_paths.djvm_path, djvulibre_paths.djvm_path, L"-i", arg1, arg2, 0)) {
+					if(_wspawnl(_P_WAIT, djvulibre_paths.djvm_path, arg0, L"-i", arg1, arg2, 0)) {
 						wprintf(L"Can't merge djvu files\n");
 						is_error = true;
 					}
@@ -459,7 +460,7 @@ bool depressConvertPage(bool is_bw, wchar_t *inputfile, wchar_t *tempfile, wchar
 {
 	FILE *f_in = 0, *f_temp = 0;
 	int sizex, sizey, channels;
-	wchar_t arg1[32770], arg2[32770];
+	wchar_t arg0[32770], arg1[32770], arg2[32770];
 	unsigned char *buffer = 0;
 	bool result = false;
 
@@ -488,14 +489,12 @@ bool depressConvertPage(bool is_bw, wchar_t *inputfile, wchar_t *tempfile, wchar
 	swprintf(arg1, 32770, L"\"%ls\"", tempfile);
 	swprintf(arg2, 32770, L"\"%ls\"", outputfile);
 
-	if(is_bw) {
-		if(_wspawnl(_P_WAIT, djvulibre_paths->cjb2_path, djvulibre_paths->cjb2_path, arg1, arg2, 0)) {
-			goto EXIT;
-		}
+	if (is_bw) {
+		swprintf(arg0, 32770, L"\"%ls\"", djvulibre_paths->cjb2_path);
+		if(_wspawnl(_P_WAIT, djvulibre_paths->cjb2_path, arg0, arg1, arg2, 0)) goto EXIT;
 	} else {
-		if(_wspawnl(_P_WAIT, djvulibre_paths->c44_path, djvulibre_paths->c44_path, arg1, arg2, 0)) {
-			goto EXIT;
-		}
+		swprintf(arg0, 32770, L"\"%ls\"", djvulibre_paths->c44_path);
+		if(_wspawnl(_P_WAIT, djvulibre_paths->c44_path, arg0, arg1, arg2, 0)) goto EXIT;
 	}
 
 	result = true;

@@ -39,6 +39,10 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <wchar.h>
 #include <time.h>
 
+#include <sys/types.h>
+#include <direct.h>
+#include <io.h>
+
 #define STB_IMAGE_IMPLEMENTATION
 #include "third_party/stb_image.h"
 
@@ -91,7 +95,7 @@ int wmain(int argc, wchar_t **argv)
 	depress_flags_type flags;
 	size_t filecount = 0;
 	depress_task_type *tasks = 0;
-	size_t tasks_num = 0, tasks_max = 0;
+	size_t tasks_num = 0;
 	DWORD text_list_fn_length;
 	int threads_num = 0;
 	HANDLE *threads;
@@ -224,7 +228,7 @@ int wmain(int argc, wchar_t **argv)
 			int j;
 
 			WaitForMultipleObjects(i, threads, TRUE, INFINITE);
-			
+
 			for(j = 0; j < i; j++)
 				CloseHandle(threads[j]);
 
@@ -323,7 +327,7 @@ unsigned int __stdcall depressThreadProc(void *args)
 
 			arg.tasks[i].is_completed = true;
 		}
-		
+
 		SetEvent(arg.tasks[i].finished);
 	}
 
@@ -403,7 +407,7 @@ bool depressCreateTasks(wchar_t *textfile, wchar_t *textfilepath, wchar_t *outpu
 		}
 
 		// Filling task
-		
+
 		swprintf(tempstr, 32, L"\\temp%lld.ppm", (long long)tasks_num);
 		wcscpy(tasks[tasks_num].tempfile, temppath);
 		wcscat(tasks[tasks_num].tempfile, tempstr);
@@ -545,7 +549,7 @@ bool depressGetTempFolder(wchar_t *temp_path)
 	wchar_t appdatalocalpath[MAX_PATH], tempstr[30];
 	long long counter = 0;
 
-	SHGetFolderPath(NULL, CSIDL_LOCAL_APPDATA, NULL, SHGFP_TYPE_CURRENT, appdatalocalpath);
+	SHGetFolderPathW(NULL, CSIDL_LOCAL_APPDATA, NULL, SHGFP_TYPE_CURRENT, appdatalocalpath);
 
 	// 260 is much greater than 32768, no checks needed
 
@@ -556,14 +560,14 @@ bool depressGetTempFolder(wchar_t *temp_path)
 			return false;
 
 		swprintf(tempstr, 30, L"\\depress%lld", counter);
-		
+
 		wcscat(temp_path, tempstr);
 
 		if(_waccess(temp_path, 06)) { // Folder doesnt exist
-			if(!_wmkdir(temp_path)) 
+			if(!_wmkdir(temp_path))
 				return true;
 		}
-		
+
 		counter++;
 	}
 }

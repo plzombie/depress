@@ -549,7 +549,7 @@ bool depressGetTempFolder(wchar_t *temp_path)
 	wchar_t appdatalocalpath[MAX_PATH], tempstr[30];
 	long long counter = 0;
 
-	SHGetFolderPathW(NULL, CSIDL_LOCAL_APPDATA, NULL, SHGFP_TYPE_CURRENT, appdatalocalpath);
+	if(SHGetFolderPathW(NULL, CSIDL_LOCAL_APPDATA, NULL, SHGFP_TYPE_CURRENT, appdatalocalpath) != S_OK) appdatalocalpath[0] = 0;
 
 	// 260 is much greater than 32768, no checks needed
 

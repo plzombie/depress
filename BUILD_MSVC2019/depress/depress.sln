@@ -9,6 +9,8 @@ Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
 		Debug|x86 = Debug|x86
+		Release (2015XP)|x64 = Release (2015XP)|x64
+		Release (2015XP)|x86 = Release (2015XP)|x86
 		Release (2017XP)|x64 = Release (2017XP)|x64
 		Release (2017XP)|x86 = Release (2017XP)|x86
 		Release|x64 = Release|x64
@@ -19,6 +21,10 @@ Global
 		{4F68B9A5-C56C-44AB-A291-85BFE471EC7F}.Debug|x64.Build.0 = Debug|x64
 		{4F68B9A5-C56C-44AB-A291-85BFE471EC7F}.Debug|x86.ActiveCfg = Debug|Win32
 		{4F68B9A5-C56C-44AB-A291-85BFE471EC7F}.Debug|x86.Build.0 = Debug|Win32
+		{4F68B9A5-C56C-44AB-A291-85BFE471EC7F}.Release (2015XP)|x64.ActiveCfg = Release (2015XP)|x64
+		{4F68B9A5-C56C-44AB-A291-85BFE471EC7F}.Release (2015XP)|x64.Build.0 = Release (2015XP)|x64
+		{4F68B9A5-C56C-44AB-A291-85BFE471EC7F}.Release (2015XP)|x86.ActiveCfg = Release (2015XP)|Win32
+		{4F68B9A5-C56C-44AB-A291-85BFE471EC7F}.Release (2015XP)|x86.Build.0 = Release (2015XP)|Win32
 		{4F68B9A5-C56C-44AB-A291-85BFE471EC7F}.Release (2017XP)|x64.ActiveCfg = Release (2017XP)|x64
 		{4F68B9A5-C56C-44AB-A291-85BFE471EC7F}.Release (2017XP)|x64.Build.0 = Release (2017XP)|x64
 		{4F68B9A5-C56C-44AB-A291-85BFE471EC7F}.Release (2017XP)|x86.ActiveCfg = Release (2017XP)|Win32

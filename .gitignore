@@ -7,6 +7,10 @@
 *.tlog
 *.lastbuildstate
 *.exe
+*.dll
+*.dll.recipe
+*.lib
+*.exp
 *.iobj
 *.ipdb
 *.ipch
@@ -19,6 +23,7 @@
 *.idb
 *.exe.recipe
 *.FileListAbsolute.txt
+*.sdf
 
 # OpenWatcom
 *.lk1

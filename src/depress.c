@@ -462,21 +462,29 @@ void depressDestroyTasks(depress_task_type *tasks, size_t tasks_num)
 
 unsigned char *depressLoadImage(FILE *f, int *sizex, int *sizey, int *channels, bool is_bw)
 {
-	if(is_bw)
-		return stbi_load_from_file(f, sizex, sizey, channels, 1);
-	else if(stbi_info_from_file(f, sizex, sizey, channels)) {
+	unsigned char *buf = 0;
+
+	if(is_bw) {
+		buf = stbi_load_from_file(f, sizex, sizey, channels, 1);
+		*channels = 1;
+	} else if(stbi_info_from_file(f, sizex, sizey, channels)) {
 		switch(*channels) {
 			case 1:
 			case 3:
-				return stbi_load_from_file(f, sizex, sizey, channels, 0);
+				buf = stbi_load_from_file(f, sizex, sizey, channels, 0);
+				break;
 			case 2:
-				return stbi_load_from_file(f, sizex, sizey, channels, 1);
+				buf = stbi_load_from_file(f, sizex, sizey, channels, 1);
+				*channels = 1;
+				break;
 			case 4:
-				return stbi_load_from_file(f, sizex, sizey, channels, 3);
+				buf = stbi_load_from_file(f, sizex, sizey, channels, 3);
+				*channels = 3;
+				break;
 		}
 	}
 
-	return 0;
+	return buf;
 }
 
 bool depressConvertPage(bool is_bw, wchar_t *inputfile, wchar_t *tempfile, wchar_t *outputfile, depress_djvulibre_paths_type *djvulibre_paths)

@@ -4,10 +4,10 @@ projectIdent
 VpeMain
 1
 WRect
-986
-1526
+16
+0
 5856
-6978
+5489
 2
 MProject
 3
@@ -30,8 +30,8 @@ VComponent
 WRect
 0
 0
-5685
-4285
+5680
+4276
 0
 0
 9
@@ -39,5 +39,5 @@ WFileName
 11
 depress.tgt
 0
-0
+1
 7

@@ -24,6 +24,7 @@
 *.exe.recipe
 *.FileListAbsolute.txt
 *.sdf
+*.opensdf
 
 # OpenWatcom
 *.lk1

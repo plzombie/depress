@@ -460,6 +460,25 @@ void depressDestroyTasks(depress_task_type *tasks, size_t tasks_num)
 	free(tasks);
 }
 
+unsigned char *depressLoadImage(FILE *f, int *sizex, int *sizey, int *channels, bool is_bw)
+{
+	if(is_bw)
+		return stbi_load_from_file(f, sizex, sizey, channels, 1);
+	else if(stbi_info_from_file(f, sizex, sizey, channels)) {
+		switch(*channels) {
+			case 1:
+			case 3:
+				return stbi_load_from_file(f, sizex, sizey, channels, 0);
+			case 2:
+				return stbi_load_from_file(f, sizex, sizey, channels, 1);
+			case 4:
+				return stbi_load_from_file(f, sizex, sizey, channels, 3);
+		}
+	}
+
+	return 0;
+}
+
 bool depressConvertPage(bool is_bw, wchar_t *inputfile, wchar_t *tempfile, wchar_t *outputfile, depress_djvulibre_paths_type *djvulibre_paths)
 {
 	FILE *f_in = 0, *f_temp = 0;
@@ -473,7 +492,7 @@ bool depressConvertPage(bool is_bw, wchar_t *inputfile, wchar_t *tempfile, wchar
 	if(!f_in || !f_temp)
 		goto EXIT;
 
-	buffer = stbi_load_from_file(f_in, &sizex, &sizey, &channels, is_bw?1:0);
+	buffer = depressLoadImage(f_in, &sizex, &sizey, &channels, is_bw);
 	if(!buffer)
 		goto EXIT;
 

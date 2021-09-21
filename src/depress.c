@@ -353,7 +353,11 @@ bool depressCreateTasks(wchar_t *textfile, wchar_t *textfilepath, wchar_t *outpu
 	*tasks_out = 0;
 	*tasks_num_out = 0;
 
+#ifdef _MSC_VER
 	f = _wfopen(textfile, L"rt, ccs=UTF-8");
+#else
+	f = _wfopen(textfile, L"rt");
+#endif
 	if(!f) return false;
 
 	while(1) {

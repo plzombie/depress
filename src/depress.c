@@ -41,6 +41,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <sys/types.h>
 #include <direct.h>
+#include <fcntl.h>
 #include <io.h>
 
 #define STB_IMAGE_IMPLEMENTATION
@@ -109,6 +110,12 @@ int wmain(int argc, wchar_t **argv)
 	flags.bw = false;
 
 	setlocale(LC_ALL, "");
+
+#ifdef _MSC_VER
+	_setmode(_fileno(stdin), _O_U16TEXT);
+	_setmode(_fileno(stdout), _O_U16TEXT);
+	_setmode(_fileno(stderr), _O_U16TEXT);
+#endif
 
 	// Reading options
 	argsc = argc - 1;

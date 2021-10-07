@@ -71,7 +71,7 @@ WString
 COBJ
 19
 WVList
-8
+10
 20
 MVState
 21
@@ -113,32 +113,32 @@ WString
 1
 1
 30
-MVState
+MCState
 31
 WString
 3
 WCC
 32
 WString
-23
-?????Macro definitions:
-0
+30
+n????Multithreaded application
+1
+1
 33
-WString
-18
-WIN32 STBI_NO_SIMD
-0
+MVState
 34
-MRState
-35
 WString
 3
 WCC
+35
+WString
+23
+?????Macro definitions:
+0
 36
 WString
-37
-?????No double-byte character support
-0
+18
+WIN32 STBI_NO_SIMD
 0
 37
 MRState
@@ -148,10 +148,10 @@ WString
 WCC
 39
 WString
-20
-?????Kanji (Unicode)
+37
+?????No double-byte character support
 0
-1
+0
 40
 MRState
 41
@@ -160,8 +160,8 @@ WString
 WCC
 42
 WString
-23
-?????Time optimizations
+20
+?????Kanji (Unicode)
 0
 1
 43
@@ -172,47 +172,71 @@ WString
 WCC
 45
 WString
+23
+?????Time optimizations
+0
+1
+46
+MRState
+47
+WString
+3
+WCC
+48
+WString
 26
 ?????Fastest possible code
 0
 0
-46
+49
+MCState
+50
+WString
+3
+WCC
+51
+WString
+30
+n????Multithreaded application
+0
+1
+52
 WVList
 0
 -1
 1
 1
 0
-47
+53
 MItem
 16
 ..\src\depress.c
-48
+54
 WString
 4
 COBJ
-49
+55
 WVList
 0
-50
+56
 WVList
 0
 17
 1
 1
 0
-51
+57
 MItem
 17
 ..\src\ppm_save.c
-52
+58
 WString
 4
 COBJ
-53
+59
 WVList
 0
-54
+60
 WVList
 0
 17

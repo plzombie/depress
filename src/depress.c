@@ -321,13 +321,8 @@ unsigned int __stdcall depressThreadProc(void *args)
 				global_error = true;
 
 		if(global_error == false) {
-			if(!i) {
-				if(!depressConvertPage(arg.flags.bw, arg.tasks[i].inputfile, arg.tasks[i].tempfile, arg.tasks[i].outputfile, arg.djvulibre_paths))
-					arg.tasks[i].is_error = true;
-			} else {
-				if(!depressConvertPage(arg.flags.bw, arg.tasks[i].inputfile, arg.tasks[i].tempfile, arg.tasks[i].outputfile, arg.djvulibre_paths))
-					arg.tasks[i].is_error = true;
-			}
+			if(!depressConvertPage(arg.flags.bw, arg.tasks[i].inputfile, arg.tasks[i].tempfile, arg.tasks[i].outputfile, arg.djvulibre_paths))
+				arg.tasks[i].is_error = true;
 
 			if(arg.tasks[i].is_error == true)
 				SetEvent(arg.global_error_event);

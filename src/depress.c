@@ -61,15 +61,15 @@ typedef struct {
 	wchar_t inputfile[32768];
 	wchar_t tempfile[32768];
 	wchar_t outputfile[32768];
+	HANDLE finished;
+	depress_flags_type flags;
 	bool is_error;
 	bool is_completed;
-	HANDLE finished;
 } depress_task_type;
 
 typedef struct {
 	depress_task_type *tasks;
 	depress_djvulibre_paths_type *djvulibre_paths;
-	depress_flags_type flags;
 	size_t tasks_num;
 	int thread_id;
 	int threads_num;
@@ -77,7 +77,7 @@ typedef struct {
 } depress_thread_arg_type;
 
 bool depressConvertPage(bool is_bw, wchar_t *inputfile, wchar_t *tempfile, wchar_t *outputfile, depress_djvulibre_paths_type *djvulibre_paths);
-bool depressCreateTasks(wchar_t *textfile, wchar_t *textfilepath, wchar_t *outputfile, wchar_t *temppath, depress_task_type **tasks_out, size_t *tasks_num_out);
+bool depressCreateTasks(wchar_t *textfile, wchar_t *textfilepath, wchar_t *outputfile, wchar_t *temppath, depress_flags_type flags, depress_task_type **tasks_out, size_t *tasks_num_out);
 void depressDestroyTasks(depress_task_type *tasks, size_t tasks_num);
 int depressGetNumberOfThreads(void);
 bool depressGetDjvulibrePaths(depress_djvulibre_paths_type *djvulibre_paths);
@@ -186,7 +186,7 @@ int wmain(int argc, wchar_t **argv)
 		return 0;
 	}
 
-	if(!depressCreateTasks(text_list_filename, text_list_path, *(argsp + 1), temp_path, &tasks, &tasks_num)) {
+	if(!depressCreateTasks(text_list_filename, text_list_path, *(argsp + 1), temp_path, flags, &tasks, &tasks_num)) {
 		wprintf(L"Can't create files list\n");
 
 		return 0;
@@ -224,7 +224,6 @@ int wmain(int argc, wchar_t **argv)
 	for(i = 0; i < threads_num; i++) {
 		thread_args[i].tasks = tasks;
 		thread_args[i].djvulibre_paths = &djvulibre_paths;
-		thread_args[i].flags = flags;
 		thread_args[i].tasks_num = tasks_num;
 		thread_args[i].thread_id = i;
 		thread_args[i].threads_num = threads_num;
@@ -321,7 +320,7 @@ unsigned int __stdcall depressThreadProc(void *args)
 				global_error = true;
 
 		if(global_error == false) {
-			if(!depressConvertPage(arg.flags.bw, arg.tasks[i].inputfile, arg.tasks[i].tempfile, arg.tasks[i].outputfile, arg.djvulibre_paths))
+			if(!depressConvertPage(arg.tasks[i].flags.bw, arg.tasks[i].inputfile, arg.tasks[i].tempfile, arg.tasks[i].outputfile, arg.djvulibre_paths))
 				arg.tasks[i].is_error = true;
 
 			if(arg.tasks[i].is_error == true)
@@ -336,7 +335,7 @@ unsigned int __stdcall depressThreadProc(void *args)
 	return 0;
 }
 
-bool depressCreateTasks(wchar_t *textfile, wchar_t *textfilepath, wchar_t *outputfile, wchar_t *temppath, depress_task_type **tasks_out, size_t *tasks_num_out)
+bool depressCreateTasks(wchar_t *textfile, wchar_t *textfilepath, wchar_t *outputfile, wchar_t *temppath, depress_flags_type flags, depress_task_type **tasks_out, size_t *tasks_num_out)
 {
 	FILE *f;
 	size_t task_inputfile_length;
@@ -425,6 +424,7 @@ bool depressCreateTasks(wchar_t *textfile, wchar_t *textfilepath, wchar_t *outpu
 			wcscat(tasks[tasks_num].outputfile, tempstr);
 		}
 
+		tasks[tasks_num].flags = flags;
 		tasks[tasks_num].is_error = false;
 		tasks[tasks_num].is_completed = false;
 

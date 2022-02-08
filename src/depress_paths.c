@@ -48,6 +48,9 @@ bool depressGetDjvulibrePaths(depress_djvulibre_paths_type *djvulibre_paths)
 	filename_len = SearchPathW(NULL, L"djvm.exe", NULL, 32768, djvulibre_paths->djvm_path, NULL);
 	if (filename_len == 0 || filename_len > 32768) return false;
 
+	filename_len = SearchPathW(NULL, L"djvused.exe", NULL, 32768, djvulibre_paths->djvused_path, NULL);
+	if (filename_len == 0 || filename_len > 32768) return false;
+
 	return true;
 }
 

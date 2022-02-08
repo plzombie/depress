@@ -1,7 +1,7 @@
 /*
 BSD 2-Clause License
 
-Copyright (c) 2021, Mikhail Morozov
+Copyright (c) 2022, Mikhail Morozov
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -26,21 +26,38 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#ifndef DEPRESS_PATHS_H
-#define DEPRESS_PATHS_H
+#ifndef DEPRESS_DOCUMENT_H
+#define DEPRESS_DOCUMENT_H
 
 #include <stdbool.h>
+#include <stdint.h>
 #include <wchar.h>
 
-typedef struct {
-	wchar_t cjb2_path[32768];
-	wchar_t c44_path[32768];
-	wchar_t djvm_path[32768];
-	wchar_t djvused_path[32768];
-} depress_djvulibre_paths_type;
+#include <Windows.h>
 
-extern bool depressGetDjvulibrePaths(depress_djvulibre_paths_type *djvulibre_paths);
-extern bool depressGetTempFolder(wchar_t *temp_path);
-extern void depressDestroyTempFolder(wchar_t *temp_path);
+#include "../include/depress_tasks.h"
+#include "../include/depress_threads.h"
+#include "../include/depress_paths.h"
+
+enum {
+	DEPRESS_DOCUMENT_PAGE_TITLE_TYPE_NO,
+	DEPRESS_DOCUMENT_PAGE_TITLE_TYPE_AUTOMATIC
+};
+
+typedef struct {
+	// Tasks
+	depress_task_type *tasks;
+	size_t tasks_num;
+	// Threads
+	HANDLE *threads;
+	depress_thread_arg_type *thread_args;
+	int threads_num;
+	// Paths
+	depress_djvulibre_paths_type djvulibre_paths;
+	// Final flags
+	int page_title_type;
+} depress_document_type;
+
+bool depressDocumentFinalize(depress_document_type *document, wchar_t *fname);
 
 #endif

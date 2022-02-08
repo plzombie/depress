@@ -1,7 +1,7 @@
 /*
 BSD 2-Clause License
 
-Copyright (c) 2021, Mikhail Morozov
+Copyright (c) 2021-2022, Mikhail Morozov
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -41,12 +41,11 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <fcntl.h>
 #include <io.h>
 
-#include "../include/depress_paths.h"
-#include "../include/depress_tasks.h"
-#include "../include/depress_threads.h"
+#include "../include/depress_document.h"
 
 #define DEPRESS_ARG_PAGETYPE_BW L"-bw"
 #define DEPRESS_ARG_PAGETYPE_BW_PARAM1_DITHERING L"-dith"
+#define DEPRESS_ARG_PAGETITLEAUTO L"-pta"
 
 int wmain(int argc, wchar_t **argv)
 {
@@ -58,20 +57,18 @@ int wmain(int argc, wchar_t **argv)
 	wchar_t arg0[32770], arg1[32770], arg2[32770];
 	depress_flags_type flags;
 	size_t filecount = 0;
-	depress_task_type *tasks = 0;
-	size_t tasks_num = 0;
 	DWORD text_list_fn_length;
-	int threads_num = 0;
-	HANDLE *threads;
 	HANDLE global_error_event;
-	depress_djvulibre_paths_type djvulibre_paths;
-	depress_thread_arg_type *thread_args;
+	depress_document_type document;
 	bool is_error = false;
 	int i;
 	clock_t time_start;
 
 	memset(&flags, 0, sizeof(depress_flags_type));
 	flags.type = DEPRESS_PAGE_TYPE_COLOR;
+
+	memset(&document, 0, sizeof(depress_document_type));
+	document.page_title_type = DEPRESS_DOCUMENT_PAGE_TITLE_TYPE_NO;
 
 	setlocale(LC_ALL, "");
 
@@ -98,6 +95,8 @@ int wmain(int argc, wchar_t **argv)
 				flags.param1 = DEPRESS_PAGE_TYPE_BW_PARAM1_DITHERING;
 			else
 				wprintf(L"Warning: argument %ls can be set only with %ls\n", DEPRESS_ARG_PAGETYPE_BW_PARAM1_DITHERING, DEPRESS_ARG_PAGETYPE_BW);
+		} else if(!wcscmp(*argsp, DEPRESS_ARG_PAGETITLEAUTO)) {
+			document.page_title_type = DEPRESS_DOCUMENT_PAGE_TITLE_TYPE_AUTOMATIC;
 		} else
 			wprintf(L"Warning: unknown argument %ls\n", *argsp);
 
@@ -142,7 +141,7 @@ int wmain(int argc, wchar_t **argv)
 	SetSearchPathMode(BASE_SEARCH_PATH_ENABLE_SAFE_SEARCHMODE | BASE_SEARCH_PATH_PERMANENT);
 
 	// Get paths to djvulibre files
-	if(!depressGetDjvulibrePaths(&djvulibre_paths)) {
+	if(!depressGetDjvulibrePaths(&document.djvulibre_paths)) {
 		wprintf(L"Can't find djvulibre files\n");
 
 		return 0;
@@ -157,22 +156,22 @@ int wmain(int argc, wchar_t **argv)
 		return 0;
 	}
 
-	if(!depressCreateTasks(text_list_filename, text_list_path, *(argsp + 1), temp_path, flags, &tasks, &tasks_num)) {
+	if(!depressCreateTasks(text_list_filename, text_list_path, *(argsp + 1), temp_path, flags, &document.tasks, &document.tasks_num)) {
 		wprintf(L"Can't create files list\n");
 
 		return 0;
 	}
 
-	threads_num = depressGetNumberOfThreads();
-	if(threads_num <= 0) threads_num = 1;
-	if(threads_num > 64) threads_num = 64;
+	document.threads_num = depressGetNumberOfThreads();
+	if(document.threads_num <= 0) document.threads_num = 1;
+	if(document.threads_num > 64) document.threads_num = 64;
 
-	threads = malloc(sizeof(HANDLE) * threads_num);
-	thread_args = malloc(sizeof(depress_thread_arg_type) * threads_num);
-	if(!threads || !thread_args) {
-		if(threads) free(threads);
-		if(thread_args) free(thread_args);
-		depressDestroyTasks(tasks, tasks_num);
+	document.threads = malloc(sizeof(HANDLE) * document.threads_num);
+	document.thread_args = malloc(sizeof(depress_thread_arg_type) * document.threads_num);
+	if(!document.threads || !document.thread_args) {
+		if(document.threads) free(document.threads);
+		if(document.thread_args) free(document.thread_args);
+		depressDestroyTasks(document.tasks, document.tasks_num);
 		depressDestroyTempFolder(temp_path);
 
 		wprintf(L"Can't allocate memory\n");
@@ -182,9 +181,9 @@ int wmain(int argc, wchar_t **argv)
 
 	global_error_event = CreateEventW(NULL, TRUE, FALSE, NULL);
 	if(global_error_event == NULL) {
-		free(threads);
-		free(thread_args);
-		depressDestroyTasks(tasks, tasks_num);
+		free(document.threads);
+		free(document.thread_args);
+		depressDestroyTasks(document.tasks, document.tasks_num);
 		depressDestroyTempFolder(temp_path);
 
 		wprintf(L"Can't create event\n");
@@ -192,22 +191,22 @@ int wmain(int argc, wchar_t **argv)
 		return 0;
 	}
 
-	for(i = 0; i < threads_num; i++) {
-		thread_args[i].tasks = tasks;
-		thread_args[i].djvulibre_paths = &djvulibre_paths;
-		thread_args[i].tasks_num = tasks_num;
-		thread_args[i].thread_id = i;
-		thread_args[i].threads_num = threads_num;
-		thread_args[i].global_error_event = global_error_event;
+	for(i = 0; i < document.threads_num; i++) {
+		document.thread_args[i].tasks = document.tasks;
+		document.thread_args[i].djvulibre_paths = &document.djvulibre_paths;
+		document.thread_args[i].tasks_num = document.tasks_num;
+		document.thread_args[i].thread_id = i;
+		document.thread_args[i].threads_num = document.threads_num;
+		document.thread_args[i].global_error_event = global_error_event;
 
-		threads[i] = (HANDLE)_beginthreadex(0, 0, depressThreadProc, thread_args + i, 0, 0);
-		if(!threads[i]) {
+		document.threads[i] = (HANDLE)_beginthreadex(0, 0, depressThreadProc, document.thread_args + i, 0, 0);
+		if(!document.threads[i]) {
 			int j;
 
-			WaitForMultipleObjects(i, threads, TRUE, INFINITE);
+			WaitForMultipleObjects(i, document.threads, TRUE, INFINITE);
 
 			for(j = 0; j < i; j++)
-				CloseHandle(threads[j]);
+				CloseHandle(document.threads[j]);
 
 			is_error = true;
 
@@ -219,49 +218,52 @@ int wmain(int argc, wchar_t **argv)
 	if(!is_error) {
 		swprintf(arg1, 32770, L"\"%ls\"", *(argsp + 1));
 
-		for(filecount = 0; filecount < tasks_num; filecount++) {
+		for(filecount = 0; filecount < document.tasks_num; filecount++) {
 			if(!is_error)
 				if(WaitForSingleObject(global_error_event, 0) == WAIT_OBJECT_0)
 					is_error = true;
 
-			while(WaitForSingleObject(tasks[filecount].finished, INFINITE) != WAIT_OBJECT_0);
+			while(WaitForSingleObject(document.tasks[filecount].finished, INFINITE) != WAIT_OBJECT_0);
 
-			if(!tasks[filecount].is_completed)
+			if(!document.tasks[filecount].is_completed)
 				continue;
 
-			if(tasks[filecount].is_error) {
-				wprintf(L"Error while converting file \"%ls\"\n", tasks[filecount].inputfile);
+			if(document.tasks[filecount].is_error) {
+				wprintf(L"Error while converting file \"%ls\"\n", document.tasks[filecount].inputfile);
 				is_error = true;
 			} else {
 				if(is_error == false && filecount > 0) {
-					wprintf(L"Merging file \"%ls\"\n", tasks[filecount].inputfile);
+					wprintf(L"Merging file \"%ls\"\n", document.tasks[filecount].inputfile);
 
-					swprintf(arg2, 32770, L"\"%ls\"", tasks[filecount].outputfile);
-					swprintf(arg0, 32770, L"\"%ls\"", djvulibre_paths.djvm_path);
+					swprintf(arg2, 32770, L"\"%ls\"", document.tasks[filecount].outputfile);
+					swprintf(arg0, 32770, L"\"%ls\"", document.djvulibre_paths.djvm_path);
 
-					if(_wspawnl(_P_WAIT, djvulibre_paths.djvm_path, arg0, L"-i", arg1, arg2, 0)) {
+					if(_wspawnl(_P_WAIT, document.djvulibre_paths.djvm_path, arg0, L"-i", arg1, arg2, 0)) {
 						wprintf(L"Can't merge djvu files\n");
 						is_error = true;
 					}
 				}
 				if(filecount > 0)
-					if(!_waccess(tasks[filecount].outputfile, 06))
-						_wremove(tasks[filecount].outputfile);
+					if(!_waccess(document.tasks[filecount].outputfile, 06))
+						_wremove(document.tasks[filecount].outputfile);
 			}
 		}
 	}
 
 	if(!is_error) {
-		WaitForMultipleObjects(threads_num, threads, TRUE, INFINITE);
+		WaitForMultipleObjects(document.threads_num, document.threads, TRUE, INFINITE);
 
-		for(i = 0; i < threads_num; i++)
-			CloseHandle(threads[i]);
+		for(i = 0; i < document.threads_num; i++)
+			CloseHandle(document.threads[i]);
 	}
+
+	if(!is_error)
+		depressDocumentFinalize(&document, arg1);
 
 	depressDestroyTempFolder(temp_path);
 
-	free(threads);
-	free(thread_args);
+	free(document.threads);
+	free(document.thread_args);
 
 	CloseHandle(global_error_event);
 
@@ -272,7 +274,7 @@ int wmain(int argc, wchar_t **argv)
 	} else
 		wprintf(L"Converted in %f s\n", (float)(clock()-time_start)/CLOCKS_PER_SEC);
 
-	depressDestroyTasks(tasks, tasks_num);
+	depressDestroyTasks(document.tasks, document.tasks_num);
 
 	return 0;
 }

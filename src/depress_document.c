@@ -1,7 +1,7 @@
 /*
 BSD 2-Clause License
 
-Copyright (c) 2021, Mikhail Morozov
+Copyright (c) 2022, Mikhail Morozov
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -26,21 +26,12 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#ifndef DEPRESS_PATHS_H
-#define DEPRESS_PATHS_H
+#include "../include/depress_document.h"
 
-#include <stdbool.h>
-#include <wchar.h>
+bool depressDocumentFinalize(depress_document_type *document, wchar_t *fname)
+{
+	(void)document;
+	(void)fname;
 
-typedef struct {
-	wchar_t cjb2_path[32768];
-	wchar_t c44_path[32768];
-	wchar_t djvm_path[32768];
-	wchar_t djvused_path[32768];
-} depress_djvulibre_paths_type;
-
-extern bool depressGetDjvulibrePaths(depress_djvulibre_paths_type *djvulibre_paths);
-extern bool depressGetTempFolder(wchar_t *temp_path);
-extern void depressDestroyTempFolder(wchar_t *temp_path);
-
-#endif
+	return true;
+}

@@ -36,5 +36,8 @@
     <ClCompile Include="..\..\src\depress_threads.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\depress_document.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

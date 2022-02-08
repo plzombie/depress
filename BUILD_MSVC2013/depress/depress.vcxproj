@@ -145,6 +145,7 @@
   <ItemGroup>
     <ClCompile Include="..\..\src\depress.c" />
     <ClCompile Include="..\..\src\depress_converter.c" />
+    <ClCompile Include="..\..\src\depress_document.c" />
     <ClCompile Include="..\..\src\depress_image.c" />
     <ClCompile Include="..\..\src\depress_paths.c" />
     <ClCompile Include="..\..\src\depress_tasks.c" />

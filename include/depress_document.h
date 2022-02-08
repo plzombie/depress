@@ -44,6 +44,10 @@ enum {
 	DEPRESS_DOCUMENT_PAGE_TITLE_TYPE_AUTOMATIC
 };
 
+enum {
+	DEPRESS_DOCUMENT_PAGE_TITLE_AUTOMATIC_USE_SHORT_NAME = 0x1
+};
+
 typedef struct {
 	// Tasks
 	depress_task_type *tasks;
@@ -56,6 +60,7 @@ typedef struct {
 	depress_djvulibre_paths_type djvulibre_paths;
 	// Final flags
 	int page_title_type;
+	unsigned int page_title_type_flags;
 } depress_document_type;
 
 bool depressDocumentFinalize(depress_document_type *document, wchar_t *fname);

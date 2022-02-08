@@ -46,6 +46,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define DEPRESS_ARG_PAGETYPE_BW L"-bw"
 #define DEPRESS_ARG_PAGETYPE_BW_PARAM1_DITHERING L"-dith"
 #define DEPRESS_ARG_PAGETITLEAUTO L"-pta"
+#define DEPRESS_ARG_PAGETITLEAUTO_SHORTNAME L"-shortfntitle"
 
 int wmain(int argc, wchar_t **argv)
 {
@@ -97,6 +98,8 @@ int wmain(int argc, wchar_t **argv)
 				wprintf(L"Warning: argument %ls can be set only with %ls\n", DEPRESS_ARG_PAGETYPE_BW_PARAM1_DITHERING, DEPRESS_ARG_PAGETYPE_BW);
 		} else if(!wcscmp(*argsp, DEPRESS_ARG_PAGETITLEAUTO)) {
 			document.page_title_type = DEPRESS_DOCUMENT_PAGE_TITLE_TYPE_AUTOMATIC;
+		} else if(!wcscmp(*argsp, DEPRESS_ARG_PAGETITLEAUTO_SHORTNAME)) {
+			document.page_title_type_flags |= DEPRESS_DOCUMENT_PAGE_TITLE_AUTOMATIC_USE_SHORT_NAME;
 		} else
 			wprintf(L"Warning: unknown argument %ls\n", *argsp);
 
@@ -108,7 +111,9 @@ int wmain(int argc, wchar_t **argv)
 			L"\tdepress [options] input.txt output.djvu\n"
 			L"\t\toptions:\n"
 			L"\t\t\t" DEPRESS_ARG_PAGETYPE_BW L" - create black and white document\n"
-			L"\t\t\t" DEPRESS_ARG_PAGETYPE_BW_PARAM1_DITHERING L" - use dithering for bw document\n\n"
+			L"\t\t\t" DEPRESS_ARG_PAGETYPE_BW_PARAM1_DITHERING L" - use dithering for bw document\n"
+			L"\t\t\t" DEPRESS_ARG_PAGETITLEAUTO L" - use file name as page title\n"
+			L"\t\t\t" DEPRESS_ARG_PAGETITLEAUTO_SHORTNAME L" - use short file name as page title (when using previous)\n\n"
 		);
 		return 0;
 	}
@@ -257,8 +262,10 @@ int wmain(int argc, wchar_t **argv)
 			CloseHandle(document.threads[i]);
 	}
 
-	if(!is_error)
-		depressDocumentFinalize(&document, arg1);
+	if(!is_error) {
+		if(!depressDocumentFinalize(&document, arg1))
+			wprintf(L"%ls", L"Warning: can't perform final steps\n");
+	}
 
 	depressDestroyTempFolder(temp_path);
 

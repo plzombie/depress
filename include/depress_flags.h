@@ -1,7 +1,7 @@
 /*
 BSD 2-Clause License
 
-Copyright (c) 2021, Mikhail Morozov
+Copyright (c) 2021-2022, Mikhail Morozov
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -26,27 +26,21 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#ifndef DEPRESS_TASKS_H
-#define DEPRESS_TASKS_H
+#ifndef DEPRESS_FLAGS_H
+#define DEPRESS_FLAGS_H
 
-#include <Windows.h>
+enum {
+	DEPRESS_PAGE_TYPE_COLOR,
+	DEPRESS_PAGE_TYPE_BW
+};
 
-#include <stdbool.h>
-#include <wchar.h>
-
-#include "depress_flags.h"
+enum {
+	DEPRESS_PAGE_TYPE_BW_PARAM1_SIMPLE
+};
 
 typedef struct {
-	wchar_t inputfile[32768];
-	wchar_t tempfile[32768];
-	wchar_t outputfile[32768];
-	HANDLE finished;
-	depress_flags_type flags;
-	bool is_error;
-	bool is_completed;
-} depress_task_type;
-
-extern bool depressCreateTasks(wchar_t *textfile, wchar_t *textfilepath, wchar_t *outputfile, wchar_t *temppath, depress_flags_type flags, depress_task_type **tasks_out, size_t *tasks_num_out);
-extern void depressDestroyTasks(depress_task_type *tasks, size_t tasks_num);
+	int type;
+	int param1;
+} depress_flags_type;
 
 #endif

@@ -44,7 +44,7 @@ unsigned int __stdcall depressThreadProc(void *args)
 				global_error = true;
 
 		if(global_error == false) {
-			if(!depressConvertPage(arg.tasks[i].flags.bw, arg.tasks[i].inputfile, arg.tasks[i].tempfile, arg.tasks[i].outputfile, arg.djvulibre_paths))
+			if(!depressConvertPage(arg.tasks[i].flags.type, arg.tasks[i].inputfile, arg.tasks[i].tempfile, arg.tasks[i].outputfile, arg.djvulibre_paths))
 				arg.tasks[i].is_error = true;
 
 			if(arg.tasks[i].is_error == true)

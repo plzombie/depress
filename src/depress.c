@@ -67,7 +67,8 @@ int wmain(int argc, wchar_t **argv)
 	int i;
 	clock_t time_start;
 
-	flags.bw = false;
+	memset(&flags, 0, sizeof(depress_flags_type));
+	flags.type = DEPRESS_PAGE_TYPE_COLOR;
 
 	setlocale(LC_ALL, "");
 
@@ -86,9 +87,10 @@ int wmain(int argc, wchar_t **argv)
 
 		argsc--;
 
-		if(!wcscmp(*argsp, L"-bw"))
-			flags.bw = true;
-		else
+		if(!wcscmp(*argsp, L"-bw")) {
+			flags.type = DEPRESS_PAGE_TYPE_BW;
+			flags.param1 = DEPRESS_PAGE_TYPE_BW_PARAM1_SIMPLE;
+		} else
 			wprintf(L"Warning: unknown argument %ls\n", *argsp);
 
 		argsp++;

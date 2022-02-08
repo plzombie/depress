@@ -28,6 +28,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "../include/depress_converter.h"
 #include "../include/depress_image.h"
+#include "../include/depress_flags.h"
 #include "../include/ppm_save.h"
 
 #include <Windows.h>
@@ -35,7 +36,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <io.h>
 #include <process.h>
 
-bool depressConvertPage(bool is_bw, wchar_t *inputfile, wchar_t *tempfile, wchar_t *outputfile, depress_djvulibre_paths_type *djvulibre_paths)
+bool depressConvertPage(int page_type, wchar_t *inputfile, wchar_t *tempfile, wchar_t *outputfile, depress_djvulibre_paths_type *djvulibre_paths)
 {
 	FILE *f_in = 0, *f_temp = 0;
 	int sizex, sizey, channels;
@@ -48,13 +49,13 @@ bool depressConvertPage(bool is_bw, wchar_t *inputfile, wchar_t *tempfile, wchar
 	if(!f_in || !f_temp)
 		goto EXIT;
 
-	buffer = depressLoadImage(f_in, &sizex, &sizey, &channels, is_bw);
+	buffer = depressLoadImage(f_in, &sizex, &sizey, &channels, page_type == DEPRESS_PAGE_TYPE_BW);
 	if(!buffer)
 		goto EXIT;
 
 	fclose(f_in); f_in = 0;
 
-	if(is_bw) {
+	if(page_type == DEPRESS_PAGE_TYPE_BW) {
 		if(!pbmSave(sizex, sizey, buffer, f_temp))
 			goto EXIT;
 	} else {
@@ -68,7 +69,7 @@ bool depressConvertPage(bool is_bw, wchar_t *inputfile, wchar_t *tempfile, wchar
 	swprintf(arg1, 32770, L"\"%ls\"", tempfile);
 	swprintf(arg2, 32770, L"\"%ls\"", outputfile);
 
-	if (is_bw) {
+	if(page_type == DEPRESS_PAGE_TYPE_BW) {
 		swprintf(arg0, 32770, L"\"%ls\"", djvulibre_paths->cjb2_path);
 		if(_wspawnl(_P_WAIT, djvulibre_paths->cjb2_path, arg0, arg1, arg2, 0)) goto EXIT;
 	} else {

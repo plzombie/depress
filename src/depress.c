@@ -45,6 +45,9 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../include/depress_tasks.h"
 #include "../include/depress_threads.h"
 
+#define DEPRESS_ARG_PAGETYPE_BW L"-bw"
+#define DEPRESS_ARG_PAGETYPE_BW_PARAM1_DITHERING L"-dith"
+
 int wmain(int argc, wchar_t **argv)
 {
 	wchar_t **argsp;
@@ -87,9 +90,14 @@ int wmain(int argc, wchar_t **argv)
 
 		argsc--;
 
-		if(!wcscmp(*argsp, L"-bw")) {
+		if(!wcscmp(*argsp, DEPRESS_ARG_PAGETYPE_BW)) {
 			flags.type = DEPRESS_PAGE_TYPE_BW;
 			flags.param1 = DEPRESS_PAGE_TYPE_BW_PARAM1_SIMPLE;
+		} else if(!wcscmp(*argsp, DEPRESS_ARG_PAGETYPE_BW_PARAM1_DITHERING)) {
+			if (flags.type == DEPRESS_PAGE_TYPE_BW)
+				flags.param1 = DEPRESS_PAGE_TYPE_BW_PARAM1_DITHERING;
+			else
+				wprintf(L"Warning: argument %ls can be set only with %ls\n", DEPRESS_ARG_PAGETYPE_BW_PARAM1_DITHERING, DEPRESS_ARG_PAGETYPE_BW);
 		} else
 			wprintf(L"Warning: unknown argument %ls\n", *argsp);
 
@@ -100,7 +108,8 @@ int wmain(int argc, wchar_t **argv)
 		wprintf(
 			L"\tdepress [options] input.txt output.djvu\n"
 			L"\t\toptions:\n"
-			L"\t\t\t-bw - create black and white document\n\n"
+			L"\t\t\t" DEPRESS_ARG_PAGETYPE_BW L" - create black and white document\n"
+			L"\t\t\t" DEPRESS_ARG_PAGETYPE_BW_PARAM1_DITHERING L" - use dithering for bw document\n\n"
 		);
 		return 0;
 	}

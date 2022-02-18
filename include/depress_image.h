@@ -33,5 +33,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <stdbool.h>
 
 extern unsigned char *depressLoadImage(FILE *f, int *sizex, int *sizey, int *channels, bool is_bw);
+extern void depressImageApplyErrorDiffusion(unsigned char* buf, int sizex, int sizey);
 
 #endif

@@ -36,7 +36,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <io.h>
 #include <process.h>
 
-bool depressConvertPage(int page_type, wchar_t *inputfile, wchar_t *tempfile, wchar_t *outputfile, depress_djvulibre_paths_type *djvulibre_paths)
+bool depressConvertPage(depress_flags_type flags, wchar_t *inputfile, wchar_t *tempfile, wchar_t *outputfile, depress_djvulibre_paths_type *djvulibre_paths)
 {
 	FILE *f_in = 0, *f_temp = 0;
 	int sizex, sizey, channels;
@@ -49,13 +49,16 @@ bool depressConvertPage(int page_type, wchar_t *inputfile, wchar_t *tempfile, wc
 	if(!f_in || !f_temp)
 		goto EXIT;
 
-	buffer = depressLoadImage(f_in, &sizex, &sizey, &channels, page_type == DEPRESS_PAGE_TYPE_BW);
+	buffer = depressLoadImage(f_in, &sizex, &sizey, &channels, flags.type == DEPRESS_PAGE_TYPE_BW);
 	if(!buffer)
 		goto EXIT;
 
+	if(flags.type == DEPRESS_PAGE_TYPE_BW && flags.param1 == DEPRESS_PAGE_TYPE_BW_PARAM1_ERRDIFF)
+		depressImageApplyErrorDiffusion(buffer, sizex, sizey);
+
 	fclose(f_in); f_in = 0;
 
-	if(page_type == DEPRESS_PAGE_TYPE_BW) {
+	if(flags.type == DEPRESS_PAGE_TYPE_BW) {
 		if(!pbmSave(sizex, sizey, buffer, f_temp))
 			goto EXIT;
 	} else {
@@ -69,7 +72,7 @@ bool depressConvertPage(int page_type, wchar_t *inputfile, wchar_t *tempfile, wc
 	swprintf(arg1, 32770, L"\"%ls\"", tempfile);
 	swprintf(arg2, 32770, L"\"%ls\"", outputfile);
 
-	if(page_type == DEPRESS_PAGE_TYPE_BW) {
+	if(flags.type == DEPRESS_PAGE_TYPE_BW) {
 		swprintf(arg0, 32770, L"\"%ls\"", djvulibre_paths->cjb2_path);
 		if(_wspawnl(_P_WAIT, djvulibre_paths->cjb2_path, arg0, arg1, arg2, 0)) goto EXIT;
 	} else {

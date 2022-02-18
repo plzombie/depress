@@ -31,6 +31,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define STB_IMAGE_IMPLEMENTATION
 #include "third_party/stb_image.h"
 
+
+
 unsigned char *depressLoadImage(FILE *f, int *sizex, int *sizey, int *channels, bool is_bw)
 {
 	unsigned char *buf = 0;
@@ -56,4 +58,26 @@ unsigned char *depressLoadImage(FILE *f, int *sizex, int *sizey, int *channels, 
 	}
 
 	return buf;
+}
+
+void depressImageApplyErrorDiffusion(unsigned char* buf, int sizex, int sizey)
+{
+	int i, j, acc = 0;
+	unsigned char *p;
+
+	if(!buf || sizex <= 0 || sizey <= 0) return;
+
+	p = buf;
+
+	for(i = 0; i < sizey; i++) {
+		for(j = 0; j < sizex; j++) {
+			acc += *p;
+			
+			if(acc >= 255) {
+				acc -= 255;
+				*(p++) = 255;
+			} else
+				*(p++) = 0;
+		}
+	}
 }

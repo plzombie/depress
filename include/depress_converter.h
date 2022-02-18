@@ -30,10 +30,11 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define DEPRESS_CONVERTER_H
 
 #include "depress_paths.h"
+#include "depress_flags.h"
 
 #include <stdbool.h>
 #include <wchar.h>
 
-extern bool depressConvertPage(int page_type, wchar_t *inputfile, wchar_t *tempfile, wchar_t *outputfile, depress_djvulibre_paths_type *djvulibre_paths);
+extern bool depressConvertPage(depress_flags_type flags, wchar_t *inputfile, wchar_t *tempfile, wchar_t *outputfile, depress_djvulibre_paths_type *djvulibre_paths);
 
 #endif

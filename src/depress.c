@@ -44,7 +44,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../include/depress_document.h"
 
 #define DEPRESS_ARG_PAGETYPE_BW L"-bw"
-#define DEPRESS_ARG_PAGETYPE_BW_PARAM1_DITHERING L"-dith"
+#define DEPRESS_ARG_PAGETYPE_BW_PARAM1_ERRDIFF L"-errdiff"
 #define DEPRESS_ARG_PAGETITLEAUTO L"-pta"
 #define DEPRESS_ARG_PAGETITLEAUTO_SHORTNAME L"-shortfntitle"
 
@@ -91,11 +91,11 @@ int wmain(int argc, wchar_t **argv)
 		if(!wcscmp(*argsp, DEPRESS_ARG_PAGETYPE_BW)) {
 			flags.type = DEPRESS_PAGE_TYPE_BW;
 			flags.param1 = DEPRESS_PAGE_TYPE_BW_PARAM1_SIMPLE;
-		} else if(!wcscmp(*argsp, DEPRESS_ARG_PAGETYPE_BW_PARAM1_DITHERING)) {
+		} else if(!wcscmp(*argsp, DEPRESS_ARG_PAGETYPE_BW_PARAM1_ERRDIFF)) {
 			if (flags.type == DEPRESS_PAGE_TYPE_BW)
-				flags.param1 = DEPRESS_PAGE_TYPE_BW_PARAM1_DITHERING;
+				flags.param1 = DEPRESS_PAGE_TYPE_BW_PARAM1_ERRDIFF;
 			else
-				wprintf(L"Warning: argument %ls can be set only with %ls\n", DEPRESS_ARG_PAGETYPE_BW_PARAM1_DITHERING, DEPRESS_ARG_PAGETYPE_BW);
+				wprintf(L"Warning: argument %ls can be set only with %ls\n", DEPRESS_ARG_PAGETYPE_BW_PARAM1_ERRDIFF, DEPRESS_ARG_PAGETYPE_BW);
 		} else if(!wcscmp(*argsp, DEPRESS_ARG_PAGETITLEAUTO)) {
 			document.page_title_type = DEPRESS_DOCUMENT_PAGE_TITLE_TYPE_AUTOMATIC;
 		} else if(!wcscmp(*argsp, DEPRESS_ARG_PAGETITLEAUTO_SHORTNAME)) {
@@ -111,7 +111,7 @@ int wmain(int argc, wchar_t **argv)
 			L"\tdepress [options] input.txt output.djvu\n"
 			L"\t\toptions:\n"
 			L"\t\t\t" DEPRESS_ARG_PAGETYPE_BW L" - create black and white document\n"
-			L"\t\t\t" DEPRESS_ARG_PAGETYPE_BW_PARAM1_DITHERING L" - use dithering for bw document\n"
+			L"\t\t\t" DEPRESS_ARG_PAGETYPE_BW_PARAM1_ERRDIFF L" - use error diffusion for bw document\n"
 			L"\t\t\t" DEPRESS_ARG_PAGETITLEAUTO L" - use file name as page title\n"
 			L"\t\t\t" DEPRESS_ARG_PAGETITLEAUTO_SHORTNAME L" - use short file name as page title (when using previous)\n\n"
 		);

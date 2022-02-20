@@ -140,34 +140,16 @@ bool depressDocumentRunTasks(depress_document_type *document)
 	document->threads = malloc(sizeof(HANDLE) * document->threads_num);
 	document->thread_args = malloc(sizeof(depress_thread_arg_type) * document->threads_num);
 	if(!document->threads || !document->thread_args) {
-		if(document->threads) {
-			free(document->threads);
-			document->threads = 0;
-		}
-		if(document->thread_args) {
-			free(document->thread_args);
-			document->thread_args = 0;
-		}
-		depressDestroyTasks(document->tasks, document->tasks_num);
-		depressDestroyTempFolder(document->temp_path);
-
 		wprintf(L"Can't allocate memory\n");
 
-		return false;
+		goto LABEL_ERROR;
 	}
 
 	document->global_error_event = CreateEventW(NULL, TRUE, FALSE, NULL);
 	if(document->global_error_event == NULL) {
-		free(document->threads);
-		free(document->thread_args);
-		document->threads = 0;
-		document->thread_args = 0;
-		depressDestroyTasks(document->tasks, document->tasks_num);
-		depressDestroyTempFolder(document->temp_path);
-
 		wprintf(L"Can't create event\n");
 
-		return false;
+		goto LABEL_ERROR;
 	}
 
 	for(i = 0; i < document->threads_num; i++) {
@@ -179,7 +161,7 @@ bool depressDocumentRunTasks(depress_document_type *document)
 		document->thread_args[i].global_error_event = document->global_error_event;
 
 		document->threads[i] = (HANDLE)_beginthreadex(0, 0, depressThreadProc, document->thread_args + i, 0, 0);
-		if(!document->threads[i]) {
+		if(document->threads[i] == INVALID_HANDLE_VALUE) {
 			int j;
 
 			WaitForMultipleObjects(i, document->threads, TRUE, INFINITE);
@@ -203,6 +185,21 @@ bool depressDocumentRunTasks(depress_document_type *document)
 	}
 
 	return success;
+
+LABEL_ERROR:
+
+	if(document->threads) {
+		free(document->threads);
+		document->threads = 0;
+	}
+	if(document->thread_args) {
+		free(document->thread_args);
+		document->thread_args = 0;
+	}
+	depressDestroyTasks(document->tasks, document->tasks_num);
+	depressDestroyTempFolder(document->temp_path);
+
+	return false;
 }
 
 bool depressDocumentProcessTasks(depress_document_type *document)

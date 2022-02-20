@@ -61,8 +61,17 @@ typedef struct {
 	// Final flags
 	int page_title_type;
 	unsigned int page_title_type_flags;
+	// Paths
+	wchar_t temp_path[32768];
+	wchar_t *output_file;
+	// Handles
+	HANDLE global_error_event;
 } depress_document_type;
 
-bool depressDocumentFinalize(depress_document_type *document, wchar_t *fname);
+extern bool depressDocumentInit(depress_document_type *document);
+extern bool depressDocumentDestroy(depress_document_type *document);
+extern bool depressDocumentRunTasks(depress_document_type *document);
+extern bool depressDocumentProcessTasks(depress_document_type *document);
+extern bool depressDocumentFinalize(depress_document_type *document);
 
 #endif

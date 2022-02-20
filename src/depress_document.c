@@ -28,6 +28,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "../include/depress_document.h"
 
+#include <process.h>
 #include <stdio.h>
 
 static depressDocumentGetTitleFromFilename(wchar_t* fname, char* title, bool use_full_name)
@@ -93,7 +94,175 @@ static depressDocumentGetTitleFromFilename(wchar_t* fname, char* title, bool use
 	}
 }
 
-bool depressDocumentFinalize(depress_document_type *document, wchar_t *fname)
+bool depressDocumentInit(depress_document_type *document)
+{
+	memset(document, 0, sizeof(depress_document_type));
+	
+	document->global_error_event = INVALID_HANDLE_VALUE;
+
+	document->page_title_type = DEPRESS_DOCUMENT_PAGE_TITLE_TYPE_NO;
+
+	// Get paths to djvulibre files
+	if(!depressGetDjvulibrePaths(&document->djvulibre_paths)) {
+		wprintf(L"Can't find djvulibre files\n");
+
+		return false;
+	}
+
+	if(!depressGetTempFolder(document->temp_path)) {
+		wprintf(L"Can't get path for temporary files\n");
+
+		return false;
+	}
+
+	return true;
+}
+
+bool depressDocumentDestroy(depress_document_type *document)
+{
+	depressDestroyTempFolder(document->temp_path);
+
+	return true;
+}
+
+bool depressDocumentRunTasks(depress_document_type *document)
+{
+	int i;
+	bool success = true;
+
+	if(document->tasks == 0)
+		return false;
+
+	document->threads_num = depressGetNumberOfThreads();
+	if(document->threads_num <= 0) document->threads_num = 1;
+	if(document->threads_num > 64) document->threads_num = 64;
+
+	document->threads = malloc(sizeof(HANDLE) * document->threads_num);
+	document->thread_args = malloc(sizeof(depress_thread_arg_type) * document->threads_num);
+	if(!document->threads || !document->thread_args) {
+		if(document->threads) {
+			free(document->threads);
+			document->threads = 0;
+		}
+		if(document->thread_args) {
+			free(document->thread_args);
+			document->thread_args = 0;
+		}
+		depressDestroyTasks(document->tasks, document->tasks_num);
+		depressDestroyTempFolder(document->temp_path);
+
+		wprintf(L"Can't allocate memory\n");
+
+		return false;
+	}
+
+	document->global_error_event = CreateEventW(NULL, TRUE, FALSE, NULL);
+	if(document->global_error_event == NULL) {
+		free(document->threads);
+		free(document->thread_args);
+		document->threads = 0;
+		document->thread_args = 0;
+		depressDestroyTasks(document->tasks, document->tasks_num);
+		depressDestroyTempFolder(document->temp_path);
+
+		wprintf(L"Can't create event\n");
+
+		return false;
+	}
+
+	for(i = 0; i < document->threads_num; i++) {
+		document->thread_args[i].tasks = document->tasks;
+		document->thread_args[i].djvulibre_paths = &document->djvulibre_paths;
+		document->thread_args[i].tasks_num = document->tasks_num;
+		document->thread_args[i].thread_id = i;
+		document->thread_args[i].threads_num = document->threads_num;
+		document->thread_args[i].global_error_event = document->global_error_event;
+
+		document->threads[i] = (HANDLE)_beginthreadex(0, 0, depressThreadProc, document->thread_args + i, 0, 0);
+		if(!document->threads[i]) {
+			int j;
+
+			WaitForMultipleObjects(i, document->threads, TRUE, INFINITE);
+
+			for (j = 0; j < i; j++)
+				CloseHandle(document->threads[j]);
+
+			fclose(document->global_error_event);
+			document->global_error_event = INVALID_HANDLE_VALUE;
+
+			free(document->threads);
+			document->threads = 0;
+
+			free(document->thread_args);
+			document->thread_args = 0;
+
+			success = false;
+
+			break;
+		}
+	}
+
+	return success;
+}
+
+bool depressDocumentProcessTasks(depress_document_type *document)
+{
+	bool success = true;
+	size_t filecount = 0;
+	int i;
+	wchar_t arg0[32770], arg1[32770], arg2[32770];
+
+	if(document->tasks == 0 || document->threads == 0 || document->thread_args == 0)
+		return false;
+
+	swprintf(arg1, 32770, L"\"%ls\"", document->output_file);
+
+	for(filecount = 0; filecount < document->tasks_num; filecount++) {
+		if(success)
+			if(WaitForSingleObject(document->global_error_event, 0) == WAIT_OBJECT_0)
+				success = false;
+
+		while(WaitForSingleObject(document->tasks[filecount].finished, INFINITE) != WAIT_OBJECT_0);
+
+		if(!document->tasks[filecount].is_completed)
+			continue;
+
+		if(document->tasks[filecount].is_error) {
+			wprintf(L"Error while converting file \"%ls\"\n", document->tasks[filecount].inputfile);
+			success = false;
+		}
+		else {
+			if(success && filecount > 0) {
+				wprintf(L"Merging file \"%ls\"\n", document->tasks[filecount].inputfile);
+
+				swprintf(arg2, 32770, L"\"%ls\"", document->tasks[filecount].outputfile);
+				swprintf(arg0, 32770, L"\"%ls\"", document->djvulibre_paths.djvm_path);
+
+				if(_wspawnl(_P_WAIT, document->djvulibre_paths.djvm_path, arg0, L"-i", arg1, arg2, 0)) {
+					wprintf(L"Can't merge djvu files\n");
+					success = false;
+				}
+			}
+			if(filecount > 0)
+				if(!_waccess(document->tasks[filecount].outputfile, 06))
+					_wremove(document->tasks[filecount].outputfile);
+		}
+	}
+
+	WaitForMultipleObjects(document->threads_num, document->threads, TRUE, INFINITE);
+
+	for(i = 0; i < document->threads_num; i++)
+		CloseHandle(document->threads[i]);
+
+	free(document->threads);
+	free(document->thread_args);
+	document->threads = 0;
+	document->thread_args = 0;
+
+	return success;
+}
+
+bool depressDocumentFinalize(depress_document_type *document)
 {
 	FILE *djvused;
 	wchar_t opencommand[65622]; //2(whole brackets)+32768+2(brackets)+32768+2(brackets)+80(must be enough for commands)
@@ -102,7 +271,7 @@ bool depressDocumentFinalize(depress_document_type *document, wchar_t *fname)
 	if(document->page_title_type == DEPRESS_DOCUMENT_PAGE_TITLE_TYPE_NO) // Check if there are some post processing
 		return true; // Nothing to be done
 
-	swprintf(opencommand, 65622, L"\"\"%ls\" %ls\"", document->djvulibre_paths.djvused_path, fname);
+	swprintf(opencommand, 65622, L"\"\"%ls\" \"%ls\"\"", document->djvulibre_paths.djvused_path, document->output_file);
 
 	djvused = _wpopen(opencommand, L"wt");
 	if(!djvused)

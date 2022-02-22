@@ -28,10 +28,11 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "../include/depress_document.h"
 
+#include <io.h>
 #include <process.h>
 #include <stdio.h>
 
-static depressDocumentGetTitleFromFilename(wchar_t* fname, char* title, bool use_full_name)
+static void depressDocumentGetTitleFromFilename(wchar_t* fname, char* title, bool use_full_name)
 {
 	wchar_t temp[32768];
 	char *p;

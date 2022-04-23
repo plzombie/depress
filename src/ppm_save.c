@@ -63,32 +63,36 @@ bool ppmSave(unsigned int sizex, unsigned int sizey, unsigned int channels, unsi
 bool pbmSave(unsigned int sizex, unsigned int sizey, unsigned char *buf, FILE *f)
 {
 	unsigned char *filebuf, *p, b;
-	size_t filesize, i, j;
+	size_t fileline, filesize, i, j, k;
 
 	if(sizex == 0 || sizey == 0) return false;
 	if(!buf || !f) return false;
-	if((SIZE_MAX / sizey) <= sizex) return false;
 
-	filesize = (size_t)sizex*(size_t)sizey/8;
-	if(((size_t)sizex*(size_t)sizey)%8 > 0)
-		filesize++;
+	fileline = (size_t)sizex/8;
+	if((size_t)sizex%8 > 0) fileline++;
+	
+	if((SIZE_MAX / sizey) <= fileline) return false;
+	
+	filesize = fileline*(size_t)sizey;
 
 	filebuf = malloc(filesize);
 	if(!filebuf) return false;
 
-	j = 0;
-	b = 0;
 	p = filebuf;
-	for(i = 0; i < (size_t)sizex*(size_t)sizey; i++, j++) {
-		if(j == 8) {
-			j = 0;
-			*(p++) = b;
-			b = 0;
+	for(i = 0; i < (size_t)sizey; i++) {
+		k = 0;
+		b = 0;
+		for(j = 0; j < (size_t)sizex; j++, k++) {
+			if(k == 8) {
+				k = 0;
+				*(p++) = b;
+				b = 0;
+			}
+			if(buf[i*sizex+j] < 128)
+				b |= 1<<(7-k);
 		}
-		if(buf[i] < 128)
-			b |= 1<<(7-j);
-	}
-	if(j == 8) *p = b;
+		if(k > 0) *(p++) = b;
+	}	
 
 	fprintf(f, "P4\n%u %u\n", sizex, sizey);
 	fwrite(filebuf, filesize, 1, f);

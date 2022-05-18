@@ -31,6 +31,46 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <stdio.h>
 #include <stdlib.h>
 
+bool depressAddTask(depress_task_type *task, depress_task_type **tasks_out, size_t *tasks_num_out, size_t *tasks_max_out)
+{
+	depress_task_type *tasks = 0;
+	size_t tasks_num, tasks_max = 0;
+
+	tasks = *tasks_out;
+	tasks_num = *tasks_num_out;
+	tasks_max = *tasks_max_out;
+
+	if(tasks_max == 0) {
+		tasks = malloc(sizeof(depress_task_type) * 2);
+		if(tasks) {
+			tasks_max = 2;
+		}
+		else {
+			return false;
+		}
+	} else if(tasks_num == tasks_max) {
+		depress_task_type *_tasks;
+		size_t _tasks_max;
+
+		_tasks_max = tasks_max * 2;
+		_tasks = realloc(tasks, _tasks_max * sizeof(depress_task_type));
+		if(!_tasks) {
+			return false;
+		}
+		tasks = _tasks;
+		tasks_max = _tasks_max;
+	}
+
+	tasks[tasks_num] = *task;
+	tasks_num++;
+
+	*tasks_out = tasks;
+	*tasks_num_out = tasks_num;
+	*tasks_max_out = tasks_max;
+
+	return true;
+}
+
 bool depressCreateTasks(wchar_t *textfile, wchar_t *textfilepath, wchar_t *outputfile, wchar_t *temppath, depress_flags_type flags, depress_task_type **tasks_out, size_t *tasks_num_out, size_t *tasks_max_out)
 {
 	FILE *f;
@@ -39,9 +79,11 @@ bool depressCreateTasks(wchar_t *textfile, wchar_t *textfilepath, wchar_t *outpu
 	wchar_t tempstr[32];
 	depress_task_type *tasks = 0;
 	size_t tasks_num = 0, tasks_max = 0;
+	depress_task_type task;
 
 	*tasks_out = 0;
 	*tasks_num_out = 0;
+	*tasks_max_out = 0;
 
 #ifdef _MSC_VER
 	f = _wfopen(textfile, L"rt, ccs=UTF-8");
@@ -52,35 +94,6 @@ bool depressCreateTasks(wchar_t *textfile, wchar_t *textfilepath, wchar_t *outpu
 
 	while(1) {
 		wchar_t *eol;
-
-		if(tasks_max == 0) {
-			tasks = malloc(sizeof(depress_task_type) * 2);
-			if(tasks) {
-				tasks_max = 2;
-			}
-			else {
-				return false;
-			}
-		}
-		else if(tasks_num == tasks_max) {
-			depress_task_type *_tasks;
-			size_t _tasks_max;
-
-			_tasks_max = tasks_max * 2;
-			_tasks = realloc(tasks, _tasks_max * sizeof(depress_task_type));
-			if(!_tasks) {
-				size_t i;
-
-				for(i = 0; i < tasks_num; i++)
-					CloseHandle(tasks[i].finished);
-					
-				free(tasks);
-
-				return false;
-			}
-			tasks = _tasks;
-			tasks_max = _tasks_max;
-		}
 
 		// Reading line
 		if(!fgetws(inputfile, 32770, f)) {
@@ -115,7 +128,7 @@ bool depressCreateTasks(wchar_t *textfile, wchar_t *textfilepath, wchar_t *outpu
 			continue;
 
 		// Adding textfile path to inputfile
-		task_inputfile_length = SearchPathW(textfilepath, inputfile, NULL, 32768, tasks[tasks_num].inputfile, NULL);
+		task_inputfile_length = SearchPathW(textfilepath, inputfile, NULL, 32768, task.inputfile, NULL);
 		if(task_inputfile_length > 32768 || task_inputfile_length == 0) {
 			size_t i;
 
@@ -130,22 +143,22 @@ bool depressCreateTasks(wchar_t *textfile, wchar_t *textfilepath, wchar_t *outpu
 		// Filling task
 
 		swprintf(tempstr, 32, L"\\temp%lld.ppm", (long long)tasks_num);
-		wcscpy(tasks[tasks_num].tempfile, temppath);
-		wcscat(tasks[tasks_num].tempfile, tempstr);
+		wcscpy(task.tempfile, temppath);
+		wcscat(task.tempfile, tempstr);
 		if(tasks_num == 0)
-			wcscpy(tasks[tasks_num].outputfile, outputfile);
+			wcscpy(task.outputfile, outputfile);
 		else {
 			swprintf(tempstr, 32, L"\\temp%lld.djvu", (long long)tasks_num);
-			wcscpy(tasks[tasks_num].outputfile, temppath);
-			wcscat(tasks[tasks_num].outputfile, tempstr);
+			wcscpy(task.outputfile, temppath);
+			wcscat(task.outputfile, tempstr);
 		}
 
-		tasks[tasks_num].flags = flags;
-		tasks[tasks_num].is_error = false;
-		tasks[tasks_num].is_completed = false;
+		task.flags = flags;
+		task.is_error = false;
+		task.is_completed = false;
 
-		tasks[tasks_num].finished = CreateEvent(NULL, TRUE, FALSE, NULL);
-		if(!tasks[tasks_num].finished) {
+		task.finished = CreateEvent(NULL, TRUE, FALSE, NULL);
+		if(!task.finished) {
 			size_t i;
 
 			for(i = 0; i < tasks_num; i++)
@@ -156,7 +169,16 @@ bool depressCreateTasks(wchar_t *textfile, wchar_t *textfilepath, wchar_t *outpu
 			return false;
 		}
 
-		tasks_num++;
+		if(!depressAddTask(&task, &tasks, &tasks_num, &tasks_max)) {
+			size_t i;
+
+			for(i = 0; i < tasks_num; i++)
+				CloseHandle(tasks[i].finished);
+
+			free(tasks);
+
+			return false;
+		}
 	}
 
 	if(tasks_num == 0 && tasks_max > 0) {

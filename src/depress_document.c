@@ -178,6 +178,8 @@ bool depressDocumentRunTasks(depress_document_type *document)
 		if(document->threads[i] == INVALID_HANDLE_VALUE) {
 			int j;
 
+			wprintf(L"Can't create thread\n");
+
 			WaitForMultipleObjects(i, document->threads, TRUE, INFINITE);
 
 			for (j = 0; j < i; j++)
@@ -316,3 +318,119 @@ depress_document_final_flags_type depressDocumentGetFinalFlags(depress_document_
 {
 	return document->final_flags;
 }
+
+bool depressDocumentCreateTasksFromTextFile(depress_document_type* document, wchar_t *textfile, wchar_t *textfilepath, wchar_t *outputfile, wchar_t *temppath, depress_flags_type flags)
+{
+	FILE *f;
+	size_t task_inputfile_length;
+	wchar_t inputfile[32770];
+	wchar_t tempstr[32];
+	depress_task_type *tasks = 0;
+	size_t tasks_num = 0, tasks_max = 0;
+	depress_task_type task;
+
+	if(document->tasks)
+		depressDestroyTasks(document->tasks, document->tasks_num);
+
+	document->tasks = 0;
+	document->tasks_num = 0;
+	document->tasks_max = 0;
+
+#ifdef _MSC_VER
+	f = _wfopen(textfile, L"rt, ccs=UTF-8");
+#else
+	f = _wfopen(textfile, L"rt");
+#endif
+	if(!f) return false;
+
+	while(1) {
+		wchar_t *eol;
+
+		// Reading line
+		if(!fgetws(inputfile, 32770, f)) {
+			if(feof(f))
+				break;
+			else {
+				size_t i;
+
+				for(i = 0; i < tasks_num; i++)
+					CloseHandle(tasks[i].finished);
+						
+				free(tasks);
+
+				return false;
+			}
+		}
+		if(wcslen(inputfile) == 32769) {
+			size_t i;
+
+			for(i = 0; i < tasks_num; i++)
+				CloseHandle(tasks[i].finished);
+				
+			free(tasks);
+
+			return false;
+		}
+
+		eol = wcsrchr(inputfile, '\n');
+		if(eol) *eol = 0;
+
+		if(*inputfile == 0)
+			continue;
+
+		// Adding textfile path to inputfile
+		task_inputfile_length = SearchPathW(textfilepath, inputfile, NULL, 32768, task.inputfile, NULL);
+		if(task_inputfile_length > 32768 || task_inputfile_length == 0) {
+			size_t i;
+
+			for(i = 0; i < tasks_num; i++)
+				CloseHandle(tasks[i].finished);
+				
+			free(tasks);
+
+			return false;
+		}
+
+		// Filling task
+
+		swprintf(tempstr, 32, L"\\temp%lld.ppm", (long long)tasks_num);
+		wcscpy(task.tempfile, temppath);
+		wcscat(task.tempfile, tempstr);
+		if(tasks_num == 0)
+			wcscpy(task.outputfile, outputfile);
+		else {
+			swprintf(tempstr, 32, L"\\temp%lld.djvu", (long long)tasks_num);
+			wcscpy(task.outputfile, temppath);
+			wcscat(task.outputfile, tempstr);
+		}
+
+		task.flags = flags;
+
+		if(!depressAddTask(&task, &tasks, &tasks_num, &tasks_max)) {
+			size_t i;
+
+			for(i = 0; i < tasks_num; i++)
+				CloseHandle(tasks[i].finished);
+
+			free(tasks);
+
+			return false;
+		}
+	}
+
+	if(tasks_num == 0 && tasks_max > 0) {
+		free(tasks);
+		tasks = 0;
+		tasks_max = 0;
+	}
+
+	document->output_file = outputfile;
+	document->tasks = tasks;
+	document->tasks_num = tasks_num;
+	document->tasks_max = tasks_max;
+
+	fclose(f);
+
+	return true;
+}
+

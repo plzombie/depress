@@ -35,6 +35,7 @@ bool depressAddTask(depress_task_type *task, depress_task_type **tasks_out, size
 {
 	depress_task_type *tasks = 0;
 	size_t tasks_num, tasks_max = 0;
+	bool success = true;
 
 	tasks = *tasks_out;
 	tasks_num = *tasks_num_out;
@@ -61,138 +62,26 @@ bool depressAddTask(depress_task_type *task, depress_task_type **tasks_out, size
 		tasks_max = _tasks_max;
 	}
 
+
 	tasks[tasks_num] = *task;
-	tasks_num++;
+	tasks[tasks_num].is_error = false;
+	tasks[tasks_num].is_completed = false;
+
+	tasks[tasks_num].finished = CreateEventW(NULL, TRUE, FALSE, NULL);
+	if(!tasks[tasks_num].finished)
+		success = false;
+
+	if(success)
+		tasks_num++;
 
 	*tasks_out = tasks;
 	*tasks_num_out = tasks_num;
 	*tasks_max_out = tasks_max;
 
-	return true;
-}
-
-bool depressCreateTasks(wchar_t *textfile, wchar_t *textfilepath, wchar_t *outputfile, wchar_t *temppath, depress_flags_type flags, depress_task_type **tasks_out, size_t *tasks_num_out, size_t *tasks_max_out)
-{
-	FILE *f;
-	size_t task_inputfile_length;
-	wchar_t inputfile[32770];
-	wchar_t tempstr[32];
-	depress_task_type *tasks = 0;
-	size_t tasks_num = 0, tasks_max = 0;
-	depress_task_type task;
-
-	*tasks_out = 0;
-	*tasks_num_out = 0;
-	*tasks_max_out = 0;
-
-#ifdef _MSC_VER
-	f = _wfopen(textfile, L"rt, ccs=UTF-8");
-#else
-	f = _wfopen(textfile, L"rt");
-#endif
-	if(!f) return false;
-
-	while(1) {
-		wchar_t *eol;
-
-		// Reading line
-		if(!fgetws(inputfile, 32770, f)) {
-			if(feof(f))
-				break;
-			else {
-				size_t i;
-
-				for(i = 0; i < tasks_num; i++)
-					CloseHandle(tasks[i].finished);
-						
-				free(tasks);
-
-				return false;
-			}
-		}
-		if(wcslen(inputfile) == 32769) {
-			size_t i;
-
-			for(i = 0; i < tasks_num; i++)
-				CloseHandle(tasks[i].finished);
-				
-			free(tasks);
-
-			return false;
-		}
-
-		eol = wcsrchr(inputfile, '\n');
-		if(eol) *eol = 0;
-
-		if(*inputfile == 0)
-			continue;
-
-		// Adding textfile path to inputfile
-		task_inputfile_length = SearchPathW(textfilepath, inputfile, NULL, 32768, task.inputfile, NULL);
-		if(task_inputfile_length > 32768 || task_inputfile_length == 0) {
-			size_t i;
-
-			for(i = 0; i < tasks_num; i++)
-				CloseHandle(tasks[i].finished);
-				
-			free(tasks);
-
-			return false;
-		}
-
-		// Filling task
-
-		swprintf(tempstr, 32, L"\\temp%lld.ppm", (long long)tasks_num);
-		wcscpy(task.tempfile, temppath);
-		wcscat(task.tempfile, tempstr);
-		if(tasks_num == 0)
-			wcscpy(task.outputfile, outputfile);
-		else {
-			swprintf(tempstr, 32, L"\\temp%lld.djvu", (long long)tasks_num);
-			wcscpy(task.outputfile, temppath);
-			wcscat(task.outputfile, tempstr);
-		}
-
-		task.flags = flags;
-		task.is_error = false;
-		task.is_completed = false;
-
-		task.finished = CreateEvent(NULL, TRUE, FALSE, NULL);
-		if(!task.finished) {
-			size_t i;
-
-			for(i = 0; i < tasks_num; i++)
-				CloseHandle(tasks[i].finished);
-
-			free(tasks);
-
-			return false;
-		}
-
-		if(!depressAddTask(&task, &tasks, &tasks_num, &tasks_max)) {
-			size_t i;
-
-			for(i = 0; i < tasks_num; i++)
-				CloseHandle(tasks[i].finished);
-
-			free(tasks);
-
-			return false;
-		}
-	}
-
-	if(tasks_num == 0 && tasks_max > 0) {
-		free(tasks);
-		tasks = 0;
-	}
-
-	*tasks_out = tasks;
-	*tasks_num_out = tasks_num;
-	*tasks_max_out = tasks_max;
-
-	fclose(f);
-
-	return true;
+	if(success)
+		return true;
+	else
+		return false;
 }
 
 void depressDestroyTasks(depress_task_type *tasks, size_t tasks_num)

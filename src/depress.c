@@ -145,19 +145,17 @@ int wmain(int argc, wchar_t **argv)
 
 	depressDocumentSetFinalFlags(&document, final_flags);
 
-	document.output_file = *(argsp + 1);
-
 	// Creating task list from file
 	wprintf(L"Opening list: \"%ls\"\n", text_list_filename);
 
-	if(!depressCreateTasks(text_list_filename, text_list_path, *(argsp + 1), document.temp_path, flags, &document.tasks, &document.tasks_num, &document.tasks_max)) {
+	if(!depressDocumentCreateTasksFromTextFile(&document, text_list_filename, text_list_path, *(argsp + 1), document.temp_path, flags)) {
 		wprintf(L"Can't create files list\n");
 
 		depressDocumentDestroy(&document);
 
 		return 0;
 	}
-
+	
 	success = depressDocumentRunTasks(&document);
 
 	// Creating djvu

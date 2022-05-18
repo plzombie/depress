@@ -80,5 +80,6 @@ extern bool depressDocumentProcessTasks(depress_document_type *document);
 extern bool depressDocumentFinalize(depress_document_type *document);
 extern void depressDocumentSetFinalFlags(depress_document_type *document, depress_document_final_flags_type final_flags);
 extern depress_document_final_flags_type depressDocumentGetFinalFlags(depress_document_type *document);
+extern bool depressDocumentCreateTasksFromTextFile(depress_document_type* document, wchar_t *textfile, wchar_t *textfilepath, wchar_t *outputfile, wchar_t *temppath, depress_flags_type flags);
 
 #endif

@@ -125,12 +125,18 @@ bool depressDocumentDestroy(depress_document_type *document)
 	
 	if(document->tasks) {
 		depressDestroyTasks(document->tasks, document->tasks_num);
+		
+		free(document->tasks);
+		
 		document->tasks = 0;
 		document->tasks_num = document->tasks_max = 0;
 	}
 	
-	if(document->global_error_event != INVALID_HANDLE_VALUE)
+	if(document->global_error_event != INVALID_HANDLE_VALUE) {
 		CloseHandle(document->global_error_event);
+		
+		document->global_error_event = INVALID_HANDLE_VALUE;
+	}
 
 	return true;
 }

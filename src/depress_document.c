@@ -375,33 +375,10 @@ bool depressDocumentCreateTasksFromTextFile(depress_document_type *document, wch
 		if(!fgetws(inputfile, 32770, f)) {
 			if(feof(f))
 				break;
-			else {
-				size_t i;
-
-				for(i = 0; i < document->tasks_num; i++)
-					CloseHandle(document->tasks[i].finished);
-						
-				free(document->tasks);
-
-				document->tasks = 0;
-				document->tasks_num = document->tasks_max = 0;
-
-				return false;
-			}
+			else 
+				goto LABEL_ERROR;
 		}
-		if(wcslen(inputfile) == 32769) {
-			size_t i;
-
-			for(i = 0; i < document->tasks_num; i++)
-				CloseHandle(document->tasks[i].finished);
-				
-			free(document->tasks);
-
-			document->tasks = 0;
-			document->tasks_num = document->tasks_max = 0;
-
-			return false;
-		}
+		if(wcslen(inputfile) == 32769) goto LABEL_ERROR;
 
 		eol = wcsrchr(inputfile, '\n');
 		if(eol) *eol = 0;
@@ -411,42 +388,30 @@ bool depressDocumentCreateTasksFromTextFile(depress_document_type *document, wch
 
 		// Adding textfile path to inputfile
 		task_inputfile_length = SearchPathW(textfilepath, inputfile, NULL, 32768, inputfile_fullname, NULL);
-		if(task_inputfile_length > 32768 || task_inputfile_length == 0) {
-			size_t i;
+		if(task_inputfile_length > 32768 || task_inputfile_length == 0) goto LABEL_ERROR;
 
-			for(i = 0; i < document->tasks_num; i++)
-				CloseHandle(document->tasks[i].finished);
-				
-			free(document->tasks);
-
-			document->tasks = 0;
-			document->tasks_num = document->tasks_max = 0;
-
-			return false;
-		}
-
-		if(!depressDocumentAddTask(document, inputfile_fullname, flags)) {
-			size_t i;
-
-			for(i = 0; i < document->tasks_num; i++)
-				CloseHandle(document->tasks[i].finished);
-
-			free(document->tasks);
-			document->tasks = 0;
-			document->tasks_num = document->tasks_max = 0;
-
-			return false;
-		}
-	}
-
-	if(document->tasks_num == 0 && document->tasks_max > 0) {
-		free(document->tasks);
-		document->tasks = 0;
-		document->tasks_max = 0;
+		if(!depressDocumentAddTask(document, inputfile_fullname, flags)) goto LABEL_ERROR;
 	}
 
 	fclose(f);
 
 	return true;
+
+LABEL_ERROR:
+
+	{
+		size_t i;
+
+		for (i = 0; i < document->tasks_num; i++)
+			CloseHandle(document->tasks[i].finished);
+	}
+
+	free(document->tasks);
+
+	document->tasks = 0;
+	document->tasks_num = document->tasks_max = 0;
+	document->output_file = 0;
+
+	return false;
 }
 

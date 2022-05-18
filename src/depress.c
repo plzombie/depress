@@ -63,10 +63,6 @@ int wmain(int argc, wchar_t **argv)
 	memset(&flags, 0, sizeof(depress_flags_type));
 	flags.type = DEPRESS_PAGE_TYPE_COLOR;
 
-	// Initialize document
-	if(!depressDocumentInit(&document))
-		return 0;
-
 	setlocale(LC_ALL, "");
 
 #ifdef _MSC_VER
@@ -112,8 +108,6 @@ int wmain(int argc, wchar_t **argv)
 			L"\t\t\t" DEPRESS_ARG_PAGETITLEAUTO_SHORTNAME L" - use short file name as page title (when using previous)\n\n"
 		);
 
-		depressDocumentDestroy(&document);
-
 		return 0;
 	}
 
@@ -121,8 +115,6 @@ int wmain(int argc, wchar_t **argv)
 
 	if(wcslen(*(argsp + 1)) > 32767) {
 		wprintf(L"Error: output file name is too long\n");
-
-		depressDocumentDestroy(&document);
 
 		return 0;
 	}
@@ -132,14 +124,10 @@ int wmain(int argc, wchar_t **argv)
 	if(!text_list_fn_length) {
 		wprintf(L"Can't find files list\n");
 
-		depressDocumentDestroy(&document);
-
 		return 0;
 	}
 	if(text_list_fn_length > 32768) {
 		wprintf(L"Error: path for files list is too long\n");
-
-		depressDocumentDestroy(&document);
 
 		return 0;
 	}
@@ -150,12 +138,16 @@ int wmain(int argc, wchar_t **argv)
 	// Enabling safe search mode
 	SetSearchPathMode(BASE_SEARCH_PATH_ENABLE_SAFE_SEARCHMODE | BASE_SEARCH_PATH_PERMANENT);
 
+	// Initialize document
+	if(!depressDocumentInit(&document))
+		return 0;
+
 	document.output_file = *(argsp + 1);
 
 	// Creating task list from file
 	wprintf(L"Opening list: \"%ls\"\n", text_list_filename);
 
-	if(!depressCreateTasks(text_list_filename, text_list_path, *(argsp + 1), document.temp_path, flags, &document.tasks, &document.tasks_num)) {
+	if(!depressCreateTasks(text_list_filename, text_list_path, *(argsp + 1), document.temp_path, flags, &document.tasks, &document.tasks_num, &document.tasks_max)) {
 		wprintf(L"Can't create files list\n");
 
 		depressDocumentDestroy(&document);
@@ -176,16 +168,12 @@ int wmain(int argc, wchar_t **argv)
 
 	depressDocumentDestroy(&document);
 
-	CloseHandle(document.global_error_event);
-
 	if(!success) {
 		wprintf(L"Can't create djvu file\n");
 		if(!_waccess(*(argsp + 1), 06))
 			_wremove(*(argsp + 1));
 	} else
 		wprintf(L"Converted in %f s\n", (float)(clock()-time_start)/CLOCKS_PER_SEC);
-
-	depressDestroyTasks(document.tasks, document.tasks_num);
 
 	return 0;
 }

@@ -31,7 +31,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <stdio.h>
 #include <stdlib.h>
 
-bool depressCreateTasks(wchar_t *textfile, wchar_t *textfilepath, wchar_t *outputfile, wchar_t *temppath, depress_flags_type flags, depress_task_type **tasks_out, size_t *tasks_num_out)
+bool depressCreateTasks(wchar_t *textfile, wchar_t *textfilepath, wchar_t *outputfile, wchar_t *temppath, depress_flags_type flags, depress_task_type **tasks_out, size_t *tasks_num_out, size_t *tasks_max_out)
 {
 	FILE *f;
 	size_t task_inputfile_length;
@@ -166,6 +166,7 @@ bool depressCreateTasks(wchar_t *textfile, wchar_t *textfilepath, wchar_t *outpu
 
 	*tasks_out = tasks;
 	*tasks_num_out = tasks_num;
+	*tasks_max_out = tasks_max;
 
 	fclose(f);
 

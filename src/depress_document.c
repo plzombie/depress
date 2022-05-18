@@ -122,6 +122,15 @@ bool depressDocumentInit(depress_document_type *document)
 bool depressDocumentDestroy(depress_document_type *document)
 {
 	depressDestroyTempFolder(document->temp_path);
+	
+	if(document->tasks) {
+		depressDestroyTasks(document->tasks, document->tasks_num);
+		document->tasks = 0;
+		document->tasks_num = document->tasks_max = 0;
+	}
+	
+	if(document->global_error_event != INVALID_HANDLE_VALUE)
+		CloseHandle(document->global_error_event);
 
 	return true;
 }

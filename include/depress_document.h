@@ -52,6 +52,7 @@ typedef struct {
 	// Tasks
 	depress_task_type *tasks;
 	size_t tasks_num;
+	size_t tasks_max;
 	// Threads
 	HANDLE *threads;
 	depress_thread_arg_type *thread_args;

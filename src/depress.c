@@ -57,6 +57,7 @@ int wmain(int argc, wchar_t **argv)
 	depress_flags_type flags;
 	DWORD text_list_fn_length;
 	depress_document_type document;
+	depress_document_final_flags_type final_flags;
 	bool success = true;
 	clock_t time_start;
 
@@ -89,9 +90,9 @@ int wmain(int argc, wchar_t **argv)
 			else
 				wprintf(L"Warning: argument %ls can be set only with %ls\n", DEPRESS_ARG_PAGETYPE_BW_PARAM1_ERRDIFF, DEPRESS_ARG_PAGETYPE_BW);
 		} else if(!wcscmp(*argsp, DEPRESS_ARG_PAGETITLEAUTO)) {
-			document.page_title_type = DEPRESS_DOCUMENT_PAGE_TITLE_TYPE_AUTOMATIC;
+			final_flags.page_title_type = DEPRESS_DOCUMENT_PAGE_TITLE_TYPE_AUTOMATIC;
 		} else if(!wcscmp(*argsp, DEPRESS_ARG_PAGETITLEAUTO_SHORTNAME)) {
-			document.page_title_type_flags |= DEPRESS_DOCUMENT_PAGE_TITLE_AUTOMATIC_USE_SHORT_NAME;
+			final_flags.page_title_type_flags |= DEPRESS_DOCUMENT_PAGE_TITLE_AUTOMATIC_USE_SHORT_NAME;
 		} else
 			wprintf(L"Warning: unknown argument %ls\n", *argsp);
 
@@ -141,6 +142,8 @@ int wmain(int argc, wchar_t **argv)
 	// Initialize document
 	if(!depressDocumentInit(&document))
 		return 0;
+
+	depressDocumentSetFinalFlags(&document, final_flags);
 
 	document.output_file = *(argsp + 1);
 

@@ -49,6 +49,11 @@ enum {
 };
 
 typedef struct {
+	int page_title_type;
+	unsigned int page_title_type_flags;
+} depress_document_final_flags_type;
+
+typedef struct {
 	// Tasks
 	depress_task_type *tasks;
 	size_t tasks_num;
@@ -60,8 +65,7 @@ typedef struct {
 	// Paths
 	depress_djvulibre_paths_type djvulibre_paths;
 	// Final flags
-	int page_title_type;
-	unsigned int page_title_type_flags;
+	depress_document_final_flags_type final_flags;
 	// Paths
 	wchar_t temp_path[32768];
 	wchar_t *output_file;
@@ -74,5 +78,7 @@ extern bool depressDocumentDestroy(depress_document_type *document);
 extern bool depressDocumentRunTasks(depress_document_type *document);
 extern bool depressDocumentProcessTasks(depress_document_type *document);
 extern bool depressDocumentFinalize(depress_document_type *document);
+extern void depressDocumentSetFinalFlags(depress_document_type *document, depress_document_final_flags_type final_flags);
+extern depress_document_final_flags_type depressDocumentGetFinalFlags(depress_document_type *document);
 
 #endif

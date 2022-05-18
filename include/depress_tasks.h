@@ -46,8 +46,7 @@ typedef struct {
 	bool is_completed;
 } depress_task_type;
 
-extern bool depressAddTask(depress_task_type* task, depress_task_type** tasks_out, size_t* tasks_num_out, size_t* tasks_max_out);
-extern bool depressCreateTasks(wchar_t *textfile, wchar_t *textfilepath, wchar_t *outputfile, wchar_t *temppath, depress_flags_type flags, depress_task_type **tasks_out, size_t *tasks_num_out, size_t *tasks_max_out);
+extern bool depressAddTask(depress_task_type *task, depress_task_type **tasks_out, size_t *tasks_num_out, size_t *tasks_max_out);
 extern void depressDestroyTasks(depress_task_type *tasks, size_t tasks_num);
 
 #endif

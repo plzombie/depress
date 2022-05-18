@@ -319,15 +319,39 @@ depress_document_final_flags_type depressDocumentGetFinalFlags(depress_document_
 	return document->final_flags;
 }
 
-bool depressDocumentCreateTasksFromTextFile(depress_document_type* document, wchar_t *textfile, wchar_t *textfilepath, wchar_t *outputfile, wchar_t *temppath, depress_flags_type flags)
+bool depressDocumentAddTask(depress_document_type *document, wchar_t *inputfile, depress_flags_type flags)
+{
+	depress_task_type task;
+	wchar_t tempstr[32];
+
+	memset(&task, 0, sizeof(depress_task_type));
+
+	// Filling task
+	wcscpy(task.inputfile, inputfile);
+	swprintf(tempstr, 32, L"\\temp%lld.ppm", (long long)(document->tasks_num));
+	wcscpy(task.tempfile, document->temp_path);
+	wcscat(task.tempfile, tempstr);
+	if(document->tasks_num == 0)
+		wcscpy(task.outputfile, document->output_file);
+	else {
+		swprintf(tempstr, 32, L"\\temp%lld.djvu", (long long)(document->tasks_num));
+		wcscpy(task.outputfile, document->temp_path);
+		wcscat(task.outputfile, tempstr);
+	}
+	task.flags = flags;
+
+	if(depressAddTask(&task, &(document->tasks), &(document->tasks_num), &(document->tasks_max)))
+		return true;
+	else
+		return false;
+}
+
+bool depressDocumentCreateTasksFromTextFile(depress_document_type *document, wchar_t *textfile, wchar_t *textfilepath, wchar_t *outputfile, depress_flags_type flags)
 {
 	FILE *f;
 	size_t task_inputfile_length;
 	wchar_t inputfile[32770];
-	wchar_t tempstr[32];
-	depress_task_type *tasks = 0;
-	size_t tasks_num = 0, tasks_max = 0;
-	depress_task_type task;
+	wchar_t inputfile_fullname[32768];
 
 	if(document->tasks)
 		depressDestroyTasks(document->tasks, document->tasks_num);
@@ -335,6 +359,7 @@ bool depressDocumentCreateTasksFromTextFile(depress_document_type* document, wch
 	document->tasks = 0;
 	document->tasks_num = 0;
 	document->tasks_max = 0;
+	document->output_file = outputfile;
 
 #ifdef _MSC_VER
 	f = _wfopen(textfile, L"rt, ccs=UTF-8");
@@ -353,10 +378,13 @@ bool depressDocumentCreateTasksFromTextFile(depress_document_type* document, wch
 			else {
 				size_t i;
 
-				for(i = 0; i < tasks_num; i++)
-					CloseHandle(tasks[i].finished);
+				for(i = 0; i < document->tasks_num; i++)
+					CloseHandle(document->tasks[i].finished);
 						
-				free(tasks);
+				free(document->tasks);
+
+				document->tasks = 0;
+				document->tasks_num = document->tasks_max = 0;
 
 				return false;
 			}
@@ -364,10 +392,13 @@ bool depressDocumentCreateTasksFromTextFile(depress_document_type* document, wch
 		if(wcslen(inputfile) == 32769) {
 			size_t i;
 
-			for(i = 0; i < tasks_num; i++)
-				CloseHandle(tasks[i].finished);
+			for(i = 0; i < document->tasks_num; i++)
+				CloseHandle(document->tasks[i].finished);
 				
-			free(tasks);
+			free(document->tasks);
+
+			document->tasks = 0;
+			document->tasks_num = document->tasks_max = 0;
 
 			return false;
 		}
@@ -379,55 +410,40 @@ bool depressDocumentCreateTasksFromTextFile(depress_document_type* document, wch
 			continue;
 
 		// Adding textfile path to inputfile
-		task_inputfile_length = SearchPathW(textfilepath, inputfile, NULL, 32768, task.inputfile, NULL);
+		task_inputfile_length = SearchPathW(textfilepath, inputfile, NULL, 32768, inputfile_fullname, NULL);
 		if(task_inputfile_length > 32768 || task_inputfile_length == 0) {
 			size_t i;
 
-			for(i = 0; i < tasks_num; i++)
-				CloseHandle(tasks[i].finished);
+			for(i = 0; i < document->tasks_num; i++)
+				CloseHandle(document->tasks[i].finished);
 				
-			free(tasks);
+			free(document->tasks);
+
+			document->tasks = 0;
+			document->tasks_num = document->tasks_max = 0;
 
 			return false;
 		}
 
-		// Filling task
-
-		swprintf(tempstr, 32, L"\\temp%lld.ppm", (long long)tasks_num);
-		wcscpy(task.tempfile, temppath);
-		wcscat(task.tempfile, tempstr);
-		if(tasks_num == 0)
-			wcscpy(task.outputfile, outputfile);
-		else {
-			swprintf(tempstr, 32, L"\\temp%lld.djvu", (long long)tasks_num);
-			wcscpy(task.outputfile, temppath);
-			wcscat(task.outputfile, tempstr);
-		}
-
-		task.flags = flags;
-
-		if(!depressAddTask(&task, &tasks, &tasks_num, &tasks_max)) {
+		if(!depressDocumentAddTask(document, inputfile_fullname, flags)) {
 			size_t i;
 
-			for(i = 0; i < tasks_num; i++)
-				CloseHandle(tasks[i].finished);
+			for(i = 0; i < document->tasks_num; i++)
+				CloseHandle(document->tasks[i].finished);
 
-			free(tasks);
+			free(document->tasks);
+			document->tasks = 0;
+			document->tasks_num = document->tasks_max = 0;
 
 			return false;
 		}
 	}
 
-	if(tasks_num == 0 && tasks_max > 0) {
-		free(tasks);
-		tasks = 0;
-		tasks_max = 0;
+	if(document->tasks_num == 0 && document->tasks_max > 0) {
+		free(document->tasks);
+		document->tasks = 0;
+		document->tasks_max = 0;
 	}
-
-	document->output_file = outputfile;
-	document->tasks = tasks;
-	document->tasks_num = tasks_num;
-	document->tasks_max = tasks_max;
 
 	fclose(f);
 

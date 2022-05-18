@@ -148,7 +148,7 @@ int wmain(int argc, wchar_t **argv)
 	// Creating task list from file
 	wprintf(L"Opening list: \"%ls\"\n", text_list_filename);
 
-	if(!depressDocumentCreateTasksFromTextFile(&document, text_list_filename, text_list_path, *(argsp + 1), document.temp_path, flags)) {
+	if(!depressDocumentCreateTasksFromTextFile(&document, text_list_filename, text_list_path, *(argsp + 1), flags)) {
 		wprintf(L"Can't create files list\n");
 
 		depressDocumentDestroy(&document);

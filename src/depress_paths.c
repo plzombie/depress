@@ -61,7 +61,7 @@ bool depressGetTempFolder(wchar_t *temp_path)
 
 	if (SHGetFolderPathW(NULL, CSIDL_LOCAL_APPDATA, NULL, SHGFP_TYPE_CURRENT, appdatalocalpath) != S_OK) appdatalocalpath[0] = 0;
 
-	// 260 is much greater than 32768, no checks needed
+	// 32768 is much greater than 260, no checks needed
 
 	while (1) {
 		wcscpy(temp_path, appdatalocalpath);

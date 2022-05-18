@@ -69,6 +69,11 @@ bool depressCreateTasks(wchar_t *textfile, wchar_t *textfilepath, wchar_t *outpu
 			_tasks_max = tasks_max * 2;
 			_tasks = realloc(tasks, _tasks_max * sizeof(depress_task_type));
 			if(!_tasks) {
+				size_t i;
+
+				for(i = 0; i < tasks_num; i++)
+					CloseHandle(tasks[i].finished);
+					
 				free(tasks);
 
 				return false;
@@ -82,12 +87,22 @@ bool depressCreateTasks(wchar_t *textfile, wchar_t *textfilepath, wchar_t *outpu
 			if(feof(f))
 				break;
 			else {
-				if(tasks) free(tasks);
+				size_t i;
+
+				for(i = 0; i < tasks_num; i++)
+					CloseHandle(tasks[i].finished);
+						
+				free(tasks);
 
 				return false;
 			}
 		}
 		if(wcslen(inputfile) == 32769) {
+			size_t i;
+
+			for(i = 0; i < tasks_num; i++)
+				CloseHandle(tasks[i].finished);
+				
 			free(tasks);
 
 			return false;
@@ -102,6 +117,11 @@ bool depressCreateTasks(wchar_t *textfile, wchar_t *textfilepath, wchar_t *outpu
 		// Adding textfile path to inputfile
 		task_inputfile_length = SearchPathW(textfilepath, inputfile, NULL, 32768, tasks[tasks_num].inputfile, NULL);
 		if(task_inputfile_length > 32768 || task_inputfile_length == 0) {
+			size_t i;
+
+			for(i = 0; i < tasks_num; i++)
+				CloseHandle(tasks[i].finished);
+				
 			free(tasks);
 
 			return false;

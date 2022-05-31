@@ -48,6 +48,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define DEPRESS_ARG_PAGETITLEAUTO L"-pta"
 #define DEPRESS_ARG_PAGETITLEAUTO_SHORTNAME L"-shortfntitle"
 #define DEPRESS_ARG_TEMP L"-temp"
+#define DEPRESS_ARG_QUALITY L"-quality"
 
 int wmain(int argc, wchar_t **argv)
 {
@@ -64,6 +65,7 @@ int wmain(int argc, wchar_t **argv)
 
 	memset(&flags, 0, sizeof(depress_flags_type));
 	flags.type = DEPRESS_PAGE_TYPE_COLOR;
+	flags.quality = 100;
 
 	memset(&document_flags, 0, sizeof(depress_document_flags_type));
 	document_flags.page_title_type = DEPRESS_DOCUMENT_PAGE_TITLE_TYPE_NO;
@@ -103,6 +105,15 @@ int wmain(int argc, wchar_t **argv)
 				document_flags.userdef_temp_dir = *(++argsp);
 			} else
 				wprintf(L"Warning: argument " DEPRESS_ARG_TEMP L" should have parameter\n");
+		} else if(!wcscmp(*argsp, DEPRESS_ARG_QUALITY)) {
+			if(argsc > 0) {
+				argsc--;
+				flags.quality = _wtoi(*(++argsp));
+				if(flags.quality < 0 || flags.quality > 100) {
+					wprintf(L"Warning: quality must be between 0 and 100\n");
+					flags.quality = 100;
+				}
+			}
 		} else
 			wprintf(L"Warning: unknown argument %ls\n", *argsp);
 
@@ -117,7 +128,9 @@ int wmain(int argc, wchar_t **argv)
 			L"\t\t\t" DEPRESS_ARG_PAGETYPE_BW_PARAM1_ERRDIFF L" - use error diffusion for bw document\n"
 			L"\t\t\t" DEPRESS_ARG_PAGETITLEAUTO L" - use file name as page title\n"
 			L"\t\t\t" DEPRESS_ARG_PAGETITLEAUTO_SHORTNAME L" - use short file name as page title (when using previous)\n"
-			L"\t\t\t" DEPRESS_ARG_TEMP L" tempdir - use tempdir as directory for temporary files\n\n"
+			L"\t\t\t" DEPRESS_ARG_TEMP L" tempdir - use tempdir as directory for temporary files\n"
+			L"\t\t\t" DEPRESS_ARG_QUALITY L" percents - sets image quality in percents\n"
+			L"\t\t\t\t100 is lossy for BW and good for PHOTO (10% compression rate)\n\n"
 		);
 
 		return 0;

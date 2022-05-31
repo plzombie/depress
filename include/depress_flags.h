@@ -42,6 +42,7 @@ enum {
 typedef struct {
 	int type;
 	int param1;
+	int quality; // 0..100
 } depress_flags_type;
 
 #endif

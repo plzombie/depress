@@ -224,7 +224,7 @@ bool depressDocumentProcessTasks(depress_document_type *document)
 	bool success = true;
 	size_t filecount = 0;
 	int i;
-	wchar_t *arg0, *arg1, *arg2;
+	wchar_t *arg0 = 0, *arg1 = 0, *arg2 = 0;
 
 	if(document->tasks == 0 || document->threads == 0 || document->thread_args == 0)
 		return false;

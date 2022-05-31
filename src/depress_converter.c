@@ -40,17 +40,18 @@ bool depressConvertPage(depress_flags_type flags, wchar_t *inputfile, wchar_t *t
 {
 	FILE *f_in = 0, *f_temp = 0;
 	int sizex, sizey, channels;
-	wchar_t *arg0, *arg1, *arg2;
+	wchar_t *arg0 = 0, *arg1 = 0, *arg2 = 0, *arg3 = 0;
 	unsigned char *buffer = 0;
 	bool result = false;
 
-	arg0 = malloc(3*32770*sizeof(wchar_t));
+	arg0 = malloc((3*32770+80)*sizeof(wchar_t));
 
 	if(!arg0)
 		goto EXIT;
 	else {
 		arg1 = arg0 + 32770;
 		arg2 = arg1 + 32770;
+		arg3 = arg2 + 32770;
 	}
 
 	f_in = _wfopen(inputfile, L"rb");
@@ -83,10 +84,31 @@ bool depressConvertPage(depress_flags_type flags, wchar_t *inputfile, wchar_t *t
 
 	if(flags.type == DEPRESS_PAGE_TYPE_BW) {
 		swprintf(arg0, 32770, L"\"%ls\"", djvulibre_paths->cjb2_path);
-		if(_wspawnl(_P_WAIT, djvulibre_paths->cjb2_path, arg0, arg1, arg2, 0)) goto EXIT;
+
+		if(flags.quality < 0 || flags.quality >= 100)
+			*arg3 = 0;
+		else {
+			int q;
+
+			q = flags.quality;
+			q = 200 - 2 * q; // 0 - 100%, 200 - 0%
+
+			swprintf(arg3, 80, L"-losslevel %d", q);
+		}
+
+		if(_wspawnl(_P_WAIT, djvulibre_paths->cjb2_path, arg0, arg3, arg1, arg2, 0)) goto EXIT;
 	} else {
+		int q;
+
 		swprintf(arg0, 32770, L"\"%ls\"", djvulibre_paths->c44_path);
-		if(_wspawnl(_P_WAIT, djvulibre_paths->c44_path, arg0, arg1, arg2, 0)) goto EXIT;
+
+		q = flags.quality/10;
+		if(q < 1) q = 1;
+		if(q > 10) q = 10;
+
+		swprintf(arg3, 80, L"-percent %d", q);
+
+		if(_wspawnl(_P_WAIT, djvulibre_paths->c44_path, arg0, arg3, arg1, arg2, 0)) goto EXIT;
 	}
 
 	result = true;

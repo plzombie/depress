@@ -130,7 +130,7 @@ int wmain(int argc, wchar_t **argv)
 			L"\t\t\t" DEPRESS_ARG_PAGETITLEAUTO_SHORTNAME L" - use short file name as page title (when using previous)\n"
 			L"\t\t\t" DEPRESS_ARG_TEMP L" tempdir - use tempdir as directory for temporary files\n"
 			L"\t\t\t" DEPRESS_ARG_QUALITY L" percents - sets image quality in percents\n"
-			L"\t\t\t\t100 is lossy for BW and good for PHOTO (10% compression rate)\n\n"
+			L"\t\t\t\t100 is lossy for BW and good for PHOTO (10%% compression rate)\n\n"
 		);
 
 		return 0;

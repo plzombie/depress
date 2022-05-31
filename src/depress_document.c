@@ -93,15 +93,16 @@ static void depressDocumentGetTitleFromFilename(wchar_t* fname, char* title, boo
 			*(p++) = '?';
 		}
 	}
+	*p = 0;
 }
 
-bool depressDocumentInit(depress_document_type *document)
+bool depressDocumentInit(depress_document_type *document, depress_document_flags_type document_flags)
 {
 	memset(document, 0, sizeof(depress_document_type));
 	
 	document->global_error_event = INVALID_HANDLE_VALUE;
 
-	document->final_flags.page_title_type = DEPRESS_DOCUMENT_PAGE_TITLE_TYPE_NO;
+	document->document_flags = document_flags;
 
 	// Get paths to djvulibre files
 	if(!depressGetDjvulibrePaths(&document->djvulibre_paths)) {
@@ -110,7 +111,7 @@ bool depressDocumentInit(depress_document_type *document)
 		return false;
 	}
 
-	if(!depressGetTempFolder(document->temp_path)) {
+	if(!depressGetTempFolder(document->temp_path, document->document_flags.userdef_temp_dir)) {
 		wprintf(L"Can't get path for temporary files\n");
 
 		return false;
@@ -281,7 +282,7 @@ bool depressDocumentFinalize(depress_document_type *document)
 	wchar_t opencommand[65622]; //2(whole brackets)+32768+2(brackets)+32768+2(brackets)+80(must be enough for commands)
 	char title[131072]; // backslashes and utf8 encoding needs up to 4 bytes
 
-	if(document->final_flags.page_title_type == DEPRESS_DOCUMENT_PAGE_TITLE_TYPE_NO) // Check if there are some post processing
+	if(document->document_flags.page_title_type == DEPRESS_DOCUMENT_PAGE_TITLE_TYPE_NO) // Check if there are some post processing
 		return true; // Nothing to be done
 
 	swprintf(opencommand, 65622, L"\"\"%ls\" \"%ls\"\"", document->djvulibre_paths.djvused_path, document->output_file);
@@ -290,11 +291,11 @@ bool depressDocumentFinalize(depress_document_type *document)
 	if(!djvused)
 		return false;
 
-	if(document->final_flags.page_title_type == DEPRESS_DOCUMENT_PAGE_TITLE_TYPE_AUTOMATIC) {
+	if(document->document_flags.page_title_type == DEPRESS_DOCUMENT_PAGE_TITLE_TYPE_AUTOMATIC) {
 		size_t i;
 		bool full_name;
 
-		full_name = !(document->final_flags.page_title_type_flags & DEPRESS_DOCUMENT_PAGE_TITLE_AUTOMATIC_USE_SHORT_NAME);
+		full_name = !(document->document_flags.page_title_type_flags & DEPRESS_DOCUMENT_PAGE_TITLE_AUTOMATIC_USE_SHORT_NAME);
 
 		for(i = 0; i < document->tasks_num; i++) {
 			depressDocumentGetTitleFromFilename(document->tasks[i].inputfile, title, full_name);
@@ -307,16 +308,6 @@ bool depressDocumentFinalize(depress_document_type *document)
 	_pclose(djvused);
 
 	return true;
-}
-
-void depressDocumentSetFinalFlags(depress_document_type* document, depress_document_final_flags_type final_flags)
-{
-	document->final_flags = final_flags;
-}
-
-depress_document_final_flags_type depressDocumentGetFinalFlags(depress_document_type *document)
-{
-	return document->final_flags;
 }
 
 bool depressDocumentAddTask(depress_document_type *document, wchar_t *inputfile, depress_flags_type flags)

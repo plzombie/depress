@@ -49,9 +49,10 @@ enum {
 };
 
 typedef struct {
+	wchar_t *userdef_temp_dir;
 	int page_title_type;
 	unsigned int page_title_type_flags;
-} depress_document_final_flags_type;
+} depress_document_flags_type;
 
 typedef struct {
 	// Tasks
@@ -64,8 +65,8 @@ typedef struct {
 	int threads_num;
 	// Paths
 	depress_djvulibre_paths_type djvulibre_paths;
-	// Final flags
-	depress_document_final_flags_type final_flags;
+	// Document wide flags
+	depress_document_flags_type document_flags;
 	// Paths
 	wchar_t temp_path[32768];
 	wchar_t *output_file;
@@ -73,13 +74,11 @@ typedef struct {
 	HANDLE global_error_event;
 } depress_document_type;
 
-extern bool depressDocumentInit(depress_document_type *document);
+extern bool depressDocumentInit(depress_document_type *document, depress_document_flags_type document_flags);
 extern bool depressDocumentDestroy(depress_document_type *document);
 extern bool depressDocumentRunTasks(depress_document_type *document);
 extern bool depressDocumentProcessTasks(depress_document_type *document);
 extern bool depressDocumentFinalize(depress_document_type *document);
-extern void depressDocumentSetFinalFlags(depress_document_type *document, depress_document_final_flags_type final_flags);
-extern depress_document_final_flags_type depressDocumentGetFinalFlags(depress_document_type *document);
 extern bool depressDocumentAddTask(depress_document_type *document, wchar_t *inputfile, depress_flags_type flags);
 extern bool depressDocumentCreateTasksFromTextFile(depress_document_type *document, wchar_t *textfile, wchar_t *textfilepath, wchar_t *outputfile, depress_flags_type flags);
 

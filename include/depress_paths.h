@@ -40,7 +40,7 @@ typedef struct {
 } depress_djvulibre_paths_type;
 
 extern bool depressGetDjvulibrePaths(depress_djvulibre_paths_type *djvulibre_paths);
-extern bool depressGetTempFolder(wchar_t *temp_path);
+extern bool depressGetTempFolder(wchar_t *temp_path, wchar_t *userdef_temp_dir);
 extern void depressDestroyTempFolder(wchar_t *temp_path);
 
 #endif

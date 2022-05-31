@@ -47,6 +47,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define DEPRESS_ARG_PAGETYPE_BW_PARAM1_ERRDIFF L"-errdiff"
 #define DEPRESS_ARG_PAGETITLEAUTO L"-pta"
 #define DEPRESS_ARG_PAGETITLEAUTO_SHORTNAME L"-shortfntitle"
+#define DEPRESS_ARG_TEMP L"-temp"
 
 int wmain(int argc, wchar_t **argv)
 {
@@ -57,12 +58,15 @@ int wmain(int argc, wchar_t **argv)
 	depress_flags_type flags;
 	DWORD text_list_fn_length;
 	depress_document_type document;
-	depress_document_final_flags_type final_flags;
+	depress_document_flags_type document_flags;
 	bool success = true;
 	clock_t time_start;
 
 	memset(&flags, 0, sizeof(depress_flags_type));
 	flags.type = DEPRESS_PAGE_TYPE_COLOR;
+
+	memset(&document_flags, 0, sizeof(depress_document_flags_type));
+	document_flags.page_title_type = DEPRESS_DOCUMENT_PAGE_TITLE_TYPE_NO;
 
 	setlocale(LC_ALL, "");
 
@@ -90,9 +94,15 @@ int wmain(int argc, wchar_t **argv)
 			else
 				wprintf(L"Warning: argument %ls can be set only with %ls\n", DEPRESS_ARG_PAGETYPE_BW_PARAM1_ERRDIFF, DEPRESS_ARG_PAGETYPE_BW);
 		} else if(!wcscmp(*argsp, DEPRESS_ARG_PAGETITLEAUTO)) {
-			final_flags.page_title_type = DEPRESS_DOCUMENT_PAGE_TITLE_TYPE_AUTOMATIC;
+			document_flags.page_title_type = DEPRESS_DOCUMENT_PAGE_TITLE_TYPE_AUTOMATIC;
 		} else if(!wcscmp(*argsp, DEPRESS_ARG_PAGETITLEAUTO_SHORTNAME)) {
-			final_flags.page_title_type_flags |= DEPRESS_DOCUMENT_PAGE_TITLE_AUTOMATIC_USE_SHORT_NAME;
+			document_flags.page_title_type_flags |= DEPRESS_DOCUMENT_PAGE_TITLE_AUTOMATIC_USE_SHORT_NAME;
+		} else if(!wcscmp(*argsp, DEPRESS_ARG_TEMP)) {
+			if(argsc > 0) {
+				argsc--;
+				document_flags.userdef_temp_dir = *(++argsp);
+			} else
+				wprintf(L"Warning: argument " DEPRESS_ARG_TEMP L" should have parameter\n");
 		} else
 			wprintf(L"Warning: unknown argument %ls\n", *argsp);
 
@@ -106,7 +116,8 @@ int wmain(int argc, wchar_t **argv)
 			L"\t\t\t" DEPRESS_ARG_PAGETYPE_BW L" - create black and white document\n"
 			L"\t\t\t" DEPRESS_ARG_PAGETYPE_BW_PARAM1_ERRDIFF L" - use error diffusion for bw document\n"
 			L"\t\t\t" DEPRESS_ARG_PAGETITLEAUTO L" - use file name as page title\n"
-			L"\t\t\t" DEPRESS_ARG_PAGETITLEAUTO_SHORTNAME L" - use short file name as page title (when using previous)\n\n"
+			L"\t\t\t" DEPRESS_ARG_PAGETITLEAUTO_SHORTNAME L" - use short file name as page title (when using previous)\n"
+			L"\t\t\t" DEPRESS_ARG_TEMP L" tempdir - use tempdir as directory for temporary files\n\n"
 		);
 
 		return 0;
@@ -140,10 +151,8 @@ int wmain(int argc, wchar_t **argv)
 	SetSearchPathMode(BASE_SEARCH_PATH_ENABLE_SAFE_SEARCHMODE | BASE_SEARCH_PATH_PERMANENT);
 
 	// Initialize document
-	if(!depressDocumentInit(&document))
+	if(!depressDocumentInit(&document, document_flags))
 		return 0;
-
-	depressDocumentSetFinalFlags(&document, final_flags);
 
 	// Creating task list from file
 	wprintf(L"Opening list: \"%ls\"\n", text_list_filename);

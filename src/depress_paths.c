@@ -40,41 +40,53 @@ bool depressGetDjvulibrePaths(depress_djvulibre_paths_type *djvulibre_paths)
 	DWORD filename_len;
 
 	filename_len = SearchPathW(NULL, L"c44.exe", NULL, 32768, djvulibre_paths->c44_path, NULL);
-	if (filename_len == 0 || filename_len > 32768) return false;
+	if(filename_len == 0 || filename_len > 32768) return false;
 
 	filename_len = SearchPathW(NULL, L"cjb2.exe", NULL, 32768, djvulibre_paths->cjb2_path, NULL);
-	if (filename_len == 0 || filename_len > 32768) return false;
+	if(filename_len == 0 || filename_len > 32768) return false;
 
 	filename_len = SearchPathW(NULL, L"djvm.exe", NULL, 32768, djvulibre_paths->djvm_path, NULL);
-	if (filename_len == 0 || filename_len > 32768) return false;
+	if(filename_len == 0 || filename_len > 32768) return false;
 
 	filename_len = SearchPathW(NULL, L"djvused.exe", NULL, 32768, djvulibre_paths->djvused_path, NULL);
-	if (filename_len == 0 || filename_len > 32768) return false;
+	if(filename_len == 0 || filename_len > 32768) return false;
 
 	return true;
 }
 
-bool depressGetTempFolder(wchar_t *temp_path)
+bool depressGetTempFolder(wchar_t *temp_path, wchar_t *userdef_temp_dir)
 {
-	wchar_t appdatalocalpath[MAX_PATH], tempstr[30];
+	wchar_t appdatalocalpath[MAX_PATH], tempstr[30], *temp_path_end;
 	long long counter = 0;
 
-	if (SHGetFolderPathW(NULL, CSIDL_LOCAL_APPDATA, NULL, SHGFP_TYPE_CURRENT, appdatalocalpath) != S_OK) appdatalocalpath[0] = 0;
+	if(!userdef_temp_dir) { // Temp dir not defined, use user-wide temp path
+		if(SHGetFolderPathW(NULL, CSIDL_LOCAL_APPDATA, NULL, SHGFP_TYPE_CURRENT, appdatalocalpath) != S_OK) return false;
 
-	// 32768 is much greater than 260, no checks needed
-
-	while (1) {
+		// 32768 is much greater than 260, no checks needed
 		wcscpy(temp_path, appdatalocalpath);
 		wcscat(temp_path, L"\\Temp");
-		if (_waccess(temp_path, 06))
+		if(_waccess(temp_path, 06))
 			return false;
+	} else { // Temp dir defined
+		if(wcslen(userdef_temp_dir) >= 32700) return false; // Path too long
+
+		if(_waccess(userdef_temp_dir, 06))
+			return false;
+
+		wcscpy(temp_path, userdef_temp_dir);
+	}
+
+	temp_path_end = temp_path + wcslen(temp_path);
+
+	while(1) {
+		*temp_path_end = 0;
 
 		swprintf(tempstr, 30, L"\\depress%lld", counter);
 
 		wcscat(temp_path, tempstr);
 
-		if (_waccess(temp_path, 06)) { // Folder doesnt exist
-			if (!_wmkdir(temp_path))
+		if(_waccess(temp_path, 06)) { // Folder doesnt exist
+			if(!_wmkdir(temp_path))
 				return true;
 		}
 

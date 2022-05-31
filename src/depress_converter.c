@@ -40,9 +40,18 @@ bool depressConvertPage(depress_flags_type flags, wchar_t *inputfile, wchar_t *t
 {
 	FILE *f_in = 0, *f_temp = 0;
 	int sizex, sizey, channels;
-	wchar_t arg0[32770], arg1[32770], arg2[32770];
+	wchar_t *arg0, *arg1, *arg2;
 	unsigned char *buffer = 0;
 	bool result = false;
+
+	arg0 = malloc(3*32770*sizeof(wchar_t));
+
+	if(!arg0)
+		goto EXIT;
+	else {
+		arg1 = arg0 + 32770;
+		arg2 = arg1 + 32770;
+	}
 
 	f_in = _wfopen(inputfile, L"rb");
 	f_temp = _wfopen(tempfile, L"wb");
@@ -83,6 +92,8 @@ bool depressConvertPage(depress_flags_type flags, wchar_t *inputfile, wchar_t *t
 	result = true;
 
 EXIT:
+	if(arg0) free(arg0);
+
 	if(f_in) fclose(f_in);
 	if(f_temp) fclose(f_temp);
 	if(buffer) free(buffer);

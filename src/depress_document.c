@@ -224,10 +224,17 @@ bool depressDocumentProcessTasks(depress_document_type *document)
 	bool success = true;
 	size_t filecount = 0;
 	int i;
-	wchar_t arg0[32770], arg1[32770], arg2[32770];
+	wchar_t *arg0, *arg1, *arg2;
 
 	if(document->tasks == 0 || document->threads == 0 || document->thread_args == 0)
 		return false;
+
+	arg0 = malloc(3*32770*sizeof(wchar_t));
+	if(!arg0) return false;
+	else {
+		arg1 = arg0 + 32770;
+		arg2 = arg1 + 32770;
+	}
 
 	swprintf(arg1, 32770, L"\"%ls\"", document->output_file);
 
@@ -268,6 +275,7 @@ bool depressDocumentProcessTasks(depress_document_type *document)
 	for(i = 0; i < document->threads_num; i++)
 		CloseHandle(document->threads[i]);
 
+	free(arg0);
 	free(document->threads);
 	free(document->thread_args);
 	document->threads = 0;
@@ -279,17 +287,28 @@ bool depressDocumentProcessTasks(depress_document_type *document)
 bool depressDocumentFinalize(depress_document_type *document)
 {
 	FILE *djvused;
-	wchar_t opencommand[65622]; //2(whole brackets)+32768+2(brackets)+32768+2(brackets)+80(must be enough for commands)
-	char title[131072]; // backslashes and utf8 encoding needs up to 4 bytes
+	wchar_t *opencommand;
+	char *title;
 
 	if(document->document_flags.page_title_type == DEPRESS_DOCUMENT_PAGE_TITLE_TYPE_NO) // Check if there are some post processing
 		return true; // Nothing to be done
 
+	opencommand = malloc(65622*sizeof(wchar_t)); //2(whole brackets)+32768+2(brackets)+32768+2(brackets)+80(must be enough for commands)
+	if(!opencommand) return false;
+	title = malloc(131072); // backslashes and utf8 encoding needs up to 4 bytes
+	if(!title) {
+		free(opencommand);
+		return false;
+	}
+
 	swprintf(opencommand, 65622, L"\"\"%ls\" \"%ls\"\"", document->djvulibre_paths.djvused_path, document->output_file);
 
 	djvused = _wpopen(opencommand, L"wt");
-	if(!djvused)
+	if(!djvused) {
+		free(title);
+		free(opencommand);
 		return false;
+	}
 
 	if(document->document_flags.page_title_type == DEPRESS_DOCUMENT_PAGE_TITLE_TYPE_AUTOMATIC) {
 		size_t i;
@@ -306,6 +325,8 @@ bool depressDocumentFinalize(depress_document_type *document)
 	fwprintf(djvused, L"save\n");
 
 	_pclose(djvused);
+	free(opencommand);
+	free(title);
 
 	return true;
 }
@@ -341,11 +362,17 @@ bool depressDocumentCreateTasksFromTextFile(depress_document_type *document, wch
 {
 	FILE *f;
 	size_t task_inputfile_length;
-	wchar_t inputfile[32770];
-	wchar_t inputfile_fullname[32768];
+	wchar_t *inputfile;
+	wchar_t *inputfile_fullname;
 
 	if(document->tasks)
 		depressDestroyTasks(document->tasks, document->tasks_num);
+
+	inputfile = malloc((32770+32768)*sizeof(wchar_t));
+	if(!inputfile)
+		return false;
+	else
+		inputfile_fullname = inputfile+32770;
 
 	document->tasks = 0;
 	document->tasks_num = 0;
@@ -357,7 +384,10 @@ bool depressDocumentCreateTasksFromTextFile(depress_document_type *document, wch
 #else
 	f = _wfopen(textfile, L"rt");
 #endif
-	if(!f) return false;
+	if(!f) {
+		free(inputfile);
+		return false;
+	}
 
 	while(1) {
 		wchar_t *eol;
@@ -384,11 +414,15 @@ bool depressDocumentCreateTasksFromTextFile(depress_document_type *document, wch
 		if(!depressDocumentAddTask(document, inputfile_fullname, flags)) goto LABEL_ERROR;
 	}
 
+	free(inputfile);
 	fclose(f);
 
 	return true;
 
 LABEL_ERROR:
+
+	free(inputfile);
+	fclose(f);
 
 	{
 		size_t i;

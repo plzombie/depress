@@ -65,6 +65,10 @@ bool depressConvertPage(depress_flags_type flags, wchar_t *inputfile, wchar_t *t
 
 	if(flags.type == DEPRESS_PAGE_TYPE_BW && flags.param1 == DEPRESS_PAGE_TYPE_BW_PARAM1_ERRDIFF)
 		depressImageApplyErrorDiffusion(buffer, sizex, sizey);
+	else if(flags.type == DEPRESS_PAGE_TYPE_BW && flags.param1 == DEPRESS_PAGE_TYPE_BW_PARAM1_ADAPTIVE) {
+		if(!depressImageApplyAdaptiveBinarization(buffer, sizex, sizey))
+			goto EXIT;
+	}
 
 	fclose(f_in); f_in = 0;
 

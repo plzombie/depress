@@ -81,3 +81,71 @@ void depressImageApplyErrorDiffusion(unsigned char* buf, int sizex, int sizey)
 		}
 	}
 }
+
+bool depressImageApplyAdaptiveBinarization(unsigned char* buf, int sizex, int sizey)
+{
+	int window_size = 33, window_size_half = 16;
+	int i, j, k;
+	unsigned char *old_buf, *p, *p1;
+
+	if(!buf || sizex <= 0 || sizey <= 0) return false;
+
+	old_buf = malloc((window_size_half*2+sizex)*(window_size_half*2+sizey));
+	if(!old_buf) return false;
+
+	// Fill copy of image
+	p = buf;
+	p1 = old_buf;
+	for(i = -window_size_half; i < sizey+window_size_half; i++) {
+		unsigned char b;
+		
+		for(k = 0; k < window_size_half; k++) {
+			*p1 = *p;
+			p1++;
+		}
+
+		memcpy(p1, p, sizex);
+		p1 += sizex;
+
+		b = p[sizex-1];
+		for(k = 0; k < window_size_half; k++) {
+			*p1 = b;
+			p1++;
+		}
+
+		if(i >= 0 && i < sizey-1) p += sizex;
+	}
+
+	// Perform adaptive binarization
+	p = buf;
+	for(i = 0; i < sizey; i++) {
+		for(j = 0; j < sizex; j++) {
+			unsigned int sum = 0;
+			int l;
+			unsigned char *p2;
+
+			p1 = old_buf+i*(window_size_half*2+sizex)+j;
+
+			for(k = 0; k < window_size; k++) {
+				p2 = p1;
+
+				for(l = 0; l < window_size; l++) {
+					sum += (*p2) * (*p2);
+					p2++;
+				}
+
+				p1 += window_size_half*2+sizex;
+			}
+
+			sum /= window_size*window_size;
+			sum = (unsigned int)sqrt(sum);
+			//wprintf(L"%d ", sum);
+			if(*p >= sum) *p = 255; else *p = 0;
+			p++;
+		}
+	}
+
+	free(old_buf);
+
+	return true;
+}

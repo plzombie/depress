@@ -45,6 +45,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #define DEPRESS_ARG_PAGETYPE_BW L"-bw"
 #define DEPRESS_ARG_PAGETYPE_BW_PARAM1_ERRDIFF L"-errdiff"
+#define DEPRESS_ARG_PAGETYPE_BW_PARAM1_ADAPTIVE L"-adaptive"
 #define DEPRESS_ARG_PAGETITLEAUTO L"-pta"
 #define DEPRESS_ARG_PAGETITLEAUTO_SHORTNAME L"-shortfntitle"
 #define DEPRESS_ARG_TEMP L"-temp"
@@ -95,6 +96,11 @@ int wmain(int argc, wchar_t **argv)
 				flags.param1 = DEPRESS_PAGE_TYPE_BW_PARAM1_ERRDIFF;
 			else
 				wprintf(L"Warning: argument %ls can be set only with %ls\n", DEPRESS_ARG_PAGETYPE_BW_PARAM1_ERRDIFF, DEPRESS_ARG_PAGETYPE_BW);
+		} else if(!wcscmp(*argsp, DEPRESS_ARG_PAGETYPE_BW_PARAM1_ADAPTIVE)) {
+			if(flags.type == DEPRESS_PAGE_TYPE_BW)
+				flags.param1 = DEPRESS_PAGE_TYPE_BW_PARAM1_ADAPTIVE;
+			else
+				wprintf(L"Warning: argument %ls can be set only with %ls\n", DEPRESS_ARG_PAGETYPE_BW_PARAM1_ADAPTIVE, DEPRESS_ARG_PAGETYPE_BW);
 		} else if(!wcscmp(*argsp, DEPRESS_ARG_PAGETITLEAUTO)) {
 			document_flags.page_title_type = DEPRESS_DOCUMENT_PAGE_TITLE_TYPE_AUTOMATIC;
 		} else if(!wcscmp(*argsp, DEPRESS_ARG_PAGETITLEAUTO_SHORTNAME)) {
@@ -126,6 +132,7 @@ int wmain(int argc, wchar_t **argv)
 			L"\t\toptions:\n"
 			L"\t\t\t" DEPRESS_ARG_PAGETYPE_BW L" - create black and white document\n"
 			L"\t\t\t" DEPRESS_ARG_PAGETYPE_BW_PARAM1_ERRDIFF L" - use error diffusion for bw document\n"
+			L"\t\t\t" DEPRESS_ARG_PAGETYPE_BW_PARAM1_ADAPTIVE L" - use adaptive binarization for bw document\n"
 			L"\t\t\t" DEPRESS_ARG_PAGETITLEAUTO L" - use file name as page title\n"
 			L"\t\t\t" DEPRESS_ARG_PAGETITLEAUTO_SHORTNAME L" - use short file name as page title (when using previous)\n"
 			L"\t\t\t" DEPRESS_ARG_TEMP L" tempdir - use tempdir as directory for temporary files\n"

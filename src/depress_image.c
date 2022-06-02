@@ -90,6 +90,10 @@ bool depressImageApplyAdaptiveBinarization(unsigned char* buf, int sizex, int si
 
 	if(!buf || sizex <= 0 || sizey <= 0) return false;
 
+	if(INT_MAX-sizex < window_size_half*2) return false;
+	if(INT_MAX-sizey < window_size_half*2) return false;
+	if(INT_MAX/(window_size_half*2+sizex) < (window_size_half*2+sizey)) return false;
+
 	old_buf = malloc((window_size_half*2+sizex)*(window_size_half*2+sizey));
 	if(!old_buf) return false;
 

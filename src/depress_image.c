@@ -81,12 +81,13 @@ void depressImageApplyErrorDiffusion(unsigned char* buf, int sizex, int sizey)
 		}
 	}
 }
-
+#include <time.h>
 bool depressImageApplyAdaptiveBinarization(unsigned char* buf, int sizex, int sizey)
 {
 	int window_size = 33, window_size_half = 16;
 	int i, j, k;
 	unsigned char *old_buf, *p, *p1;
+	//clock_t time_start;
 
 	if(!buf || sizex <= 0 || sizey <= 0) return false;
 
@@ -96,6 +97,8 @@ bool depressImageApplyAdaptiveBinarization(unsigned char* buf, int sizex, int si
 
 	old_buf = malloc((window_size_half*2+sizex)*(window_size_half*2+sizey));
 	if(!old_buf) return false;
+
+	//time_start = clock();
 
 	// Fill copy of image
 	p = buf;
@@ -121,34 +124,38 @@ bool depressImageApplyAdaptiveBinarization(unsigned char* buf, int sizex, int si
 	}
 
 	// Perform adaptive binarization
-	p = buf;
+	p = buf; // New buffer
+	p1 = old_buf; // Buffer with old data
 	for(i = 0; i < sizey; i++) {
 		for(j = 0; j < sizex; j++) {
 			unsigned int sum = 0;
 			int l;
 			unsigned char *p2;
 
-			p1 = old_buf+i*(window_size_half*2+sizex)+j;
-
+			p2 = p1; // Window buffer with old data
 			for(k = 0; k < window_size; k++) {
-				p2 = p1;
-
 				for(l = 0; l < window_size; l++) {
-					sum += (*p2) * (*p2);
+					int b;
+
+					b = (int)(*p2);
+					sum += b*b;
 					p2++;
 				}
 
-				p1 += window_size_half*2+sizex;
+				p2 += sizex-1; // Jump to the next window line
 			}
 
 			sum /= window_size*window_size;
 			sum = (unsigned int)sqrt(sum);
-			//wprintf(L"%d ", sum);
+
+			p1++;
 			if(*p >= sum) *p = 255; else *p = 0;
 			p++;
 		}
+		p1 += window_size_half * 2; // Pad for the next line
 	}
 
+	//wprintf(L"time %d\n", clock() - time_start);
 	free(old_buf);
 
 	return true;

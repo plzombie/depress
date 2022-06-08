@@ -1,7 +1,7 @@
 /*
 BSD 2-Clause License
 
-Copyright (c) 2021, Mikhail Morozov
+Copyright (c) 2021-2022, Mikhail Morozov
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -81,7 +81,9 @@ void depressImageApplyErrorDiffusion(unsigned char* buf, int sizex, int sizey)
 		}
 	}
 }
-#include <time.h>
+
+//#include <time.h>
+
 bool depressImageApplyAdaptiveBinarization(unsigned char* buf, int sizex, int sizey)
 {
 	int window_size = 33, window_size_half = 16;

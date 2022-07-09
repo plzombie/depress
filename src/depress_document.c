@@ -186,7 +186,7 @@ bool depressDocumentRunTasks(depress_document_type *document)
 			for (j = 0; j < i; j++)
 				CloseHandle(document->threads[j]);
 
-			fclose(document->global_error_event);
+			CloseHandle(document->global_error_event);
 			document->global_error_event = INVALID_HANDLE_VALUE;
 
 			free(document->threads);

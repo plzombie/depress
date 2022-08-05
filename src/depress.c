@@ -56,9 +56,8 @@ int wmain(int argc, wchar_t **argv)
 	wchar_t **argsp;
 	int argsc;
 	wchar_t text_list_filename[32768], text_list_path[32768], *text_list_name_start;
-	size_t text_list_path_size;
 	depress_flags_type flags;
-	DWORD text_list_fn_length;
+	size_t text_list_fn_length;
 	depress_document_type document;
 	depress_document_flags_type document_flags;
 	bool success = true;
@@ -152,7 +151,7 @@ int wmain(int argc, wchar_t **argv)
 	}
 
 	// Searching for files list with picture names
-	text_list_fn_length = SearchPathW(NULL, *argsp, L".txt", 32768, text_list_filename, &text_list_name_start);
+	text_list_fn_length = depressGetFilenameToOpen(*argsp, L".txt", 32768, text_list_filename, &text_list_name_start);
 	if(!text_list_fn_length) {
 		wprintf(L"Can't find files list\n");
 
@@ -163,9 +162,7 @@ int wmain(int argc, wchar_t **argv)
 
 		return 0;
 	}
-	text_list_path_size = text_list_name_start - text_list_filename;
-	wcsncpy(text_list_path, text_list_filename, text_list_path_size);
-	text_list_path[text_list_path_size] = 0;
+	depressGetFilenamePath(text_list_filename, text_list_name_start, text_list_path);
 
 	// Enabling safe search mode
 	SetSearchPathMode(BASE_SEARCH_PATH_ENABLE_SAFE_SEARCHMODE | BASE_SEARCH_PATH_PERMANENT);

@@ -29,6 +29,10 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef DEPRESS_TASKS_H
 #define DEPRESS_TASKS_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <Windows.h>
 
 #include <stdbool.h>
@@ -48,5 +52,9 @@ typedef struct {
 
 extern bool depressAddTask(depress_task_type *task, depress_task_type **tasks_out, size_t *tasks_num_out, size_t *tasks_max_out);
 extern void depressDestroyTasks(depress_task_type *tasks, size_t tasks_num);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

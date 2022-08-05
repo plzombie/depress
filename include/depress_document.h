@@ -29,6 +29,10 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef DEPRESS_DOCUMENT_H
 #define DEPRESS_DOCUMENT_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <stdbool.h>
 #include <stdint.h>
 #include <wchar.h>
@@ -81,5 +85,9 @@ extern bool depressDocumentProcessTasks(depress_document_type *document);
 extern bool depressDocumentFinalize(depress_document_type *document);
 extern bool depressDocumentAddTask(depress_document_type *document, wchar_t *inputfile, depress_flags_type flags);
 extern bool depressDocumentCreateTasksFromTextFile(depress_document_type *document, wchar_t *textfile, wchar_t *textfilepath, wchar_t *outputfile, depress_flags_type flags);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

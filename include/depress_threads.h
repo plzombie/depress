@@ -1,7 +1,7 @@
 /*
 BSD 2-Clause License
 
-Copyright (c) 2021, Mikhail Morozov
+Copyright (c) 2021-2022, Mikhail Morozov
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -29,6 +29,10 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef DEPRESS_THREADS_H
 #define DEPRESS_THREADS_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <Windows.h>
 
 #include <stdint.h>
@@ -47,5 +51,9 @@ typedef struct {
 
 int depressGetNumberOfThreads(void);
 unsigned int __stdcall depressThreadProc(void *args);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

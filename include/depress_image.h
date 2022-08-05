@@ -29,11 +29,19 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef DEPRESS_IMAGE_H
 #define DEPRESS_IMAGE_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <stdio.h>
 #include <stdbool.h>
 
 extern unsigned char *depressLoadImage(FILE *f, int *sizex, int *sizey, int *channels, bool is_bw);
 extern void depressImageApplyErrorDiffusion(unsigned char* buf, int sizex, int sizey);
 extern bool depressImageApplyAdaptiveBinarization(unsigned char* buf, int sizex, int sizey);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

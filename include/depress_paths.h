@@ -29,6 +29,10 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef DEPRESS_PATHS_H
 #define DEPRESS_PATHS_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <stdbool.h>
 #include <wchar.h>
 
@@ -39,8 +43,14 @@ typedef struct {
 	wchar_t djvused_path[32768];
 } depress_djvulibre_paths_type;
 
+extern size_t depressGetFilenameToOpen(const wchar_t *inp_filename, const wchar_t *file_ext, size_t buflen, wchar_t *out_filename, wchar_t **out_filename_start);
+extern void depressGetFilenamePath(const wchar_t *filename, const wchar_t *filename_start, wchar_t *filepath);
 extern bool depressGetDjvulibrePaths(depress_djvulibre_paths_type *djvulibre_paths);
 extern bool depressGetTempFolder(wchar_t *temp_path, wchar_t *userdef_temp_dir);
 extern void depressDestroyTempFolder(wchar_t *temp_path);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

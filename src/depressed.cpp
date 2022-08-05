@@ -28,16 +28,24 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <Windows.h>
 
+#include "../include/depressed_document.h"
+
 INT WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine, int nCmdShow)
 {
 	wchar_t **argv, *default_project, *default_output;
 	int argc;
+	Depressed::CDocument document;
 
 	argv = CommandLineToArgvW(pCmdLine, &argc);
 	if(!argv) return EXIT_FAILURE;
 
 	if(argc > 0) default_project = argv[0];
 	if(argc > 1) default_output = argv[1];
+
+	SetSearchPathMode(BASE_SEARCH_PATH_ENABLE_SAFE_SEARCHMODE | BASE_SEARCH_PATH_PERMANENT);
+
+	if(!document.Create())
+		MessageBoxW(NULL, L"Can't create empty document, probably not enough memory", L"Depressed", MB_OK | MB_TASKMODAL | MB_ICONSTOP);
 
 	if(argc < 2) {
 		// Run GUI
@@ -49,6 +57,8 @@ INT WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine
 		MessageBoxW(NULL, L"Too many arguments", L"Depressed", MB_OK | MB_TASKMODAL | MB_ICONINFORMATION);
 	}
 	
+	document.Destroy();
+
 	LocalFree(argv);
 
 	return 0;

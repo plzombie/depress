@@ -1,7 +1,7 @@
 /*
 BSD 2-Clause License
 
-Copyright (c) 2021-2022, Mikhail Morozov
+Copyright (c) 2022, Mikhail Morozov
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -26,32 +26,25 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#ifndef DEPRESS_FLAGS_H
-#define DEPRESS_FLAGS_H
+namespace Depressed {
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+#include "depress_document.h"
+#include "depress_flags.h"
 
-enum {
-	DEPRESS_PAGE_TYPE_COLOR,
-	DEPRESS_PAGE_TYPE_BW
+class CDocument {
+	depress_document_type m_document;
+	depress_flags_type m_global_page_flags;
+	bool m_is_init;
+
+public:
+	CDocument();
+	~CDocument();
+	static void SetDefaultPageFlags(depress_flags_type *page_flags);
+	static void SetDefaultDocumentFlags(depress_document_flags_type *document_flags);
+	bool Create(void);
+	void Destroy(void);
+	bool Serialize(void *p);
+	bool Deserialize(void *p);
 };
 
-enum {
-	DEPRESS_PAGE_TYPE_BW_PARAM1_SIMPLE,
-	DEPRESS_PAGE_TYPE_BW_PARAM1_ERRDIFF,
-	DEPRESS_PAGE_TYPE_BW_PARAM1_ADAPTIVE
-};
-
-typedef struct {
-	int type;
-	int param1;
-	int quality; // 0..100
-} depress_flags_type;
-
-#ifdef __cplusplus
 }
-#endif
-
-#endif

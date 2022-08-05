@@ -32,6 +32,7 @@
 *.mk
 *.mk1
 *.sym
+*.err
 
 # DjvuLibre
 c44.exe

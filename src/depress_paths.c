@@ -35,6 +35,26 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <io.h>
 
+size_t depressGetFilenameToOpen(const wchar_t *inp_filename, const wchar_t *file_ext, size_t buflen, wchar_t *out_filename, wchar_t **out_filename_start)
+{
+	DWORD fn_length;
+	
+	if(buflen > MAXDWORD) return 0;
+
+	fn_length = SearchPathW(NULL, inp_filename, file_ext, 32768, out_filename, out_filename_start);
+	
+	return fn_length;
+}
+
+void depressGetFilenamePath(const wchar_t *filename, const wchar_t *filename_start, wchar_t *filepath)
+{
+	size_t path_size;
+	
+	path_size = filename_start - filename;
+	wcsncpy(filepath, filename, path_size);
+	filepath[path_size] = 0;
+}
+
 bool depressGetDjvulibrePaths(depress_djvulibre_paths_type *djvulibre_paths)
 {
 	DWORD filename_len;

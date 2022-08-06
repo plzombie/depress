@@ -55,12 +55,12 @@ namespace Depressed {
 
 	bool CDocument::Create()
 	{
-		depress_document_flags_type document_flags;
+		if(m_is_init) return false;
 
 		SetDefaultPageFlags(&m_global_page_flags);
-		SetDefaultDocumentFlags(&document_flags);
+		SetDefaultDocumentFlags(&m_document_flags);
 
-		if(!depressDocumentInit(&m_document, document_flags))
+		if(!depressDocumentInit(&m_document, m_document_flags))
 			return false;
 
 		m_is_init = true;
@@ -75,6 +75,49 @@ namespace Depressed {
 		depressDocumentDestroy(&m_document);
 
 		m_is_init = false;
+	}
+
+	DocumentProcessStatus CDocument::Process(void)
+	{
+		DocumentProcessStatus status = DocumentProcessStatus::OK;
+
+		if(!depressDocumentInit(&m_document, m_document_flags))
+			status = DocumentProcessStatus::CantInitDocument;
+
+		// Add tasks
+		// There should be code to add tasks (depressDocumentAddTask)
+
+		// Create threads from tasks
+		if(status == DocumentProcessStatus::OK)
+			if(!depressDocumentRunTasks(&m_document))
+				status = DocumentProcessStatus::CantStartTasks;
+
+		// Creating djvu
+		if(status == DocumentProcessStatus::OK)
+			if(!depressDocumentProcessTasks(&m_document))
+				status = DocumentProcessStatus::CantProcessTasks;
+
+		if(status == DocumentProcessStatus::OK) {
+			if(!depressDocumentFinalize(&m_document))
+				status = DocumentProcessStatus::CantFinalizeTasks;
+		}
+
+		depressDocumentDestroy(&m_document);
+
+		if(!depressDocumentInit(&m_document, m_document_flags))
+			if(status == DocumentProcessStatus::OK)
+				status = DocumentProcessStatus::CantReInitDocument;
+
+		m_last_document_process_status = status;
+
+		return status;
+	}
+
+	size_t CDocument::GetPagesProcessed(void)
+	{
+		if(!m_is_init) return 0;
+
+		return m_document.tasks_processed;
 	}
 
 	bool CDocument::Serialize(void *p)

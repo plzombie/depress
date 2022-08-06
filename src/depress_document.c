@@ -251,8 +251,7 @@ bool depressDocumentProcessTasks(depress_document_type *document)
 		if(document->tasks[filecount].is_error) {
 			wprintf(L"Error while converting file \"%ls\"\n", document->tasks[filecount].inputfile);
 			success = false;
-		}
-		else {
+		} else {
 			if(success && filecount > 0) {
 				wprintf(L"Merging file \"%ls\"\n", document->tasks[filecount].inputfile);
 
@@ -262,7 +261,14 @@ bool depressDocumentProcessTasks(depress_document_type *document)
 				if(_wspawnl(_P_WAIT, document->djvulibre_paths.djvm_path, arg0, L"-i", arg1, arg2, 0)) {
 					wprintf(L"Can't merge djvu files\n");
 					success = false;
-				}
+				} else
+#if defined(_M_AMD64) || defined(_M_ARM64) 
+					InterlockedExchange64(&document->tasks_processed, filecount);
+#elif defined(_M_IX86) || defined(_M_ARM)
+					InterlockedExchange(&document->tasks_processed, filecount);
+#else
+#error Define specific interlocked operation here
+#endif
 			}
 			if(filecount > 0)
 				if(!_waccess(document->tasks[filecount].outputfile, 06))
@@ -377,6 +383,13 @@ bool depressDocumentCreateTasksFromTextFile(depress_document_type *document, wch
 	document->tasks = 0;
 	document->tasks_num = 0;
 	document->tasks_max = 0;
+#if defined(_M_AMD64) || defined(_M_ARM64) 
+	InterlockedExchange64(&document->tasks_processed, 0);
+#elif defined(_M_IX86) || defined(_M_ARM)
+	InterlockedExchange(&document->tasks_processed, 0);
+#else
+#error Define specific interlocked operation here
+#endif
 	document->output_file = outputfile;
 
 #ifdef _MSC_VER

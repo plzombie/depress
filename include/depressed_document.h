@@ -31,10 +31,21 @@ namespace Depressed {
 #include "depress_document.h"
 #include "depress_flags.h"
 
+enum class DocumentProcessStatus {
+	OK,
+	CantInitDocument,
+	CantStartTasks,
+	CantProcessTasks,
+	CantFinalizeTasks,
+	CantReInitDocument
+};
+
 class CDocument {
 	depress_document_type m_document;
+	depress_document_flags_type m_document_flags;
 	depress_flags_type m_global_page_flags;
 	bool m_is_init;
+	DocumentProcessStatus m_last_document_process_status;
 
 public:
 	CDocument();
@@ -43,6 +54,9 @@ public:
 	static void SetDefaultDocumentFlags(depress_document_flags_type *document_flags);
 	bool Create(void);
 	void Destroy(void);
+	DocumentProcessStatus Process(void);
+	size_t GetPagesProcessed(void);
+	DocumentProcessStatus GetLastDocumentProcessStatus(void) { return m_last_document_process_status; }
 	bool Serialize(void *p);
 	bool Deserialize(void *p);
 };

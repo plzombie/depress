@@ -40,13 +40,6 @@ namespace Depressed {
 		depressDocumentDestroy(&m_document);
 	}
 
-	void CDocument::SetDefaultPageFlags(depress_flags_type *page_flags)
-	{
-		memset(page_flags, 0, sizeof(depress_flags_type));
-		page_flags->type = DEPRESS_PAGE_TYPE_COLOR;
-		page_flags->quality = 100;
-	}
-
 	void CDocument::SetDefaultDocumentFlags(depress_document_flags_type *document_flags)
 	{
 		memset(document_flags, 0, sizeof(depress_document_flags_type));
@@ -57,7 +50,7 @@ namespace Depressed {
 	{
 		if(m_is_init) return false;
 
-		SetDefaultPageFlags(&m_global_page_flags);
+		CPage::SetDefaultPageFlags(&m_global_page_flags);
 		SetDefaultDocumentFlags(&m_document_flags);
 
 		if(!depressDocumentInit(&m_document, m_document_flags))
@@ -89,12 +82,14 @@ namespace Depressed {
 		m_pages.clear();
 	}
 
-	DocumentProcessStatus CDocument::Process(void)
+	DocumentProcessStatus CDocument::Process(wchar_t *outputfile)
 	{
 		DocumentProcessStatus status = DocumentProcessStatus::OK;
 
 		if(!depressDocumentInit(&m_document, m_document_flags))
 			status = DocumentProcessStatus::CantInitDocument;
+
+		m_document.output_file = outputfile;
 
 		// Add tasks
 		for(auto page : m_pages) {
@@ -142,6 +137,11 @@ namespace Depressed {
 #else
 #error Define specific interlocked operation here
 #endif
+	}
+
+	size_t CDocument::PagesCount(void)
+	{
+		return m_pages.size();
 	}
 
 	CPage *CDocument::PageGet(size_t id)
@@ -210,31 +210,101 @@ namespace Depressed {
 		return false;
 	}
 
-	bool CDocument::Deserialize(void *p, wchar_t *basepath)
+	bool CDocument::Deserialize(IXmlReader *reader, wchar_t *basepath)
 	{
 		depress_document_type new_document;
 		depress_document_flags_type document_flags;
 		depress_flags_type flags;
-		bool success = true;
+		bool success = true, read_pages = false;
+		std::vector<CPage *> pages;
 
 		if(!m_is_init) return false;
 
-		// Здесь должно быть чтение флагов документа и глобальных флагов страницы
-		if(!CPage::DeserializePageFlags(p, &flags)) return false;
-		if(!DeserializeDocumentFlags(p, &document_flags)) return false;
-
+		CPage::SetDefaultPageFlags(&flags);
 		SetDefaultDocumentFlags(&document_flags);
-		success = depressDocumentInit(&new_document, document_flags);
-		if(!success) return false;
 
-		// Здесь должно быть чтение страниц
-		success = false;
+		while(true) {
+			const wchar_t *value;
+			HRESULT hr;
+			XmlNodeType nodetype;
+
+			hr = reader->Read(&nodetype);
+			if(hr != S_OK) break;
+
+			if(nodetype == XmlNodeType_Element) {
+				if(reader->GetLocalName(&value, NULL) != S_OK) {
+					success = false;
+					break;
+				}
+
+				if(read_pages == false) {
+					if(wcscmp(value, L"DocumentFlags") == 0) {
+						if(!DeserializeDocumentFlags(reader, &document_flags)) {
+							success = false;
+							break;
+						}
+					} else if(wcscmp(value, L"Flags") == 0) {
+						if(!CPage::DeserializePageFlags(reader, &flags)) {
+							success = false;
+							break;
+						}
+					} else if(wcscmp(value, L"Pages") == 0) {
+						read_pages = true;
+					} else {
+						success = false;
+						break;
+					}
+				} else {
+					if(wcscmp(value, L"Page") == 0) {
+						CPage *page = new CPage();
+
+						if(!page->Deserialize(reader, basepath, flags)) {
+							delete page;
+							success = false;
+							break;
+						}
+
+						pages.push_back(page);
+					} else {
+						success = false;
+						break;
+					}
+				}
+			} else if(nodetype == XmlNodeType_EndElement) {
+				if(read_pages == true) {
+					if(reader->GetLocalName(&value, NULL) != S_OK) {
+						success = false;
+						break;
+					}
+
+					if(wcscmp(value, L"Pages") == 0) {
+						read_pages = false;
+					} else {
+						success = false;
+						break;
+					}
+				}
+			}
+		}
 
 		if(success) {
 			depressDocumentDestroy(&m_document);
+			SetDefaultDocumentFlags(&document_flags);
+			if(!depressDocumentInit(&new_document, document_flags)) {
+				for(auto page : pages)
+					delete page;
+
+				return false;
+			}
 			m_document = new_document;
+			for(auto page : m_pages)
+				delete page;
+			m_pages = pages;
 			m_global_page_flags = flags;
 		} else {
+			for(auto page : pages)
+				delete page;
+
 			depressDocumentDestroy(&new_document);
 		}
 
@@ -246,8 +316,33 @@ namespace Depressed {
 		return false;
 	}
 
-	bool CDocument::DeserializeDocumentFlags(void *p, depress_document_flags_type *document_flags)
+	bool CDocument::DeserializeDocumentFlags(IXmlReader *reader, depress_document_flags_type *document_flags)
 	{
+		const wchar_t *value;
+
+		SetDefaultDocumentFlags(document_flags);
+			
+		if(reader->MoveToFirstAttribute() != S_OK) return true;
+		while(1) {
+			if(reader->GetLocalName(&value, NULL) != S_OK) goto PROCESSING_FAILED;
+				
+			if(wcscmp(value, L"ptt") == 0) {
+				if(reader->GetValue(&value, NULL) != S_OK) goto PROCESSING_FAILED;
+
+				document_flags->page_title_type = _wtoi(value);
+			} else if(wcscmp(value, L"ptt_flags") == 0) {
+				if(reader->GetValue(&value, NULL) != S_OK) goto PROCESSING_FAILED;
+				
+				document_flags->page_title_type_flags = _wtoi(value);
+			}
+
+			if(reader->MoveToNextAttribute() != S_OK) break;
+		}
+
+		return true;
+
+	PROCESSING_FAILED:
+		SetDefaultDocumentFlags(document_flags);
 		return false;
 	}
 

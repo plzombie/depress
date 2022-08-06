@@ -342,6 +342,8 @@ bool depressDocumentAddTask(depress_document_type *document, wchar_t *inputfile,
 	depress_task_type task;
 	wchar_t tempstr[32];
 
+	if(!document->output_file) return false;
+
 	memset(&task, 0, sizeof(depress_task_type));
 
 	// Filling task

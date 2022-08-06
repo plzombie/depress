@@ -44,6 +44,7 @@ INT WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine
 	if(argc > 1) default_output = argv[1];
 
 	SetSearchPathMode(BASE_SEARCH_PATH_ENABLE_SAFE_SEARCHMODE | BASE_SEARCH_PATH_PERMANENT);
+	CoInitializeEx(NULL, COINIT_MULTITHREADED);
 
 	if(!document.Create()) {
 		MessageBoxW(NULL, L"Can't create empty document, probably not enough memory", L"Depressed", MB_OK | MB_TASKMODAL | MB_ICONSTOP);
@@ -57,8 +58,12 @@ INT WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine
 	} else if(argc == 2) {
 		// Process project file and create djvu
 		if(Depressed::OpenDied(default_project, document)) {
-			if(document.Process() != Depressed::DocumentProcessStatus::OK)
+			if(document.PagesCount() == 0)
+				MessageBoxW(NULL, L"No pages in document", L"Depressed", MB_OK | MB_TASKMODAL | MB_ICONSTOP);
+			else if(document.Process(default_output) != Depressed::DocumentProcessStatus::OK)
 				MessageBoxW(NULL, L"Can't save djvu file", L"Depressed", MB_OK | MB_TASKMODAL | MB_ICONSTOP);
+			else
+				MessageBoxW(NULL, L"File saved", L"Depressed", MB_OK | MB_TASKMODAL | MB_ICONINFORMATION);
 		} else
 			MessageBoxW(NULL, L"Can't open project file", L"Depressed", MB_OK | MB_TASKMODAL | MB_ICONSTOP);
 		//MessageBoxW(NULL, L"Project processing unimplemented", L"Depressed", MB_OK | MB_TASKMODAL | MB_ICONSTOP);

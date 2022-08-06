@@ -36,6 +36,8 @@ bool depressLoadImageFromFileAndApplyFlags(wchar_t *filename, int *sizex, int *s
 	FILE *f = 0;
 
 	f = _wfopen(filename, L"rb");
+	if(!f)
+		return false;
 
 	*buf = depressLoadImage(f, sizex, sizey, channels, flags.type == DEPRESS_PAGE_TYPE_BW);
 

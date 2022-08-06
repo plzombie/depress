@@ -26,8 +26,9 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#include <stdlib.h>
 #include "depress_flags.h"
+#include <stdlib.h>
+#include <xmllite.h>
 
 #ifndef DEPRESS_PAGE_H
 #define DEPRESS_PAGE_H
@@ -45,10 +46,11 @@ public:
 	void SetFilename(wchar_t *filename) { if(m_filename) free(m_filename); m_filename = filename; }
 	wchar_t *GetFilename(void) { return m_filename; }
 	bool LoadImageForPage(int *sizex, int *sizey, int *channels, unsigned char **buf);
+	static void SetDefaultPageFlags(depress_flags_type *page_flags);
 	bool Serialize(void *p, wchar_t *basepath);
-	bool Deserialize(void *p, wchar_t *basepath);
+	bool Deserialize(IXmlReader *reader, wchar_t *basepath, depress_flags_type flags);
 	static bool SerializePageFlags(void *p, depress_flags_type flags);
-	static bool DeserializePageFlags(void *p, depress_flags_type *flags);
+	static bool DeserializePageFlags(IXmlReader *reader, depress_flags_type *flags);
 };
 
 }

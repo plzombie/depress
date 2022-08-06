@@ -28,12 +28,84 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "../include/depressed_open.h"
 
+#include <xmllite.h>
+#include <Shlwapi.h>
+#include <string.h>
+
 namespace Depressed {
+
+	static bool OpenXml(wchar_t *filename, IXmlReader **reader, IStream **filestream)
+	{
+		HRESULT hr;
+
+		hr = SHCreateStreamOnFileW(filename, STGM_READ, filestream);
+		if(FAILED(hr)) return false;
+
+		hr = CreateXmlReader(__uuidof(IXmlReader), (void **)reader, NULL);
+		if(FAILED(hr)) {
+			(*filestream)->Release();
+
+			return false;
+		}
+
+		// We don't need DTD
+		hr = (*reader)->SetProperty(XmlReaderProperty_DtdProcessing, DtdProcessing_Prohibit);
+		if(FAILED(hr)) {
+			(*reader)->Release();
+			(*filestream)->Release();
+
+			return false;
+		}
+
+		hr = (*reader)->SetInput(*filestream);
+		if(FAILED(hr)) {
+			(*reader)->Release();
+			(*filestream)->Release();
+
+			return false;
+		}
+
+		return true;
+	}
 
 	bool OpenDied(wchar_t *filename, CDocument &document, wchar_t **basepath)
 	{
+		
+		IXmlReader *reader;
+		IStream *filestream;
 
-		return false;
+		if(!OpenXml(filename, &reader, &filestream)) return false;
+
+		while(true) {
+			const wchar_t *value;
+			HRESULT hr;
+			XmlNodeType nodetype;
+
+			hr = reader->Read(&nodetype);
+			if(hr == S_FALSE) break;
+			if(hr == E_PENDING) {
+				Sleep(0);
+				continue;
+			}
+
+			if(nodetype != XmlNodeType_Element) continue;
+			reader->GetLocalName(&value, NULL);
+			if(wcscmp(value, L"Document") == 0) {
+				if(!document.Deserialize(reader, 0)) {
+					reader->Release();
+					filestream->Release();
+
+					return false;
+				}
+
+				break;
+			}
+		}
+
+		reader->Release();
+		filestream->Release();
+
+		return true;
 	}
 	
 	bool SaveDied(wchar_t *filename, CDocument &document, wchar_t **basepath)

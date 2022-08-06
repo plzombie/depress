@@ -26,14 +26,14 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#include <vector>
-
 #ifndef DEPRESSED_DOCUMENT_H
 #define DEPRESSED_DOCUMENT_H
 
 #include "depressed_page.h"
 #include "depress_document.h"
 #include "depress_flags.h"
+#include <xmllite.h>
+#include <vector>
 
 namespace Depressed {
 
@@ -58,12 +58,11 @@ class CDocument {
 public:
 	CDocument();
 	~CDocument();
-	static void SetDefaultPageFlags(depress_flags_type *page_flags);
 	static void SetDefaultDocumentFlags(depress_document_flags_type *document_flags);
 	bool Create(void);
 	void Destroy(void);
 	void DestroyPages(void);
-	DocumentProcessStatus Process(void);
+	DocumentProcessStatus Process(wchar_t *outputfile);
 	size_t GetPagesProcessed(void);
 	DocumentProcessStatus GetLastDocumentProcessStatus(void) { return m_last_document_process_status; }
 	size_t PagesCount(void);
@@ -72,9 +71,9 @@ public:
 	bool PageDelete(size_t id);
 	bool PageSwap(size_t id1, size_t id2);
 	bool Serialize(void *p, wchar_t *basepath);
-	bool Deserialize(void *p, wchar_t *basepath);
+	bool Deserialize(IXmlReader *reader, wchar_t *basepath);
 	static bool SerializeDocumentFlags(void *p, depress_document_flags_type document_flags);
-	static bool DeserializeDocumentFlags(void *p, depress_document_flags_type *document_flags);
+	static bool DeserializeDocumentFlags(IXmlReader *reader, depress_document_flags_type *document_flags);
 };
 
 }

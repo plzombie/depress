@@ -72,9 +72,21 @@ namespace Depressed {
 	{
 		if(!m_is_init) return;
 
+		DestroyPages();
+
 		depressDocumentDestroy(&m_document);
 
 		m_is_init = false;
+	}
+
+	void CDocument::DestroyPages(void)
+	{
+		if(!m_is_init) return;
+
+		for(auto page : m_pages)
+			delete page;
+
+		m_pages.clear();
 	}
 
 	DocumentProcessStatus CDocument::Process(void)
@@ -124,12 +136,59 @@ namespace Depressed {
 		if(!m_is_init) return 0;
 
 #if defined(_M_AMD64) || defined(_M_ARM64) 
-		InterlockedAdd64((LONG64 *)(&m_document.tasks_processed), 0);
+		return InterlockedAdd64((LONG64 *)(&m_document.tasks_processed), 0);
 #elif defined(_M_IX86) || defined(_M_ARM)
-		InterlockedAdd((LONG *)(&m_document.tasks_processed), 0);
+		return InterlockedAdd((LONG *)(&m_document.tasks_processed), 0);
 #else
 #error Define specific interlocked operation here
 #endif
+	}
+
+	CPage *CDocument::PageGet(size_t id)
+	{
+		if(id >= m_pages.size())
+			return 0;
+
+		return m_pages[id];
+	}
+
+	bool CDocument::PageAdd(CPage *page)
+	{
+		try {
+			m_pages.push_back(page);
+
+			return true;
+		} catch(std::bad_alloc) { // Why not ...? Because help says what it's only bad_alloc in allocator. So any others are not standard situation.
+			return false;
+		}
+	}
+
+	bool CDocument::PageDelete(size_t id)
+	{
+		if(id >= m_pages.size())
+			return false;
+
+		delete m_pages[id];
+
+		if(id == m_pages.size() - 1)
+			m_pages.pop_back();
+		else
+			m_pages.erase(m_pages.begin() + id);
+
+		return true;
+	}
+
+	bool CDocument::PageSwap(size_t id1, size_t id2)
+	{
+		CPage *temp;
+		if(id1 >= m_pages.size()) return false;
+		if(id2 >= m_pages.size()) return false;
+
+		temp = m_pages[id1];
+		m_pages[id1] = m_pages[id2];
+		m_pages[id2] = temp;
+
+		return true;
 	}
 
 	bool CDocument::Serialize(void *p, wchar_t *basepath)

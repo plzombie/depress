@@ -31,7 +31,28 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define STB_IMAGE_IMPLEMENTATION
 #include "third_party/stb_image.h"
 
+bool depressLoadImageFromFileAndApplyFlags(wchar_t *filename, int *sizex, int *sizey, int *channels, unsigned char **buf, depress_flags_type flags)
+{
+	FILE *f = 0;
 
+	f = _wfopen(filename, L"rb");
+
+	*buf = depressLoadImage(f, sizex, sizey, channels, flags.type == DEPRESS_PAGE_TYPE_BW);
+
+	fclose(f);
+
+	if(!(*buf))
+		return false;
+
+	if(flags.type == DEPRESS_PAGE_TYPE_BW && flags.param1 == DEPRESS_PAGE_TYPE_BW_PARAM1_ERRDIFF)
+		depressImageApplyErrorDiffusion(*buf, *sizex, *sizey);
+	else if(flags.type == DEPRESS_PAGE_TYPE_BW && flags.param1 == DEPRESS_PAGE_TYPE_BW_PARAM1_ADAPTIVE) {
+		if(!depressImageApplyAdaptiveBinarization(*buf, *sizex, *sizey))
+			return false;
+	}
+
+	return true;
+}
 
 unsigned char *depressLoadImage(FILE *f, int *sizex, int *sizey, int *channels, bool is_bw)
 {

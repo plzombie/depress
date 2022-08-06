@@ -26,9 +26,21 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
+#include <stdio.h>
+#include <wchar.h>
+
+#include "../include/depress_image.h"
+
 #include "../include/depressed_page.h"
 
 namespace Depressed {
+	bool CPage::LoadImageForPage(int *sizex, int *sizey, int *channels, unsigned char **buf)
+	{
+		if(!depressLoadImageFromFileAndApplyFlags(m_filename, sizex, sizey, channels, buf, m_flags))
+			return false;
+
+	}
+
 	bool CPage::Serialize(void *p, wchar_t *basepath)
 	{
 		return false;

@@ -44,6 +44,7 @@ public:
 	depress_flags_type GetFlags(void) { return m_flags; }
 	void SetFilename(wchar_t *filename) { if(m_filename) free(m_filename); m_filename = filename; }
 	wchar_t *GetFilename(void) { return m_filename; }
+	bool LoadImageForPage(int *sizex, int *sizey, int *channels, unsigned char **buf);
 	bool Serialize(void *p, wchar_t *basepath);
 	bool Deserialize(void *p, wchar_t *basepath);
 	static bool SerializePageFlags(void *p, depress_flags_type flags);

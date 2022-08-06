@@ -25,6 +25,9 @@
 *.FileListAbsolute.txt
 *.sdf
 *.opensdf
+*.exe.embed.manifest
+*.exe.embed.manifest.res
+*_manifest.rc
 
 # OpenWatcom
 *.lk1

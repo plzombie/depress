@@ -62,9 +62,15 @@ public:
 	static void SetDefaultDocumentFlags(depress_document_flags_type *document_flags);
 	bool Create(void);
 	void Destroy(void);
+	void DestroyPages(void);
 	DocumentProcessStatus Process(void);
 	size_t GetPagesProcessed(void);
 	DocumentProcessStatus GetLastDocumentProcessStatus(void) { return m_last_document_process_status; }
+	size_t PagesCount(void);
+	CPage *PageGet(size_t id);
+	bool PageAdd(CPage *page);
+	bool PageDelete(size_t id);
+	bool PageSwap(size_t id1, size_t id2);
 	bool Serialize(void *p, wchar_t *basepath);
 	bool Deserialize(void *p, wchar_t *basepath);
 	static bool SerializeDocumentFlags(void *p, depress_document_flags_type document_flags);

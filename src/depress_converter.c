@@ -38,7 +38,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 bool depressConvertPage(depress_flags_type flags, wchar_t *inputfile, wchar_t *tempfile, wchar_t *outputfile, depress_djvulibre_paths_type *djvulibre_paths)
 {
-	FILE *f_in = 0, *f_temp = 0;
+	FILE *f_temp = 0;
 	int sizex, sizey, channels;
 	wchar_t *arg0 = 0, *arg1 = 0, *arg2 = 0, *arg3 = 0;
 	unsigned char *buffer = 0;
@@ -54,23 +54,12 @@ bool depressConvertPage(depress_flags_type flags, wchar_t *inputfile, wchar_t *t
 		arg3 = arg2 + 32770;
 	}
 
-	f_in = _wfopen(inputfile, L"rb");
 	f_temp = _wfopen(tempfile, L"wb");
-	if(!f_in || !f_temp)
+	if(!f_temp)
 		goto EXIT;
 
-	buffer = depressLoadImage(f_in, &sizex, &sizey, &channels, flags.type == DEPRESS_PAGE_TYPE_BW);
-	if(!buffer)
+	if(!depressLoadImageFromFileAndApplyFlags(inputfile, &sizex, &sizey, &channels, &buffer, flags))
 		goto EXIT;
-
-	if(flags.type == DEPRESS_PAGE_TYPE_BW && flags.param1 == DEPRESS_PAGE_TYPE_BW_PARAM1_ERRDIFF)
-		depressImageApplyErrorDiffusion(buffer, sizex, sizey);
-	else if(flags.type == DEPRESS_PAGE_TYPE_BW && flags.param1 == DEPRESS_PAGE_TYPE_BW_PARAM1_ADAPTIVE) {
-		if(!depressImageApplyAdaptiveBinarization(buffer, sizex, sizey))
-			goto EXIT;
-	}
-
-	fclose(f_in); f_in = 0;
 
 	if(flags.type == DEPRESS_PAGE_TYPE_BW) {
 		if(!pbmSave(sizex, sizey, buffer, f_temp))
@@ -120,7 +109,6 @@ bool depressConvertPage(depress_flags_type flags, wchar_t *inputfile, wchar_t *t
 EXIT:
 	if(arg0) free(arg0);
 
-	if(f_in) fclose(f_in);
 	if(f_temp) fclose(f_temp);
 	if(buffer) free(buffer);
 

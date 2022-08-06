@@ -26,52 +26,18 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#include <vector>
-
-#ifndef DEPRESSED_DOCUMENT_H
-#define DEPRESSED_DOCUMENT_H
-
-#include "depressed_page.h"
-#include "depress_document.h"
-#include "depress_flags.h"
+#include "../include/depressed_open.h"
 
 namespace Depressed {
 
-enum class DocumentProcessStatus {
-	OK,
-	CantInitDocument,
-	CantAddTask,
-	CantStartTasks,
-	CantProcessTasks,
-	CantFinalizeTasks,
-	CantReInitDocument
-};
+	bool OpenDied(wchar_t *filename, CDocument &document, wchar_t **basepath)
+	{
 
-class CDocument {
-	depress_document_type m_document;
-	depress_document_flags_type m_document_flags;
-	depress_flags_type m_global_page_flags;
-	bool m_is_init;
-	DocumentProcessStatus m_last_document_process_status;
-	std::vector<CPage *> m_pages;
-
-public:
-	CDocument();
-	~CDocument();
-	static void SetDefaultPageFlags(depress_flags_type *page_flags);
-	static void SetDefaultDocumentFlags(depress_document_flags_type *document_flags);
-	bool Create(void);
-	void Destroy(void);
-	DocumentProcessStatus Process(void);
-	size_t GetPagesProcessed(void);
-	DocumentProcessStatus GetLastDocumentProcessStatus(void) { return m_last_document_process_status; }
-	bool Serialize(void *p, wchar_t *basepath);
-	bool Deserialize(void *p, wchar_t *basepath);
-	static bool SerializeDocumentFlags(void *p, depress_document_flags_type document_flags);
-	static bool DeserializeDocumentFlags(void *p, depress_document_flags_type *document_flags);
-};
-
+		return false;
+	}
+	
+	bool SaveDied(wchar_t *filename, CDocument &document, wchar_t **basepath)
+	{
+		return false;
+	}
 }
-
-#endif
-

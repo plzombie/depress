@@ -271,6 +271,8 @@
   <ItemGroup>
     <ClCompile Include="..\..\src\depressed.cpp" />
     <ClCompile Include="..\..\src\depressed_document.cpp" />
+    <ClCompile Include="..\..\src\depressed_open.cpp" />
+    <ClCompile Include="..\..\src\depressed_page.cpp" />
     <ClCompile Include="..\..\src\depress_converter.c" />
     <ClCompile Include="..\..\src\depress_document.c" />
     <ClCompile Include="..\..\src\depress_image.c" />

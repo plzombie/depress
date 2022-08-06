@@ -85,7 +85,13 @@ namespace Depressed {
 			status = DocumentProcessStatus::CantInitDocument;
 
 		// Add tasks
-		// There should be code to add tasks (depressDocumentAddTask)
+		for(auto page : m_pages) {
+			if(!depressDocumentAddTask(&m_document, page->GetFilename(), page->GetFlags())) {
+				status = DocumentProcessStatus::CantAddTask;
+
+				break;
+			}
+		}
 
 		// Create threads from tasks
 		if(status == DocumentProcessStatus::OK)
@@ -117,25 +123,46 @@ namespace Depressed {
 	{
 		if(!m_is_init) return 0;
 
-		return m_document.tasks_processed;
+#if defined(_M_AMD64) || defined(_M_ARM64) 
+		InterlockedAdd64((LONG64 *)(&m_document.tasks_processed), 0);
+#elif defined(_M_IX86) || defined(_M_ARM)
+		InterlockedAdd((LONG *)(&m_document.tasks_processed), 0);
+#else
+#error Define specific interlocked operation here
+#endif
 	}
 
-	bool CDocument::Serialize(void *p)
+	bool CDocument::Serialize(void *p, wchar_t *basepath)
 	{
+		void *pages_el;
+
 		if(!m_is_init) return false;
+
+		if(!CPage::SerializePageFlags(p, m_global_page_flags)) return false;
+		if(!SerializeDocumentFlags(p, m_document_flags)) return false;
+
+		pages_el = p;
+
+		for(auto page : m_pages) {
+			if(!page->Serialize(pages_el, basepath))
+				return false;
+		}
 
 		return false;
 	}
 
-	bool CDocument::Deserialize(void *p)
+	bool CDocument::Deserialize(void *p, wchar_t *basepath)
 	{
 		depress_document_type new_document;
 		depress_document_flags_type document_flags;
+		depress_flags_type flags;
 		bool success = true;
 
 		if(!m_is_init) return false;
 
 		// Здесь должно быть чтение флагов документа и глобальных флагов страницы
+		if(!CPage::DeserializePageFlags(p, &flags)) return false;
+		if(!DeserializeDocumentFlags(p, &document_flags)) return false;
 
 		SetDefaultDocumentFlags(&document_flags);
 		success = depressDocumentInit(&new_document, document_flags);
@@ -147,11 +174,22 @@ namespace Depressed {
 		if(success) {
 			depressDocumentDestroy(&m_document);
 			m_document = new_document;
+			m_global_page_flags = flags;
 		} else {
 			depressDocumentDestroy(&new_document);
 		}
 
 		return success;
+	}
+
+	bool CDocument::SerializeDocumentFlags(void *p, depress_document_flags_type document_flags)
+	{
+		return false;
+	}
+
+	bool CDocument::DeserializeDocumentFlags(void *p, depress_document_flags_type *document_flags)
+	{
+		return false;
 	}
 
 }

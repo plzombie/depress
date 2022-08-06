@@ -1,6 +1,6 @@
 ﻿<Document>
 <DocumentFlags ptt="1" ptt_flags="1" />
-<GlobalPageFlags type="1" param1="2" quality="100" />
+<Flags type="1" param1="2" quality="100" />
 <Pages>
 <Page><Filename>unicodeexample😊.jpg</Filename></Page>
 <Page><Filename>unicodeexample⁂.jpg</Filename></Page>

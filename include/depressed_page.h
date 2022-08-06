@@ -26,49 +26,28 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#include <vector>
-
-#ifndef DEPRESSED_DOCUMENT_H
-#define DEPRESSED_DOCUMENT_H
-
-#include "depressed_page.h"
-#include "depress_document.h"
+#include <stdlib.h>
 #include "depress_flags.h"
+
+#ifndef DEPRESS_PAGE_H
+#define DEPRESS_PAGE_H
 
 namespace Depressed {
 
-enum class DocumentProcessStatus {
-	OK,
-	CantInitDocument,
-	CantAddTask,
-	CantStartTasks,
-	CantProcessTasks,
-	CantFinalizeTasks,
-	CantReInitDocument
-};
-
-class CDocument {
-	depress_document_type m_document;
-	depress_document_flags_type m_document_flags;
-	depress_flags_type m_global_page_flags;
-	bool m_is_init;
-	DocumentProcessStatus m_last_document_process_status;
-	std::vector<CPage *> m_pages;
-
+class CPage
+{
+	depress_flags_type m_flags;
+	wchar_t *m_filename;
+	
 public:
-	CDocument();
-	~CDocument();
-	static void SetDefaultPageFlags(depress_flags_type *page_flags);
-	static void SetDefaultDocumentFlags(depress_document_flags_type *document_flags);
-	bool Create(void);
-	void Destroy(void);
-	DocumentProcessStatus Process(void);
-	size_t GetPagesProcessed(void);
-	DocumentProcessStatus GetLastDocumentProcessStatus(void) { return m_last_document_process_status; }
+	void SetFlags(depress_flags_type flags) { m_flags = flags; }
+	depress_flags_type GetFlags(void) { return m_flags; }
+	void SetFilename(wchar_t *filename) { if(m_filename) free(m_filename); m_filename = filename; }
+	wchar_t *GetFilename(void) { return m_filename; }
 	bool Serialize(void *p, wchar_t *basepath);
 	bool Deserialize(void *p, wchar_t *basepath);
-	static bool SerializeDocumentFlags(void *p, depress_document_flags_type document_flags);
-	static bool DeserializeDocumentFlags(void *p, depress_document_flags_type *document_flags);
+	static bool SerializePageFlags(void *p, depress_flags_type flags);
+	static bool DeserializePageFlags(void *p, depress_flags_type *flags);
 };
 
 }

@@ -29,10 +29,11 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <Windows.h>
 
 #include "../include/depressed_document.h"
+#include "../include/depressed_open.h"
 
 INT WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine, int nCmdShow)
 {
-	wchar_t **argv, *default_project, *default_output;
+	wchar_t **argv, *default_project = 0, *default_output = 0;
 	int argc;
 	Depressed::CDocument document;
 
@@ -44,15 +45,23 @@ INT WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine
 
 	SetSearchPathMode(BASE_SEARCH_PATH_ENABLE_SAFE_SEARCHMODE | BASE_SEARCH_PATH_PERMANENT);
 
-	if(!document.Create())
+	if(!document.Create()) {
 		MessageBoxW(NULL, L"Can't create empty document, probably not enough memory", L"Depressed", MB_OK | MB_TASKMODAL | MB_ICONSTOP);
+
+		return EXIT_FAILURE;
+	}
 
 	if(argc < 2) {
 		// Run GUI
 		MessageBoxW(NULL, L"Depressed GUI unimplemented", L"Depressed", MB_OK | MB_TASKMODAL | MB_ICONSTOP);
 	} else if(argc == 2) {
 		// Process project file and create djvu
-		MessageBoxW(NULL, L"Project processing unimplemented", L"Depressed", MB_OK | MB_TASKMODAL | MB_ICONSTOP);
+		if(Depressed::OpenDied(default_project, document)) {
+			if(document.Process() != Depressed::DocumentProcessStatus::OK)
+				MessageBoxW(NULL, L"Can't save djvu file", L"Depressed", MB_OK | MB_TASKMODAL | MB_ICONSTOP);
+		} else
+			MessageBoxW(NULL, L"Can't open project file", L"Depressed", MB_OK | MB_TASKMODAL | MB_ICONSTOP);
+		//MessageBoxW(NULL, L"Project processing unimplemented", L"Depressed", MB_OK | MB_TASKMODAL | MB_ICONSTOP);
 	} else {
 		MessageBoxW(NULL, L"Too many arguments", L"Depressed", MB_OK | MB_TASKMODAL | MB_ICONINFORMATION);
 	}

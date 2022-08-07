@@ -68,6 +68,31 @@ namespace Depressed {
 		return true;
 	}
 
+	static bool SaveXml(wchar_t *filename, IXmlWriter **writer, IStream **filestream)
+	{
+		HRESULT hr;
+
+		hr = SHCreateStreamOnFileW(filename, STGM_WRITE | STGM_CREATE, filestream);
+		if(FAILED(hr)) return false;
+
+		hr = CreateXmlWriter(__uuidof(IXmlWriter), (void **)writer, NULL);
+		if(FAILED(hr)) {
+			(*filestream)->Release();
+
+			return false;
+		}
+
+		hr = (*writer)->SetOutput(*filestream);
+		if(FAILED(hr)) {
+			(*filestream)->Release();
+			(*filestream)->Release();
+
+			return false;
+		}
+
+		return true;
+	}
+
 	bool OpenDied(wchar_t *filename, CDocument &document)
 	{
 		const size_t max_fn_len = 32768;
@@ -116,6 +141,34 @@ namespace Depressed {
 	
 	bool SaveDied(wchar_t *filename, CDocument &document)
 	{
-		return false;
+		HRESULT hr;
+		IXmlWriter *writer;
+		IStream *filestream;
+		wchar_t *basepath = 0;
+
+		if(!SaveXml(filename, &writer, &filestream))
+			return false;
+
+		writer->SetProperty(XmlWriterProperty_ByteOrderMark, TRUE);
+
+		if(!document.Serialize(writer, basepath)) {
+			writer->Release();
+			filestream->Release();
+
+			return false;
+		}
+
+		hr = writer->WriteEndDocument();
+		if(hr != S_OK) {
+			writer->Release();
+			filestream->Release();
+
+			return false;
+		}
+
+		writer->Release();
+		filestream->Release();
+
+		return true;
 	}
 }

@@ -72,16 +72,38 @@ namespace Depressed {
 		page_flags->quality = 100;
 	}
 
-	bool CPage::Serialize(IXmlWriter *writer, const wchar_t *basepath)
+	bool CPage::Serialize(IXmlWriter *writer, const wchar_t *basepath, depress_flags_type default_flags)
 	{
-		return false;
+		HRESULT hr;
+
+		hr = writer->WriteStartElement(NULL, L"Page", NULL);
+		if(hr != S_OK) return false;
+
+		if(memcmp(&m_flags, &default_flags, sizeof(depress_flags_type)))
+			if(!SerializePageFlags(writer, m_flags)) return false;
+
+		// Write filename
+		hr = writer->WriteStartElement(NULL, L"Filename", NULL);
+		if(hr != S_OK) return false;
+
+		hr = writer->WriteString(m_filename);
+		if(hr != S_OK) return false;
+
+		hr = writer->WriteEndElement();
+		if(hr != S_OK) return false;
+		// End of filename
+
+		hr = writer->WriteEndElement();
+		if(hr != S_OK) return false;
+
+		return true;
 	}
 	
-	bool CPage::Deserialize(IXmlReader *reader, const wchar_t *basepath, depress_flags_type flags)
+	bool CPage::Deserialize(IXmlReader *reader, const wchar_t *basepath, depress_flags_type default_flags)
 	{
 		bool read_filename = false;
 
-		m_flags = flags;
+		m_flags = default_flags;
 
 		while(true) {
 			const wchar_t *value;
@@ -126,7 +148,25 @@ namespace Depressed {
 
 	bool CPage::SerializePageFlags(IXmlWriter *writer, depress_flags_type flags)
 	{
-		return false;
+		wchar_t value[100];
+		HRESULT hr;
+
+		hr = writer->WriteStartElement(NULL, L"Flags", NULL);
+		if(hr != S_OK) return false;
+
+		hr = writer->WriteAttributeString(NULL, L"type", NULL, _itow(flags.type, value, 10));
+		if(hr != S_OK) return false;
+
+		hr = writer->WriteAttributeString(NULL, L"param1", NULL, _itow(flags.param1, value, 10));
+		if(hr != S_OK) return false;
+
+		hr = writer->WriteAttributeString(NULL, L"quality", NULL, _itow(flags.quality, value, 10));
+		if(hr != S_OK) return false;
+
+		hr = writer->WriteEndElement();
+		if(hr != S_OK) return false;
+
+		return true;
 	}
 
 	bool CPage::DeserializePageFlags(IXmlReader *reader, depress_flags_type *flags)

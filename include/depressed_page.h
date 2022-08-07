@@ -48,8 +48,8 @@ public:
 	wchar_t *GetFilename(void) { return m_filename; }
 	bool LoadImageForPage(int *sizex, int *sizey, int *channels, unsigned char **buf);
 	static void SetDefaultPageFlags(depress_flags_type *page_flags);
-	bool Serialize(IXmlWriter *writer, const wchar_t *basepath);
-	bool Deserialize(IXmlReader *reader, const wchar_t *basepath, depress_flags_type flags);
+	bool Serialize(IXmlWriter *writer, const wchar_t *basepath, depress_flags_type default_flags);
+	bool Deserialize(IXmlReader *reader, const wchar_t *basepath, depress_flags_type default_flags);
 	static bool SerializePageFlags(IXmlWriter *writer, depress_flags_type flags);
 	static bool DeserializePageFlags(IXmlReader *reader, depress_flags_type *flags);
 };

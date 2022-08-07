@@ -193,22 +193,35 @@ namespace Depressed {
 
 	bool CDocument::Serialize(IXmlWriter *writer, const wchar_t *basepath)
 	{
+		HRESULT hr;
+
 		if(!m_is_init) return false;
+
+		hr = writer->WriteStartElement(NULL, L"Document", NULL);
+		if(hr != S_OK) return false;
 
 		if(!CPage::SerializePageFlags(writer, m_global_page_flags)) return false;
 		if(!SerializeDocumentFlags(writer, m_document_flags)) return false;
 
+		// Write pages
+		hr = writer->WriteStartElement(NULL, L"Pages", NULL);
+		if(hr != S_OK) return false;
+
 		for(auto page : m_pages) {
-			if(!page->Serialize(writer, basepath))
+			if(!page->Serialize(writer, basepath, m_global_page_flags))
 				return false;
 		}
 
-		return false;
+		hr = writer->WriteEndElement();
+		// End of pages
+
+		hr = writer->WriteEndElement();
+
+		return true;
 	}
 
 	bool CDocument::Deserialize(IXmlReader *reader, const wchar_t *basepath)
 	{
-		depress_document_type new_document;
 		depress_document_flags_type document_flags;
 		depress_flags_type flags;
 		bool success = true, read_pages = false;
@@ -284,24 +297,14 @@ namespace Depressed {
 		}
 
 		if(success) {
-			depressDocumentDestroy(&m_document);
-			SetDefaultDocumentFlags(&document_flags);
-			if(!depressDocumentInit(&new_document, document_flags)) {
-				for(auto page : pages)
-					delete page;
-
-				return false;
-			}
-			m_document = new_document;
 			for(auto page : m_pages)
 				delete page;
 			m_pages = pages;
+			m_document_flags = document_flags;
 			m_global_page_flags = flags;
 		} else {
 			for(auto page : pages)
 				delete page;
-
-			depressDocumentDestroy(&new_document);
 		}
 
 		return success;
@@ -309,7 +312,22 @@ namespace Depressed {
 
 	bool CDocument::SerializeDocumentFlags(IXmlWriter *writer, depress_document_flags_type document_flags)
 	{
-		return false;
+		wchar_t value[100];
+		HRESULT hr;
+
+		hr = writer->WriteStartElement(NULL, L"DocumentFlags", NULL);
+		if(hr != S_OK) return false;
+
+		hr = writer->WriteAttributeString(NULL, L"ptt", NULL, _itow(document_flags.page_title_type, value, 10));
+		if(hr != S_OK) return false;
+
+		hr = writer->WriteAttributeString(NULL, L"ptt_flags", NULL, _itow(document_flags.page_title_type_flags, value, 10));
+		if(hr != S_OK) return false;
+
+		hr = writer->WriteEndElement();
+		if(hr != S_OK) return false;
+
+		return true;
 	}
 
 	bool CDocument::DeserializeDocumentFlags(IXmlReader *reader, depress_document_flags_type *document_flags)

@@ -62,6 +62,8 @@ public:
 	bool Create(void);
 	void Destroy(void);
 	void DestroyPages(void);
+	depress_document_flags_type GetDocumentFlags(void) { return m_document_flags; }
+	void SetDocumentFlags(depress_document_flags_type document_flags) { m_document_flags = document_flags; }
 	DocumentProcessStatus Process(const wchar_t *outputfile);
 	size_t GetPagesProcessed(void);
 	DocumentProcessStatus GetLastDocumentProcessStatus(void) { return m_last_document_process_status; }

@@ -64,6 +64,22 @@ INT WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine
 				MessageBoxW(NULL, L"Can't save djvu file", L"Depressed", MB_OK | MB_TASKMODAL | MB_ICONSTOP);
 			else
 				MessageBoxW(NULL, L"File saved", L"Depressed", MB_OK | MB_TASKMODAL | MB_ICONINFORMATION);
+		
+#if 0
+			wchar_t *new_fn;
+			new_fn = (wchar_t *)malloc((wcslen(default_project) + 5 + 1)*sizeof(wchar_t));
+			if(new_fn) {
+				wcscpy(new_fn, default_project);
+				wcscat(new_fn, L".copy");
+
+				if(Depressed::SaveDied(new_fn, document))
+					MessageBoxW(NULL, L"Project copy saved", L"Depressed", MB_OK | MB_TASKMODAL | MB_ICONINFORMATION);
+				else
+					MessageBoxW(NULL, L"Can't create project copy", L"Depressed", MB_OK | MB_TASKMODAL | MB_ICONSTOP);
+
+				free(new_fn);
+			}
+#endif
 		} else
 			MessageBoxW(NULL, L"Can't open project file", L"Depressed", MB_OK | MB_TASKMODAL | MB_ICONSTOP);
 		//MessageBoxW(NULL, L"Project processing unimplemented", L"Depressed", MB_OK | MB_TASKMODAL | MB_ICONSTOP);

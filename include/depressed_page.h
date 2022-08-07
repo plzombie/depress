@@ -39,17 +39,18 @@ class CPage
 {
 	depress_flags_type m_flags;
 	wchar_t *m_filename;
+	const size_t m_max_fn_len = 32768;
 	
 public:
 	void SetFlags(depress_flags_type flags) { m_flags = flags; }
 	depress_flags_type GetFlags(void) { return m_flags; }
-	void SetFilename(wchar_t *filename) { if(m_filename) free(m_filename); m_filename = filename; }
+	bool SetFilename(const wchar_t *filename, const wchar_t *basepath = nullptr);
 	wchar_t *GetFilename(void) { return m_filename; }
 	bool LoadImageForPage(int *sizex, int *sizey, int *channels, unsigned char **buf);
 	static void SetDefaultPageFlags(depress_flags_type *page_flags);
-	bool Serialize(void *p, wchar_t *basepath);
-	bool Deserialize(IXmlReader *reader, wchar_t *basepath, depress_flags_type flags);
-	static bool SerializePageFlags(void *p, depress_flags_type flags);
+	bool Serialize(IXmlWriter *writer, const wchar_t *basepath);
+	bool Deserialize(IXmlReader *reader, const wchar_t *basepath, depress_flags_type flags);
+	static bool SerializePageFlags(IXmlWriter *writer, depress_flags_type flags);
 	static bool DeserializePageFlags(IXmlReader *reader, depress_flags_type *flags);
 };
 

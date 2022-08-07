@@ -82,7 +82,7 @@ namespace Depressed {
 		m_pages.clear();
 	}
 
-	DocumentProcessStatus CDocument::Process(wchar_t *outputfile)
+	DocumentProcessStatus CDocument::Process(const wchar_t *outputfile)
 	{
 		DocumentProcessStatus status = DocumentProcessStatus::OK;
 
@@ -191,26 +191,22 @@ namespace Depressed {
 		return true;
 	}
 
-	bool CDocument::Serialize(void *p, wchar_t *basepath)
+	bool CDocument::Serialize(IXmlWriter *writer, const wchar_t *basepath)
 	{
-		void *pages_el;
-
 		if(!m_is_init) return false;
 
-		if(!CPage::SerializePageFlags(p, m_global_page_flags)) return false;
-		if(!SerializeDocumentFlags(p, m_document_flags)) return false;
-
-		pages_el = p;
+		if(!CPage::SerializePageFlags(writer, m_global_page_flags)) return false;
+		if(!SerializeDocumentFlags(writer, m_document_flags)) return false;
 
 		for(auto page : m_pages) {
-			if(!page->Serialize(pages_el, basepath))
+			if(!page->Serialize(writer, basepath))
 				return false;
 		}
 
 		return false;
 	}
 
-	bool CDocument::Deserialize(IXmlReader *reader, wchar_t *basepath)
+	bool CDocument::Deserialize(IXmlReader *reader, const wchar_t *basepath)
 	{
 		depress_document_type new_document;
 		depress_document_flags_type document_flags;
@@ -311,7 +307,7 @@ namespace Depressed {
 		return success;
 	}
 
-	bool CDocument::SerializeDocumentFlags(void *p, depress_document_flags_type document_flags)
+	bool CDocument::SerializeDocumentFlags(IXmlWriter *writer, depress_document_flags_type document_flags)
 	{
 		return false;
 	}

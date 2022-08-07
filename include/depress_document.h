@@ -74,7 +74,7 @@ typedef struct {
 	depress_document_flags_type document_flags;
 	// Paths
 	wchar_t temp_path[32768];
-	wchar_t *output_file;
+	const wchar_t *output_file;
 	// Handles
 	HANDLE global_error_event;
 } depress_document_type;
@@ -84,8 +84,8 @@ extern bool depressDocumentDestroy(depress_document_type *document);
 extern bool depressDocumentRunTasks(depress_document_type *document);
 extern bool depressDocumentProcessTasks(depress_document_type *document);
 extern bool depressDocumentFinalize(depress_document_type *document);
-extern bool depressDocumentAddTask(depress_document_type *document, wchar_t *inputfile, depress_flags_type flags);
-extern bool depressDocumentCreateTasksFromTextFile(depress_document_type *document, wchar_t *textfile, wchar_t *textfilepath, wchar_t *outputfile, depress_flags_type flags);
+extern bool depressDocumentAddTask(depress_document_type *document, const wchar_t *inputfile, depress_flags_type flags);
+extern bool depressDocumentCreateTasksFromTextFile(depress_document_type *document, const wchar_t *textfile, const wchar_t *textfilepath, const wchar_t *outputfile, depress_flags_type flags);
 
 #ifdef __cplusplus
 }

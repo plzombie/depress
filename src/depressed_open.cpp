@@ -68,13 +68,19 @@ namespace Depressed {
 		return true;
 	}
 
-	bool OpenDied(wchar_t *filename, CDocument &document, wchar_t **basepath)
+	bool OpenDied(wchar_t *filename, CDocument &document)
 	{
-		
+		const size_t max_fn_len = 32768;
+		wchar_t full_filename[max_fn_len], *full_filename_start, basepath[max_fn_len];
+		size_t fn_length;
 		IXmlReader *reader;
 		IStream *filestream;
 
-		if(!OpenXml(filename, &reader, &filestream)) return false;
+		fn_length = depressGetFilenameToOpen(filename, L".died", max_fn_len, full_filename, &full_filename_start);
+		if(fn_length == 0 || fn_length > max_fn_len) return false;
+		depressGetFilenamePath(full_filename, full_filename_start, basepath);
+
+		if(!OpenXml(full_filename, &reader, &filestream)) return false;
 
 		while(true) {
 			const wchar_t *value;
@@ -91,7 +97,7 @@ namespace Depressed {
 			if(nodetype != XmlNodeType_Element) continue;
 			reader->GetLocalName(&value, NULL);
 			if(wcscmp(value, L"Document") == 0) {
-				if(!document.Deserialize(reader, 0)) {
+				if(!document.Deserialize(reader, basepath)) {
 					reader->Release();
 					filestream->Release();
 
@@ -108,7 +114,7 @@ namespace Depressed {
 		return true;
 	}
 	
-	bool SaveDied(wchar_t *filename, CDocument &document, wchar_t **basepath)
+	bool SaveDied(wchar_t *filename, CDocument &document)
 	{
 		return false;
 	}

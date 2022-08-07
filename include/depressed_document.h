@@ -62,7 +62,7 @@ public:
 	bool Create(void);
 	void Destroy(void);
 	void DestroyPages(void);
-	DocumentProcessStatus Process(wchar_t *outputfile);
+	DocumentProcessStatus Process(const wchar_t *outputfile);
 	size_t GetPagesProcessed(void);
 	DocumentProcessStatus GetLastDocumentProcessStatus(void) { return m_last_document_process_status; }
 	size_t PagesCount(void);
@@ -70,9 +70,9 @@ public:
 	bool PageAdd(CPage *page);
 	bool PageDelete(size_t id);
 	bool PageSwap(size_t id1, size_t id2);
-	bool Serialize(void *p, wchar_t *basepath);
-	bool Deserialize(IXmlReader *reader, wchar_t *basepath);
-	static bool SerializeDocumentFlags(void *p, depress_document_flags_type document_flags);
+	bool Serialize(IXmlWriter *writer, const wchar_t *basepath);
+	bool Deserialize(IXmlReader *reader, const wchar_t *basepath);
+	static bool SerializeDocumentFlags(IXmlWriter *writer, depress_document_flags_type document_flags);
 	static bool DeserializeDocumentFlags(IXmlReader *reader, depress_document_flags_type *document_flags);
 };
 

@@ -337,7 +337,7 @@ bool depressDocumentFinalize(depress_document_type *document)
 	return true;
 }
 
-bool depressDocumentAddTask(depress_document_type *document, wchar_t *inputfile, depress_flags_type flags)
+bool depressDocumentAddTask(depress_document_type *document, const wchar_t *inputfile, depress_flags_type flags)
 {
 	depress_task_type task;
 	wchar_t tempstr[32];
@@ -366,7 +366,7 @@ bool depressDocumentAddTask(depress_document_type *document, wchar_t *inputfile,
 		return false;
 }
 
-bool depressDocumentCreateTasksFromTextFile(depress_document_type *document, wchar_t *textfile, wchar_t *textfilepath, wchar_t *outputfile, depress_flags_type flags)
+bool depressDocumentCreateTasksFromTextFile(depress_document_type *document, const wchar_t *textfile, const wchar_t *textfilepath, const wchar_t *outputfile, depress_flags_type flags)
 {
 	FILE *f;
 	size_t task_inputfile_length;

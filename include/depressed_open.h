@@ -33,8 +33,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 namespace Depressed {
 
-	bool OpenDied(wchar_t *filename, CDocument &document, wchar_t **basepath = nullptr);
-	bool SaveDied(wchar_t *filename, CDocument &document, wchar_t **basepath = nullptr);
+	bool OpenDied(wchar_t *filename, CDocument &document);
+	bool SaveDied(wchar_t *filename, CDocument &document);
 	
 }
 

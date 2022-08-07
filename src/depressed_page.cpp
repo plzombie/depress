@@ -34,6 +34,29 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../include/depressed_page.h"
 
 namespace Depressed {
+	bool CPage::SetFilename(const wchar_t *filename, const wchar_t *basepath) {
+		wchar_t *new_filename;
+		size_t new_filename_length;
+
+		if(m_filename)
+			new_filename = m_filename;
+		else
+			new_filename = (wchar_t *)malloc(m_max_fn_len*sizeof(wchar_t));
+
+		if(!new_filename) return false;
+
+		new_filename_length = SearchPathW(basepath, filename, NULL, (DWORD)m_max_fn_len, new_filename, NULL);
+		if(new_filename_length > m_max_fn_len || new_filename_length == 0) {
+			if(!m_filename) // We created memory for new filename so we must release it before exit
+				free(new_filename);
+			return false;
+		}
+
+		m_filename = new_filename;
+
+		return true;
+	}
+
 	bool CPage::LoadImageForPage(int *sizex, int *sizey, int *channels, unsigned char **buf)
 	{
 		if(!depressLoadImageFromFileAndApplyFlags(m_filename, sizex, sizey, channels, buf, m_flags))
@@ -49,12 +72,12 @@ namespace Depressed {
 		page_flags->quality = 100;
 	}
 
-	bool CPage::Serialize(void *p, wchar_t *basepath)
+	bool CPage::Serialize(IXmlWriter *writer, const wchar_t *basepath)
 	{
 		return false;
 	}
 	
-	bool CPage::Deserialize(IXmlReader *reader, wchar_t *basepath, depress_flags_type flags)
+	bool CPage::Deserialize(IXmlReader *reader, const wchar_t *basepath, depress_flags_type flags)
 	{
 		bool read_filename = false;
 
@@ -85,10 +108,7 @@ namespace Depressed {
 				if(nodetype == XmlNodeType_Text) {
 					if(reader->GetValue(&value, NULL) != S_OK) return false;
 
-					m_filename = (wchar_t *)malloc((wcslen(value) + 1)*sizeof(wchar_t));
-					if(!m_filename) return false;
-
-					wcscpy(m_filename, value);
+					if(!SetFilename(value, basepath)) return false;
 				} else if(nodetype == XmlNodeType_EndElement) {
 					if(reader->GetLocalName(&value, NULL) != S_OK) return false;
 
@@ -104,7 +124,7 @@ namespace Depressed {
 		return true;
 	}
 
-	bool CPage::SerializePageFlags(void *p, depress_flags_type flags)
+	bool CPage::SerializePageFlags(IXmlWriter *writer, depress_flags_type flags)
 	{
 		return false;
 	}

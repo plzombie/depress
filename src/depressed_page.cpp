@@ -86,7 +86,23 @@ namespace Depressed {
 		hr = writer->WriteStartElement(NULL, L"Filename", NULL);
 		if(hr != S_OK) return false;
 
-		hr = writer->WriteString(m_filename);
+		if(!basepath)
+			hr = writer->WriteString(m_filename);
+		else {
+			size_t basepath_len;
+			wchar_t *filename;
+
+			basepath_len = wcslen(basepath);
+			filename = m_filename + basepath_len;
+			while(*filename) {
+				if(*filename == '\\' || *filename == '/')
+					filename++;
+				else
+					break;
+			}
+
+			hr = writer->WriteString(filename);
+		}
 		if(hr != S_OK) return false;
 
 		hr = writer->WriteEndElement();

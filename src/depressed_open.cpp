@@ -141,10 +141,30 @@ namespace Depressed {
 	
 	bool SaveDied(wchar_t *filename, CDocument &document)
 	{
-		HRESULT hr;
+		const size_t max_fn_len = 32768;
+		wchar_t *basepath = 0, basepath_copy[max_fn_len], *dirptr;
 		IXmlWriter *writer;
 		IStream *filestream;
-		wchar_t *basepath = 0;
+
+		dirptr = wcschr(filename, '/');
+		if(dirptr) {
+			wchar_t *dirptr2;
+
+			dirptr2 = wcschr(dirptr, '\\');
+			if(dirptr2)
+				dirptr = dirptr2;
+		} else
+			dirptr = wcschr(filename, '\\');
+		if(dirptr) {
+			size_t len;
+
+			len = dirptr - filename + 1;
+			if(len < max_fn_len) {
+				memcpy(basepath_copy, filename, sizeof(wchar_t)*len);
+				basepath_copy[len] = 0;
+				basepath = basepath_copy;
+			}
+		}
 
 		if(!SaveXml(filename, &writer, &filestream))
 			return false;
@@ -158,8 +178,7 @@ namespace Depressed {
 			return false;
 		}
 
-		hr = writer->WriteEndDocument();
-		if(hr != S_OK) {
+		if(writer->WriteEndDocument() != S_OK) {
 			writer->Release();
 			filestream->Release();
 

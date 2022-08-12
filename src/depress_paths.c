@@ -41,7 +41,7 @@ size_t depressGetFilenameToOpen(const wchar_t *inp_filename, const wchar_t *file
 	
 	if(buflen > MAXDWORD) return 0;
 
-	fn_length = SearchPathW(NULL, inp_filename, file_ext, 32768, out_filename, out_filename_start);
+	fn_length = SearchPathW(NULL, inp_filename, file_ext, (DWORD)buflen, out_filename, out_filename_start);
 	
 	return fn_length;
 }

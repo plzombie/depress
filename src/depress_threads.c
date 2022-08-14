@@ -30,6 +30,10 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "../include/depress_converter.h"
 
+GetActiveProcessorGroupCount_type GetActiveProcessorGroupCount_funcptr = 0;
+GetActiveProcessorCount_type GetActiveProcessorCount_funcptr = 0;
+SetThreadGroupAffinity_type SetThreadGroupAffinity_funcptr;
+
 unsigned int __stdcall depressThreadProc(void *args)
 {
 	size_t i;
@@ -59,11 +63,41 @@ unsigned int __stdcall depressThreadProc(void *args)
 	return 0;
 }
 
-int depressGetNumberOfThreads(void)
+void depressGetProcessGroupFunctions(void)
 {
-	SYSTEM_INFO si;
+	HANDLE kernel32_handle;
 
-	GetSystemInfo(&si);
-
-	return si.dwNumberOfProcessors;
+	kernel32_handle = GetModuleHandleW(L"kernel32.dll");
+	if(!kernel32_handle) return;
+	GetActiveProcessorGroupCount_funcptr = (GetActiveProcessorGroupCount_type)GetProcAddress(kernel32_handle, "GetActiveProcessorGroupCount");
+	GetActiveProcessorCount_funcptr = (GetActiveProcessorCount_type)GetProcAddress(kernel32_handle, "GetActiveProcessorCount");
+	SetThreadGroupAffinity_funcptr = (SetThreadGroupAffinity_type)GetProcAddress(kernel32_handle, "SetThreadGroupAffinity");
 }
+
+unsigned int depressGetNumberOfThreads(void)
+{
+	if(GetActiveProcessorGroupCount_funcptr && GetActiveProcessorCount_funcptr) {
+		WORD group_count, i;
+		DWORD processor_count = 0;
+
+		group_count = GetActiveProcessorGroupCount_funcptr();
+
+		for(i = 0; i < group_count; i++) {
+			processor_count += GetActiveProcessorCount_funcptr(i);
+		}
+
+		return processor_count;
+	} else {
+		SYSTEM_INFO si;
+
+		GetSystemInfo(&si);
+
+		return si.dwNumberOfProcessors;
+	}
+}
+
+KAFFINITY depressGetMaskForProcessorCount(DWORD processor_count)
+{
+	return ((KAFFINITY)1 << (KAFFINITY)processor_count) - 1;
+}
+

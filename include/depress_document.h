@@ -67,7 +67,7 @@ typedef struct {
 	// Threads
 	HANDLE *threads;
 	depress_thread_arg_type *thread_args;
-	int threads_num;
+	unsigned int threads_num;
 	// Paths
 	depress_djvulibre_paths_type djvulibre_paths;
 	// Document wide flags

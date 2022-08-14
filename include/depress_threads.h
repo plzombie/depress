@@ -49,8 +49,18 @@ typedef struct {
 	HANDLE global_error_event;
 } depress_thread_arg_type;
 
-int depressGetNumberOfThreads(void);
-unsigned int __stdcall depressThreadProc(void *args);
+typedef WORD (__stdcall *GetActiveProcessorGroupCount_type)(void);
+typedef DWORD (__stdcall *GetActiveProcessorCount_type)(WORD GroupNumber);
+typedef BOOL(__stdcall *SetThreadGroupAffinity_type)(HANDLE hThread, const GROUP_AFFINITY *GroupAffinity, PGROUP_AFFINITY PreviousGroupAffinity);
+
+extern GetActiveProcessorGroupCount_type GetActiveProcessorGroupCount_funcptr;
+extern GetActiveProcessorCount_type GetActiveProcessorCount_funcptr;
+extern SetThreadGroupAffinity_type SetThreadGroupAffinity_funcptr;
+
+extern void depressGetProcessGroupFunctions(void);
+extern unsigned int depressGetNumberOfThreads(void);
+extern KAFFINITY depressGetMaskForProcessorCount(DWORD processor_count);
+extern unsigned int __stdcall depressThreadProc(void *args);
 
 #ifdef __cplusplus
 }

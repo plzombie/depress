@@ -117,6 +117,8 @@ bool depressDocumentInit(depress_document_type *document, depress_document_flags
 		return false;
 	}
 
+	depressGetProcessGroupFunctions();
+
 	return true;
 }
 
@@ -142,8 +144,11 @@ bool depressDocumentDestroy(depress_document_type *document)
 
 bool depressDocumentRunTasks(depress_document_type *document)
 {
-	int i;
-	bool success = true;
+	unsigned int i;
+	bool success = true, need_set_thread_group = false;
+	DWORD threads_in_current_groups = 0;
+	WORD current_thread_affinity = (WORD)-1;
+	GROUP_AFFINITY group_affinity;
 
 	if(document->tasks == 0)
 		return false;
@@ -167,6 +172,14 @@ bool depressDocumentRunTasks(depress_document_type *document)
 		goto LABEL_ERROR;
 	}
 
+	if(GetActiveProcessorGroupCount_funcptr && GetActiveProcessorCount_funcptr && SetThreadGroupAffinity_funcptr) {
+		need_set_thread_group = true;
+	
+		memset(&group_affinity, 0, sizeof(GROUP_AFFINITY));
+
+		group_affinity.Mask = MAXULONG_PTR;
+	}
+
 	for(i = 0; i < document->threads_num; i++) {
 		document->thread_args[i].tasks = document->tasks;
 		document->thread_args[i].djvulibre_paths = &document->djvulibre_paths;
@@ -176,12 +189,30 @@ bool depressDocumentRunTasks(depress_document_type *document)
 		document->thread_args[i].global_error_event = document->global_error_event;
 
 		document->threads[i] = (HANDLE)_beginthreadex(0, 0, depressThreadProc, document->thread_args + i, 0, 0);
-		if(document->threads[i] == INVALID_HANDLE_VALUE) {
-			int j;
+
+		if(document->threads[i] == INVALID_HANDLE_VALUE) success = false;
+
+		if(success && need_set_thread_group) {
+			// We actually should not use this logic on Windows 11 and 2022 because it don't assign thread to specific processor group by default
+			// https://docs.microsoft.com/en-us/windows/win32/api/processtopologyapi/nf-processtopologyapi-setthreadgroupaffinity
+			if(i >= threads_in_current_groups) {
+				DWORD processor_count = GetActiveProcessorCount_funcptr(current_thread_affinity);
+				current_thread_affinity += 1;
+				threads_in_current_groups += processor_count;
+				group_affinity.Mask = depressGetMaskForProcessorCount(processor_count);
+				group_affinity.Group = current_thread_affinity;
+			}
+			if(!SetThreadGroupAffinity_funcptr(document->threads[i], &group_affinity, NULL)) success = false;
+		}
+
+		if(!success) {
+			unsigned int j;
 
 			wprintf(L"Can't create thread\n");
 
-			WaitForMultipleObjects(i, document->threads, TRUE, INFINITE);
+			WaitForMultipleObjects(i+1, document->threads, TRUE, INFINITE);
+
+			if(document->threads[i] != INVALID_HANDLE_VALUE) CloseHandle(document->threads[i]);
 
 			for (j = 0; j < i; j++)
 				CloseHandle(document->threads[j]);
@@ -194,8 +225,6 @@ bool depressDocumentRunTasks(depress_document_type *document)
 
 			free(document->thread_args);
 			document->thread_args = 0;
-
-			success = false;
 
 			break;
 		}
@@ -223,7 +252,7 @@ bool depressDocumentProcessTasks(depress_document_type *document)
 {
 	bool success = true;
 	size_t filecount = 0;
-	int i;
+	unsigned int i;
 	wchar_t *arg0 = 0, *arg1 = 0, *arg2 = 0;
 
 	if(document->tasks == 0 || document->threads == 0 || document->thread_args == 0)

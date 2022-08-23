@@ -484,3 +484,16 @@ LABEL_ERROR:
 	return false;
 }
 
+void depressSetDefaultDocumentFlags(depress_document_flags_type *document_flags)
+{
+	memset(document_flags, 0, sizeof(depress_document_flags_type));
+	document_flags->page_title_type = DEPRESS_DOCUMENT_PAGE_TITLE_TYPE_NO;
+}
+
+void depressSetDefaultPageFlags(depress_flags_type *flags)
+{
+	memset(flags, 0, sizeof(depress_flags_type));
+	flags->type = DEPRESS_PAGE_TYPE_COLOR;
+	flags->quality = 100;
+	flags->dpi = 100;
+}

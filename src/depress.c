@@ -50,6 +50,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define DEPRESS_ARG_PAGETITLEAUTO_SHORTNAME L"-shortfntitle"
 #define DEPRESS_ARG_TEMP L"-temp"
 #define DEPRESS_ARG_QUALITY L"-quality"
+#define DEPRESS_ARG_DPI L"-dpi"
 
 int wmain(int argc, wchar_t **argv)
 {
@@ -63,12 +64,9 @@ int wmain(int argc, wchar_t **argv)
 	bool success = true;
 	clock_t time_start;
 
-	memset(&flags, 0, sizeof(depress_flags_type));
-	flags.type = DEPRESS_PAGE_TYPE_COLOR;
-	flags.quality = 100;
+	depressSetDefaultPageFlags(&flags);
 
-	memset(&document_flags, 0, sizeof(depress_document_flags_type));
-	document_flags.page_title_type = DEPRESS_DOCUMENT_PAGE_TITLE_TYPE_NO;
+	depressSetDefaultDocumentFlags(&document_flags);
 
 	setlocale(LC_ALL, "");
 
@@ -117,6 +115,16 @@ int wmain(int argc, wchar_t **argv)
 				if(flags.quality < 0 || flags.quality > 100) {
 					wprintf(L"Warning: quality must be between 0 and 100\n");
 					flags.quality = 100;
+				}
+			} else
+				wprintf(L"Warning: argument " DEPRESS_ARG_QUALITY L" should have parameter\n");
+		} else if(!wcscmp(*argsp, DEPRESS_ARG_DPI)) {
+			if(argsc > 0) {
+				argsc--;
+				flags.dpi = _wtoi(*(++argsp));
+				if(flags.dpi <= 0) {
+					wprintf(L"Warning: dpi must be greater than\n");
+					flags.dpi = 300;
 				}
 			}
 		} else

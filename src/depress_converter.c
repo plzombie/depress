@@ -40,18 +40,19 @@ bool depressConvertPage(depress_flags_type flags, wchar_t *inputfile, wchar_t *t
 {
 	FILE *f_temp = 0;
 	int sizex, sizey, channels;
-	wchar_t *arg0 = 0, *arg1 = 0, *arg2 = 0, *arg3 = 0;
+	wchar_t *arg0 = 0, *arg1 = 0, *arg2 = 0, *arg_options, *arg_temp = 0;
 	unsigned char *buffer = 0;
 	bool result = false;
 
-	arg0 = malloc((3*32770+80)*sizeof(wchar_t));
+	arg0 = malloc((3*32770+1024+80)*sizeof(wchar_t));
 
 	if(!arg0)
 		goto EXIT;
 	else {
 		arg1 = arg0 + 32770;
 		arg2 = arg1 + 32770;
-		arg3 = arg2 + 32770;
+		arg_options = arg2 + 32770;
+		arg_temp = arg_options + 1024;
 	}
 
 	f_temp = _wfopen(tempfile, L"wb");
@@ -74,22 +75,27 @@ bool depressConvertPage(depress_flags_type flags, wchar_t *inputfile, wchar_t *t
 
 	swprintf(arg1, 32770, L"\"%ls\"", tempfile);
 	swprintf(arg2, 32770, L"\"%ls\"", outputfile);
+	*arg_options = 0;
 
 	if(flags.type == DEPRESS_PAGE_TYPE_BW) {
 		swprintf(arg0, 32770, L"\"%ls\"", djvulibre_paths->cjb2_path);
 
-		if(flags.quality < 0 || flags.quality >= 100)
-			*arg3 = 0;
-		else {
+		if(flags.quality > 0 || flags.quality < 100) {
 			int q;
 
 			q = flags.quality;
 			q = 200 - 2 * q; // 0 - 100%, 200 - 0%
 
-			swprintf(arg3, 80, L"-losslevel %d", q);
+			swprintf(arg_temp, 80, L"-losslevel %d", q);
+			wcscat(arg_options, arg_temp);
 		}
 
-		if(_wspawnl(_P_WAIT, djvulibre_paths->cjb2_path, arg0, arg3, arg1, arg2, 0)) goto EXIT;
+		if(flags.dpi > 0) {
+			swprintf(arg_temp, 80, L" -dpi %d", flags.dpi);
+			wcscat(arg_options, arg_temp);
+		}
+
+		if(_wspawnl(_P_WAIT, djvulibre_paths->cjb2_path, arg0, arg_options, arg1, arg2, 0)) goto EXIT;
 	} else {
 		int q;
 
@@ -99,9 +105,15 @@ bool depressConvertPage(depress_flags_type flags, wchar_t *inputfile, wchar_t *t
 		if(q < 1) q = 1;
 		if(q > 10) q = 10;
 
-		swprintf(arg3, 80, L"-percent %d", q);
+		swprintf(arg_temp, 80, L"-percent %d", q);
+		wcscat(arg_options, arg_temp);
 
-		if(_wspawnl(_P_WAIT, djvulibre_paths->c44_path, arg0, arg3, arg1, arg2, 0)) goto EXIT;
+		if(flags.dpi > 0) {
+			swprintf(arg_temp, 80, L" -dpi %d", flags.dpi);
+			wcscat(arg_options, arg_temp);
+		}
+
+		if(_wspawnl(_P_WAIT, djvulibre_paths->c44_path, arg0, arg_options, arg1, arg2, 0)) goto EXIT;
 	}
 
 	result = true;

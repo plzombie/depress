@@ -86,6 +86,8 @@ extern bool depressDocumentProcessTasks(depress_document_type *document);
 extern bool depressDocumentFinalize(depress_document_type *document);
 extern bool depressDocumentAddTask(depress_document_type *document, const wchar_t *inputfile, depress_flags_type flags);
 extern bool depressDocumentCreateTasksFromTextFile(depress_document_type *document, const wchar_t *textfile, const wchar_t *textfilepath, const wchar_t *outputfile, depress_flags_type flags);
+extern void depressSetDefaultDocumentFlags(depress_document_flags_type *document_flags);
+extern void depressSetDefaultPageFlags(depress_flags_type *flags);
 
 #ifdef __cplusplus
 }

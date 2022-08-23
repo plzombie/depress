@@ -42,8 +42,7 @@ namespace Depressed {
 
 	void CDocument::SetDefaultDocumentFlags(depress_document_flags_type *document_flags)
 	{
-		memset(document_flags, 0, sizeof(depress_document_flags_type));
-		document_flags->page_title_type = DEPRESS_DOCUMENT_PAGE_TITLE_TYPE_NO;
+		depressSetDefaultDocumentFlags(document_flags);
 	}
 
 	bool CDocument::Create()

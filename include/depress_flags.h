@@ -48,6 +48,7 @@ typedef struct {
 	int type;
 	int param1;
 	int quality; // 0..100
+	int dpi;
 } depress_flags_type;
 
 #ifdef __cplusplus

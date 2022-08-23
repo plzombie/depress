@@ -30,6 +30,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <wchar.h>
 
 #include "../include/depress_image.h"
+#include "../include/depress_document.h"
 
 #include "../include/depressed_page.h"
 
@@ -67,9 +68,7 @@ namespace Depressed {
 
 	void CPage::SetDefaultPageFlags(depress_flags_type *page_flags)
 	{
-		memset(page_flags, 0, sizeof(depress_flags_type));
-		page_flags->type = DEPRESS_PAGE_TYPE_COLOR;
-		page_flags->quality = 100;
+		depressSetDefaultPageFlags(page_flags);
 	}
 
 	bool CPage::Serialize(IXmlWriter *writer, const wchar_t *basepath, depress_flags_type default_flags)
@@ -179,6 +178,9 @@ namespace Depressed {
 		hr = writer->WriteAttributeString(NULL, L"quality", NULL, _itow(flags.quality, value, 10));
 		if(hr != S_OK) return false;
 
+		hr = writer->WriteAttributeString(NULL, L"dpi", NULL, _itow(flags.dpi, value, 10));
+		if(hr != S_OK) return false;
+
 		hr = writer->WriteEndElement();
 		if(hr != S_OK) return false;
 
@@ -188,7 +190,8 @@ namespace Depressed {
 	bool CPage::DeserializePageFlags(IXmlReader *reader, depress_flags_type *flags)
 	{
 		const wchar_t *value;
-		memset(flags, 0, sizeof(depress_flags_type));
+
+		SetDefaultPageFlags(flags);
 
 		if(reader->MoveToFirstAttribute() != S_OK) return true;
 		while(1) {
@@ -206,6 +209,10 @@ namespace Depressed {
 				if(reader->GetValue(&value, NULL) != S_OK) goto PROCESSING_FAILED;
 
 				flags->quality = _wtoi(value);
+			} else if(wcscmp(value, L"dpi") == 0) {
+				if(reader->GetValue(&value, NULL) != S_OK) goto PROCESSING_FAILED;
+
+				flags->dpi = _wtoi(value);
 			}
 
 			if(reader->MoveToNextAttribute() != S_OK) break;

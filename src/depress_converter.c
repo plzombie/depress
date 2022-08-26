@@ -40,18 +40,16 @@ bool depressConvertPage(depress_flags_type flags, wchar_t *inputfile, wchar_t *t
 {
 	FILE *f_temp = 0;
 	int sizex, sizey, channels;
-	wchar_t *arg0 = 0, *arg1 = 0, *arg2 = 0, *arg_options, *arg_temp = 0;
+	wchar_t *arg0 = 0, *arg_options, *arg_temp = 0, *djvulibre_path;
 	unsigned char *buffer = 0;
 	bool result = false;
 
-	arg0 = malloc((3*32770+1024+80)*sizeof(wchar_t));
+	arg0 = malloc((3*32768+1536+1024+80)*sizeof(wchar_t)); // 2*3(braces)+3(spaces)+1024(options)<1566
 
 	if(!arg0)
 		goto EXIT;
 	else {
-		arg1 = arg0 + 32770;
-		arg2 = arg1 + 32770;
-		arg_options = arg2 + 32770;
+		arg_options = arg0 + 3 * 32768 + 1536;
 		arg_temp = arg_options + 1024;
 	}
 
@@ -73,12 +71,10 @@ bool depressConvertPage(depress_flags_type flags, wchar_t *inputfile, wchar_t *t
 	free(buffer); buffer = 0;
 	fclose(f_temp); f_temp = 0;
 
-	swprintf(arg1, 32770, L"\"%ls\"", tempfile);
-	swprintf(arg2, 32770, L"\"%ls\"", outputfile);
 	*arg_options = 0;
 
 	if(flags.type == DEPRESS_PAGE_TYPE_BW) {
-		swprintf(arg0, 32770, L"\"%ls\"", djvulibre_paths->cjb2_path);
+		djvulibre_path = djvulibre_paths->cjb2_path;
 
 		if(flags.quality > 0 || flags.quality < 100) {
 			int q;
@@ -95,11 +91,11 @@ bool depressConvertPage(depress_flags_type flags, wchar_t *inputfile, wchar_t *t
 			wcscat(arg_options, arg_temp);
 		}
 
-		if(_wspawnl(_P_WAIT, djvulibre_paths->cjb2_path, arg0, arg_options, arg1, arg2, 0)) goto EXIT;
+		swprintf(arg0, 32770, L"\"%ls\" %ls \"%ls\" \"%ls\"", djvulibre_path, arg_options, tempfile, outputfile);
 	} else {
 		int q;
 
-		swprintf(arg0, 32770, L"\"%ls\"", djvulibre_paths->c44_path);
+		djvulibre_path = djvulibre_paths->c44_path;
 
 		q = flags.quality/10;
 		if(q < 1) q = 1;
@@ -113,8 +109,10 @@ bool depressConvertPage(depress_flags_type flags, wchar_t *inputfile, wchar_t *t
 			wcscat(arg_options, arg_temp);
 		}
 
-		if(_wspawnl(_P_WAIT, djvulibre_paths->c44_path, arg0, arg_options, arg1, arg2, 0)) goto EXIT;
+		swprintf(arg0, 32770, L"\"%ls\" %ls \"%ls\" \"%ls\"", djvulibre_path, arg_options, tempfile, outputfile);
 	}
+
+	if(_wspawnl(_P_WAIT, djvulibre_path, arg0, 0)) goto EXIT;
 
 	result = true;
 

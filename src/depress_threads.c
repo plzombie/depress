@@ -34,6 +34,42 @@ GetActiveProcessorGroupCount_type GetActiveProcessorGroupCount_funcptr = 0;
 GetActiveProcessorCount_type GetActiveProcessorCount_funcptr = 0;
 SetThreadGroupAffinity_type SetThreadGroupAffinity_funcptr;
 
+HANDLE depressSpawn(wchar_t *filename, wchar_t *args, bool wait, bool close_handle)
+{
+	STARTUPINFOW si;
+	PROCESS_INFORMATION pi;
+	
+	if(!filename && !args) return INVALID_HANDLE_VALUE;
+
+	ZeroMemory(&si, sizeof(STARTUPINFO));
+	si.cb = sizeof(STARTUPINFO);
+
+	ZeroMemory(&pi, sizeof(PROCESS_INFORMATION));
+
+	if(!CreateProcessW(
+		filename,
+		args,
+		NULL, // SECURITY_ATTRIBUTES (for process)
+		NULL, // SECURITY_ATTRIBUTES (for threads)
+		FALSE, // We don't need to inherit handles
+		NORMAL_PRIORITY_CLASS | CREATE_NO_WINDOW,
+		NULL, // Environment values
+		NULL, // The same current directory
+		&si,
+		&pi
+		)) return INVALID_HANDLE_VALUE;
+
+	if(wait)
+		WaitForSingleObject(pi.hProcess, INFINITE);
+
+	CloseHandle(pi.hThread);
+
+	if(close_handle)
+		CloseHandle(pi.hProcess);
+
+	return pi.hProcess;
+}
+
 unsigned int __stdcall depressThreadProc(void *args)
 {
 	size_t i;

@@ -29,6 +29,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../include/depress_converter.h"
 #include "../include/depress_image.h"
 #include "../include/depress_flags.h"
+#include "../include/depress_threads.h"
 #include "../include/ppm_save.h"
 
 #include <Windows.h>
@@ -112,7 +113,7 @@ bool depressConvertPage(depress_flags_type flags, wchar_t *inputfile, wchar_t *t
 		swprintf(arg0, 32770, L"\"%ls\" %ls \"%ls\" \"%ls\"", djvulibre_path, arg_options, tempfile, outputfile);
 	}
 
-	if(_wspawnl(_P_WAIT, djvulibre_path, arg0, 0)) goto EXIT;
+	if(depressSpawn(djvulibre_path, arg0, true, true) == INVALID_HANDLE_VALUE) goto EXIT;
 
 	result = true;
 

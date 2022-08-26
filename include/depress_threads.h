@@ -57,6 +57,7 @@ extern GetActiveProcessorGroupCount_type GetActiveProcessorGroupCount_funcptr;
 extern GetActiveProcessorCount_type GetActiveProcessorCount_funcptr;
 extern SetThreadGroupAffinity_type SetThreadGroupAffinity_funcptr;
 
+extern HANDLE depressSpawn(wchar_t *filename, wchar_t *args, bool wait, bool close_handle);
 extern void depressGetProcessGroupFunctions(void);
 extern unsigned int depressGetNumberOfThreads(void);
 extern KAFFINITY depressGetMaskForProcessorCount(DWORD processor_count);

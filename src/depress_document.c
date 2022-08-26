@@ -253,19 +253,13 @@ bool depressDocumentProcessTasks(depress_document_type *document)
 	bool success = true;
 	size_t filecount = 0;
 	unsigned int i;
-	wchar_t *arg0 = 0, *arg1 = 0, *arg2 = 0;
+	wchar_t *arg0 = 0;
 
 	if(document->tasks == 0 || document->threads == 0 || document->thread_args == 0)
 		return false;
 
-	arg0 = malloc(3*32770*sizeof(wchar_t));
+	arg0 = malloc((3*32770+1024)*sizeof(wchar_t));
 	if(!arg0) return false;
-	else {
-		arg1 = arg0 + 32770;
-		arg2 = arg1 + 32770;
-	}
-
-	swprintf(arg1, 32770, L"\"%ls\"", document->output_file);
 
 	for(filecount = 0; filecount < document->tasks_num; filecount++) {
 		if(success)
@@ -284,10 +278,9 @@ bool depressDocumentProcessTasks(depress_document_type *document)
 			if(success && filecount > 0) {
 				wprintf(L"Merging file \"%ls\"\n", document->tasks[filecount].inputfile);
 
-				swprintf(arg2, 32770, L"\"%ls\"", document->tasks[filecount].outputfile);
-				swprintf(arg0, 32770, L"\"%ls\"", document->djvulibre_paths.djvm_path);
+				swprintf(arg0, 3 * 32770 + 1024, L"\"%ls\" -i \"%ls\" \"%ls\"", document->djvulibre_paths.djvm_path, document->output_file, document->tasks[filecount].outputfile);
 
-				if(_wspawnl(_P_WAIT, document->djvulibre_paths.djvm_path, arg0, L"-i", arg1, arg2, 0)) {
+				if(depressSpawn(document->djvulibre_paths.djvm_path, arg0, true, true) == INVALID_HANDLE_VALUE) {
 					wprintf(L"Can't merge djvu files\n");
 					success = false;
 				} else

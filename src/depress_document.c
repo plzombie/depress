@@ -32,6 +32,10 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <process.h>
 #include <stdio.h>
 
+#ifndef MAXULONG_PTR
+#define MAXULONG_PTR !((ULONG_PTR)0)
+#endif
+
 static void depressDocumentGetTitleFromFilename(wchar_t* fname, char* title, bool use_full_name)
 {
 	wchar_t temp[32768];
@@ -154,7 +158,7 @@ bool depressDocumentRunTasks(depress_document_type *document)
 		return false;
 
 	document->threads_num = depressGetNumberOfThreads();
-	if(document->threads_num <= 0) document->threads_num = 1;
+	if(document->threads_num = 0) document->threads_num = 1;
 	if(document->threads_num > 64) document->threads_num = 64;
 
 	document->threads = malloc(sizeof(HANDLE) * document->threads_num);
@@ -287,7 +291,7 @@ bool depressDocumentProcessTasks(depress_document_type *document)
 #if defined(_M_AMD64) || defined(_M_ARM64) 
 					InterlockedExchange64(&document->tasks_processed, filecount);
 #elif defined(_M_IX86) || defined(_M_ARM)
-					InterlockedExchange(&document->tasks_processed, filecount);
+					InterlockedExchange((LONG *)(&document->tasks_processed), (LONG)filecount);
 #else
 #error Define specific interlocked operation here
 #endif
@@ -410,7 +414,7 @@ bool depressDocumentCreateTasksFromTextFile(depress_document_type *document, con
 #if defined(_M_AMD64) || defined(_M_ARM64) 
 	InterlockedExchange64(&document->tasks_processed, 0);
 #elif defined(_M_IX86) || defined(_M_ARM)
-	InterlockedExchange(&document->tasks_processed, 0);
+	InterlockedExchange((LONG *)(&document->tasks_processed), 0);
 #else
 #error Define specific interlocked operation here
 #endif

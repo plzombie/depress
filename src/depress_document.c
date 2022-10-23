@@ -158,7 +158,7 @@ bool depressDocumentRunTasks(depress_document_type *document)
 		return false;
 
 	document->threads_num = depressGetNumberOfThreads();
-	if(document->threads_num = 0) document->threads_num = 1;
+	if(document->threads_num == 0) document->threads_num = 1;
 	if(document->threads_num > 64) document->threads_num = 64;
 
 	document->threads = malloc(sizeof(HANDLE) * document->threads_num);

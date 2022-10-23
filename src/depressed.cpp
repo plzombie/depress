@@ -31,6 +31,35 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../include/depressed_document.h"
 #include "../include/depressed_open.h"
 
+HANDLE g_h_stdin = INVALID_HANDLE_VALUE, g_h_stdout = INVALID_HANDLE_VALUE;
+
+bool depressedCreateConsole(void)
+{
+	if(!AttachConsole(ATTACH_PARENT_PROCESS))
+		if(!AllocConsole())
+			return false;
+
+	g_h_stdin = GetStdHandle(STD_INPUT_HANDLE);
+	g_h_stdout = GetStdHandle(STD_OUTPUT_HANDLE);
+
+	if(g_h_stdin == NULL || g_h_stdin == INVALID_HANDLE_VALUE)
+		return false;
+	if(g_h_stdout == NULL || g_h_stdout == INVALID_HANDLE_VALUE)
+		return false;
+
+	return true;
+}
+
+void depressPrint(const wchar_t * const text, bool is_error = false)
+{
+	if(g_h_stdout == NULL || g_h_stdout == INVALID_HANDLE_VALUE) {
+		MessageBoxW(NULL, text, L"Depressed", MB_OK | MB_TASKMODAL | ( is_error?(MB_ICONSTOP):(MB_ICONINFORMATION) ));
+		return;
+	}
+
+	WriteConsoleW(g_h_stdout, text, wcslen(text), NULL, NULL);
+}
+
 INT WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine, int nCmdShow)
 {
 	wchar_t **argv, *default_project = 0, *default_output = 0;
@@ -57,14 +86,17 @@ INT WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine
 		MessageBoxW(NULL, L"Depressed GUI unimplemented", L"Depressed", MB_OK | MB_TASKMODAL | MB_ICONSTOP);
 	} else if(argc == 2) {
 		// Process project file and create djvu
+
+		if(!depressedCreateConsole())
+			depressPrint(L"Can't create console", true);
+
 		if(Depressed::OpenDied(default_project, document)) {
 			if(document.PagesCount() == 0)
-				MessageBoxW(NULL, L"No pages in document", L"Depressed", MB_OK | MB_TASKMODAL | MB_ICONSTOP);
+				depressPrint(L"No pages in document");
 			else if(document.Process(default_output) != Depressed::DocumentProcessStatus::OK)
-				MessageBoxW(NULL, L"Can't save djvu file", L"Depressed", MB_OK | MB_TASKMODAL | MB_ICONSTOP);
+				depressPrint(L"Can't save djvu file", true);
 			else
-				MessageBoxW(NULL, L"File saved", L"Depressed", MB_OK | MB_TASKMODAL | MB_ICONINFORMATION);
-		
+				depressPrint(L"File saved");
 #if 0
 			wchar_t *new_fn;
 			new_fn = (wchar_t *)malloc((wcslen(default_project) + 5 + 1)*sizeof(wchar_t));

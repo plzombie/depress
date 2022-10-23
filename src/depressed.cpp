@@ -27,6 +27,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 #include <Windows.h>
+#include <process.h>
 
 #include "../include/depressed_document.h"
 #include "../include/depressed_open.h"
@@ -50,14 +51,71 @@ bool depressedCreateConsole(void)
 	return true;
 }
 
-void depressPrint(const wchar_t * const text, bool is_error = false)
+void depressedPrint(const wchar_t * const text, bool is_error = false)
 {
 	if(g_h_stdout == NULL || g_h_stdout == INVALID_HANDLE_VALUE) {
 		MessageBoxW(NULL, text, L"Depressed", MB_OK | MB_TASKMODAL | ( is_error?(MB_ICONSTOP):(MB_ICONINFORMATION) ));
 		return;
 	}
 
-	WriteConsoleW(g_h_stdout, text, wcslen(text), NULL, NULL);
+	WriteConsoleW(g_h_stdout, text, (DWORD)wcslen(text), NULL, NULL);
+}
+
+unsigned __stdcall depressedSaverThread(void *param)
+{
+	void **args;
+	Depressed::CDocument *document;
+	wchar_t *output_file;
+	
+	args = (void **)param;
+	document = (Depressed::CDocument *)args[0];
+	output_file = (wchar_t *)args[1];
+
+	if(document->Process(output_file) == Depressed::DocumentProcessStatus::OK)
+		return EXIT_SUCCESS;
+	else
+		return EXIT_FAILURE;
+}
+
+bool depressedProcessBarConsole(Depressed::CDocument &document, const wchar_t *output_file)
+{
+	HANDLE saver_thread;
+	void *args[2];
+	DWORD exit_code = EXIT_FAILURE;
+	size_t processed_pages = 0, pages_count = document.PagesCount();
+	wchar_t tempstr[80];
+	
+	tempstr[79] = 0;
+	args[0] = &document;
+	args[1] = (void *)output_file;
+
+	saver_thread = (HANDLE)_beginthreadex(NULL, 0, depressedSaverThread, args, 0, NULL);
+	if(!saver_thread) return false;
+
+	depressedPrint(L"Saving djvu:\n");
+
+	while(true) {
+		bool exit_loop = WaitForSingleObject(saver_thread, 500) == WAIT_OBJECT_0;
+		size_t new_processed_pages;
+		
+		if(exit_loop)
+			new_processed_pages = pages_count;
+		else if(document.GetLastDocumentProcessStatus() == Depressed::DocumentProcessStatus::OK)
+			new_processed_pages = document.GetPagesProcessed();
+
+		if(processed_pages != new_processed_pages) {
+			swprintf(tempstr, 79, L"Processed %f%%\n", (double)new_processed_pages/(double)pages_count*100.0);
+			depressedPrint(tempstr);
+			processed_pages = new_processed_pages;
+		}
+
+		if(exit_loop) break;
+	}
+	GetExitCodeThread(saver_thread, &exit_code);
+
+	CloseHandle(saver_thread);
+
+	return exit_code == EXIT_SUCCESS;
 }
 
 INT WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine, int nCmdShow)
@@ -88,15 +146,15 @@ INT WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine
 		// Process project file and create djvu
 
 		if(!depressedCreateConsole())
-			depressPrint(L"Can't create console", true);
+			depressedPrint(L"Can't create console\n", true);
 
 		if(Depressed::OpenDied(default_project, document)) {
 			if(document.PagesCount() == 0)
-				depressPrint(L"No pages in document");
-			else if(document.Process(default_output) != Depressed::DocumentProcessStatus::OK)
-				depressPrint(L"Can't save djvu file", true);
+				depressedPrint(L"No pages in document");
+			else if(!depressedProcessBarConsole(document, default_output))
+				depressedPrint(L"Can't save djvu file", true);
 			else
-				depressPrint(L"File saved");
+				depressedPrint(L"File saved");
 #if 0
 			wchar_t *new_fn;
 			new_fn = (wchar_t *)malloc((wcslen(default_project) + 5 + 1)*sizeof(wchar_t));

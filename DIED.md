@@ -1,4 +1,4 @@
-=Hierarchy
+# Hierarchy
 
 Document
 - DocumentFlags
@@ -8,26 +8,26 @@ Document
 - - - Flags
 - - - Filename		
 
-== Document
+## Document
 
 Contains document flags, flags for all pages and element with pages.
 
-== Pages
+## Pages
 
 Contains individual pages.
 
-== Page
+## Page
 
 Individual page. Contains Flags and Filename.
 
-== DocumentFlags
+## DocumentFlags
 
 Describes document parameters. No body. Arguments:
 
 * ptt - Page title type. If ptt = 0 then no authomatic page titles. If ptt = 1 then use filename as default page title.
 * ptt_flags - Page title type flags. If ptt = 1 and ptt_flags = 1 then use short filename instead of full filename.
 
-== Flags
+## Flags
 
 Describes page flags. No body. Arguments:
 
@@ -36,7 +36,7 @@ Describes page flags. No body. Arguments:
 * quality - image quality between 0 and 100.
 * dpi - image dpi.
 
-== Filename
+## Filename
 
 Describes filename. Body is a filename.
 

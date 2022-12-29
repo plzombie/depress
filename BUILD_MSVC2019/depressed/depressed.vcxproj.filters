@@ -51,6 +51,9 @@
     <ClCompile Include="..\..\src\depressed_page.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\interlocked_ptr.c">
+      <Filter>Исходные файлы\core</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Manifest Include="..\..\resources\applications.manifest" />

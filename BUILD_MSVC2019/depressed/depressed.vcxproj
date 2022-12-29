@@ -279,6 +279,7 @@
     <ClCompile Include="..\..\src\depress_paths.c" />
     <ClCompile Include="..\..\src\depress_tasks.c" />
     <ClCompile Include="..\..\src\depress_threads.c" />
+    <ClCompile Include="..\..\src\interlocked_ptr.c" />
     <ClCompile Include="..\..\src\ppm_save.c" />
   </ItemGroup>
   <ItemGroup>

@@ -31,10 +31,10 @@ NORMAL_PRIORITY_CLASS
 CREATE_NO_WINDOW
 INFINITE
 __stdcall
-_M_AMD64
-_M_ARM64
-_M_IX86
-_M_ARM
+_M_AMD64 == __x86_64__ __amd64__
+_M_ARM64 == __aarch64__
+_M_IX86 == __i386__
+_M_ARM == __arm__
 
 Functions:
 SearchPathW

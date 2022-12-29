@@ -129,13 +129,7 @@ namespace Depressed {
 	{
 		if(!m_is_init) return 0;
 
-#if defined(_M_AMD64) || defined(_M_ARM64) 
-		return InterlockedAdd64((LONG64 *)(&m_document.tasks_processed), 0);
-#elif defined(_M_IX86) || defined(_M_ARM)
-		return InterlockedAdd((LONG *)(&m_document.tasks_processed), 0);
-#else
-#error Define specific interlocked operation here
-#endif
+		return depressDocumentGetPagesProcessed(&m_document);
 	}
 
 	size_t CDocument::PagesCount(void)

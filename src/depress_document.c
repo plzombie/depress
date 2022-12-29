@@ -27,6 +27,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 #include "../include/depress_document.h"
+#include "../include/interlocked_ptr.h"
 
 #include <io.h>
 #include <process.h>
@@ -288,13 +289,7 @@ bool depressDocumentProcessTasks(depress_document_type *document)
 					wprintf(L"Can't merge djvu files\n");
 					success = false;
 				} else
-#if defined(_M_AMD64) || defined(_M_ARM64) 
-					InterlockedExchange64(&document->tasks_processed, filecount);
-#elif defined(_M_IX86) || defined(_M_ARM)
-					InterlockedExchange((LONG *)(&document->tasks_processed), (LONG)filecount);
-#else
-#error Define specific interlocked operation here
-#endif
+					InterlockedExchangePtr((uintptr_t *)(&document->tasks_processed), filecount);
 			}
 			if(filecount > 0)
 				if(!_waccess(document->tasks[filecount].outputfile, 06))
@@ -363,6 +358,11 @@ bool depressDocumentFinalize(depress_document_type *document)
 	return true;
 }
 
+size_t depressDocumentGetPagesProcessed(depress_document_type *document)
+{
+	return InterlockedAddPtr((uintptr_t *)(&document->tasks_processed), 0);
+}
+
 bool depressDocumentAddTask(depress_document_type *document, const wchar_t *inputfile, depress_flags_type flags)
 {
 	depress_task_type task;
@@ -411,13 +411,7 @@ bool depressDocumentCreateTasksFromTextFile(depress_document_type *document, con
 	document->tasks = 0;
 	document->tasks_num = 0;
 	document->tasks_max = 0;
-#if defined(_M_AMD64) || defined(_M_ARM64) 
-	InterlockedExchange64(&document->tasks_processed, 0);
-#elif defined(_M_IX86) || defined(_M_ARM)
-	InterlockedExchange((LONG *)(&document->tasks_processed), 0);
-#else
-#error Define specific interlocked operation here
-#endif
+	InterlockedExchangePtr((uintptr_t *)(&document->tasks_processed), 0);
 	document->output_file = outputfile;
 
 #ifdef _MSC_VER

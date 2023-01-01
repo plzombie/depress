@@ -1,7 +1,7 @@
 /*
 BSD 2-Clause License
 
-Copyright (c) 2022, Mikhail Morozov
+Copyright (c) 2022-2023, Mikhail Morozov
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -37,7 +37,7 @@ namespace Depressed {
 
 	CDocument::~CDocument()
 	{
-		depressDocumentDestroy(&m_document);
+		Destroy();
 	}
 
 	void CDocument::SetDefaultDocumentFlags(depress_document_flags_type *document_flags)
@@ -49,6 +49,7 @@ namespace Depressed {
 	{
 		if(m_is_init) return false;
 
+		memset(&m_global_page_flags, 0, sizeof(depress_flags_type));
 		CPage::SetDefaultPageFlags(&m_global_page_flags);
 		SetDefaultDocumentFlags(&m_document_flags);
 
@@ -68,6 +69,12 @@ namespace Depressed {
 
 		depressDocumentDestroy(&m_document);
 
+		if(m_global_page_flags.nof_illrects) {
+			free(m_global_page_flags.illrects);
+			m_global_page_flags.illrects = 0;
+			m_global_page_flags.nof_illrects = 0;
+		}
+
 		m_is_init = false;
 	}
 
@@ -75,8 +82,11 @@ namespace Depressed {
 	{
 		if(!m_is_init) return;
 
-		for(auto page : m_pages)
+		for(auto page : m_pages) {
+			page->Destroy();
+
 			delete page;
+		}
 
 		m_pages.clear();
 	}
@@ -84,6 +94,8 @@ namespace Depressed {
 	DocumentProcessStatus CDocument::Process(const wchar_t *outputfile)
 	{
 		DocumentProcessStatus status = DocumentProcessStatus::OK;
+
+		if(!m_is_init) return DocumentProcessStatus::DocumentNotInit;
 
 		if(!depressDocumentInit(&m_document, m_document_flags))
 			status = DocumentProcessStatus::CantInitDocument;
@@ -134,11 +146,15 @@ namespace Depressed {
 
 	size_t CDocument::PagesCount(void)
 	{
+		if(!m_is_init) return 0;
+
 		return m_pages.size();
 	}
 
 	CPage *CDocument::PageGet(size_t id)
 	{
+		if(!m_is_init) return 0;
+
 		if(id >= m_pages.size())
 			return 0;
 
@@ -147,6 +163,8 @@ namespace Depressed {
 
 	bool CDocument::PageAdd(CPage *page)
 	{
+		if(!m_is_init) return false;
+
 		try {
 			m_pages.push_back(page);
 
@@ -158,6 +176,8 @@ namespace Depressed {
 
 	bool CDocument::PageDelete(size_t id)
 	{
+		if(!m_is_init) return false;
+
 		if(id >= m_pages.size())
 			return false;
 
@@ -173,6 +193,8 @@ namespace Depressed {
 
 	bool CDocument::PageSwap(size_t id1, size_t id2)
 	{
+		if(!m_is_init) return false;
+
 		CPage *temp;
 		if(id1 >= m_pages.size()) return false;
 		if(id2 >= m_pages.size()) return false;
@@ -222,6 +244,7 @@ namespace Depressed {
 
 		if(!m_is_init) return false;
 
+		memset(&flags, 0, sizeof(depress_flags_type));
 		CPage::SetDefaultPageFlags(&flags);
 		SetDefaultDocumentFlags(&document_flags);
 
@@ -260,6 +283,8 @@ namespace Depressed {
 					if(wcscmp(value, L"Page") == 0) {
 						CPage *page = new CPage();
 
+						page->Create();
+
 						if(!page->Deserialize(reader, basepath, flags)) {
 							delete page;
 							success = false;
@@ -290,8 +315,11 @@ namespace Depressed {
 		}
 
 		if(success) {
-			for(auto page : m_pages)
+			for(auto page : m_pages) {
+				page->Destroy();
+
 				delete page;
+			}
 			m_pages = pages;
 			m_document_flags = document_flags;
 			m_global_page_flags = flags;

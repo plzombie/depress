@@ -1,7 +1,7 @@
 /*
 BSD 2-Clause License
 
-Copyright (c) 2022, Mikhail Morozov
+Copyright (c) 2022-2023, Mikhail Morozov
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -37,21 +37,28 @@ namespace Depressed {
 
 class CPage
 {
+	bool m_is_init;
 	depress_flags_type m_flags;
 	wchar_t *m_filename;
 	const size_t m_max_fn_len = 32768;
 	
 public:
+	CPage();
+	~CPage();
+	void Create(void);
+	void Destroy(void);
 	void SetFlags(depress_flags_type flags) { m_flags = flags; }
 	depress_flags_type GetFlags(void) { return m_flags; }
 	bool SetFilename(const wchar_t *filename, const wchar_t *basepath = nullptr);
-	wchar_t *GetFilename(void) { return m_filename; }
+	wchar_t *GetFilename(void) { if(!m_is_init) return 0; return m_filename; }
 	bool LoadImageForPage(int *sizex, int *sizey, int *channels, unsigned char **buf);
 	static void SetDefaultPageFlags(depress_flags_type *page_flags);
 	bool Serialize(IXmlWriter *writer, const wchar_t *basepath, depress_flags_type default_flags);
 	bool Deserialize(IXmlReader *reader, const wchar_t *basepath, depress_flags_type default_flags);
 	static bool SerializePageFlags(IXmlWriter *writer, depress_flags_type flags);
 	static bool DeserializePageFlags(IXmlReader *reader, depress_flags_type *flags);
+	bool SerializeIllRect(IXmlWriter *writer, depress_illustration_rect_type *illrect);
+	bool DeserializeIllRect(IXmlReader *reader, depress_illustration_rect_type *illrect);
 };
 
 }

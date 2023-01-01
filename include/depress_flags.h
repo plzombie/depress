@@ -1,7 +1,7 @@
 /*
 BSD 2-Clause License
 
-Copyright (c) 2021-2022, Mikhail Morozov
+Copyright (c) 2021-2023, Mikhail Morozov
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -33,6 +33,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 extern "C" {
 #endif
 
+#include <stdint.h>
+
 enum {
 	DEPRESS_PAGE_TYPE_COLOR,
 	DEPRESS_PAGE_TYPE_BW
@@ -45,6 +47,15 @@ enum {
 };
 
 typedef struct {
+	unsigned int x;
+	unsigned int y;
+	unsigned int width;
+	unsigned int height;
+} depress_illustration_rect_type;
+
+typedef struct {
+	depress_illustration_rect_type *illrects;
+	size_t nof_illrects;
 	int type;
 	int param1;
 	int quality; // 0..100

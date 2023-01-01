@@ -1,7 +1,7 @@
 /*
 BSD 2-Clause License
 
-Copyright (c) 2022, Mikhail Morozov
+Copyright (c) 2022-2023, Mikhail Morozov
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -35,9 +35,48 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../include/depressed_page.h"
 
 namespace Depressed {
-	bool CPage::SetFilename(const wchar_t *filename, const wchar_t *basepath) {
+	CPage::CPage()
+	{
+		m_is_init = false;
+	}
+
+	CPage::~CPage()
+	{
+		Destroy();
+	}
+
+
+	void CPage::Create(void)
+	{
+		memset(&m_flags, 0, sizeof(depress_flags_type));
+		m_filename = 0;
+
+		m_is_init = true;
+	}
+
+	void CPage::Destroy(void)
+	{
+		if(m_flags.nof_illrects) {
+			free(m_flags.illrects);
+			m_flags.illrects = 0;
+			m_flags.nof_illrects = 0;
+		}
+
+		if(m_filename) {
+			free(m_filename);
+			m_filename = 0;
+		}
+
+		m_is_init = false;
+	}
+
+
+	bool CPage::SetFilename(const wchar_t *filename, const wchar_t *basepath)
+	{
 		wchar_t *new_filename;
 		size_t new_filename_length;
+
+		if(!m_is_init) return false;
 
 		if(m_filename)
 			new_filename = m_filename;
@@ -68,6 +107,12 @@ namespace Depressed {
 
 	void CPage::SetDefaultPageFlags(depress_flags_type *page_flags)
 	{
+		if(page_flags->nof_illrects) {
+			free(page_flags->illrects);
+			page_flags->illrects = 0;
+			page_flags->nof_illrects = 0;
+		}
+
 		depressSetDefaultPageFlags(page_flags);
 	}
 
@@ -75,10 +120,12 @@ namespace Depressed {
 	{
 		HRESULT hr;
 
+		if(!m_is_init) return false;
+
 		hr = writer->WriteStartElement(NULL, L"Page", NULL);
 		if(hr != S_OK) return false;
 
-		if(memcmp(&m_flags, &default_flags, sizeof(depress_flags_type)))
+		if(memcmp(&m_flags, &default_flags, sizeof(depress_flags_type)) || m_flags.nof_illrects)
 			if(!SerializePageFlags(writer, m_flags)) return false;
 
 		// Write filename
@@ -108,15 +155,26 @@ namespace Depressed {
 		if(hr != S_OK) return false;
 		// End of filename
 
+		if(m_flags.nof_illrects) {
+			size_t i;
+
+			for(i = 0; i < m_flags.nof_illrects; i++)
+				if(!SerializeIllRect(writer, m_flags.illrects+i)) return false;
+		}
+
 		hr = writer->WriteEndElement();
 		if(hr != S_OK) return false;
 
 		return true;
 	}
-	
+
 	bool CPage::Deserialize(IXmlReader *reader, const wchar_t *basepath, depress_flags_type default_flags)
 	{
 		bool read_filename = false;
+		size_t nof_illrects = 0;
+		depress_illustration_rect_type *illrects = 0;
+
+		if(!m_is_init) return false;
 
 		m_flags = default_flags;
 
@@ -132,33 +190,48 @@ namespace Depressed {
 
 			if(read_filename == false) {
 				if(nodetype == XmlNodeType_Element) {
-					if(reader->GetLocalName(&value, NULL) != S_OK) return false;
+					if(reader->GetLocalName(&value, NULL) != S_OK) goto PROCESSING_FAILED;
 
-					if(wcscmp(value, L"Flags") == 0) DeserializePageFlags(reader, &m_flags);
-					else if(wcscmp(value, L"Filename") == 0) read_filename = true;
+					if(wcscmp(value, L"Flags") == 0) {
+						if(!DeserializePageFlags(reader, &m_flags)) goto PROCESSING_FAILED;
+					} else if(wcscmp(value, L"IllRect") == 0) {
+						depress_illustration_rect_type *_illrects;
+
+						_illrects = (depress_illustration_rect_type *)realloc(illrects, (nof_illrects+1)*sizeof(depress_illustration_rect_type));
+						if(!_illrects) goto PROCESSING_FAILED;
+
+						illrects = _illrects;
+
+						if(!DeserializeIllRect(reader, illrects+(nof_illrects++))) goto PROCESSING_FAILED;
+					} else if(wcscmp(value, L"Filename") == 0) read_filename = true;
 				} if(nodetype == XmlNodeType_EndElement) {
-					if(reader->GetLocalName(&value, NULL) != S_OK) return false;
+					if(reader->GetLocalName(&value, NULL) != S_OK) goto PROCESSING_FAILED;
 
 					if(wcscmp(value, L"Page") == 0) break; // Finished processing of the tag
 				}
 			} else {
 				if(nodetype == XmlNodeType_Text) {
-					if(reader->GetValue(&value, NULL) != S_OK) return false;
+					if(reader->GetValue(&value, NULL) != S_OK) goto PROCESSING_FAILED;
 
-					if(!SetFilename(value, basepath)) return false;
+					if(!SetFilename(value, basepath)) goto PROCESSING_FAILED;
 				} else if(nodetype == XmlNodeType_EndElement) {
-					if(reader->GetLocalName(&value, NULL) != S_OK) return false;
+					if(reader->GetLocalName(&value, NULL) != S_OK) goto PROCESSING_FAILED;
 
 					if(wcscmp(value, L"Filename") == 0)
 						read_filename = false;
 					else
 						return false;
-				} else if(nodetype == XmlNodeType_Element) return false;
+				} else if(nodetype == XmlNodeType_Element) goto PROCESSING_FAILED;
 			}
 			
 		}
 
 		return true;
+
+	PROCESSING_FAILED:
+		if(nof_illrects) free(illrects);
+
+		return false;
 	}
 
 	bool CPage::SerializePageFlags(IXmlWriter *writer, depress_flags_type flags)
@@ -222,6 +295,70 @@ namespace Depressed {
 
 	PROCESSING_FAILED:
 		memset(flags, 0, sizeof(depress_flags_type));
+		return false;
+	}
+
+	bool CPage::SerializeIllRect(IXmlWriter *writer, depress_illustration_rect_type *illrect)
+	{
+		wchar_t value[100];
+		HRESULT hr;
+
+		hr = writer->WriteStartElement(NULL, L"IllRect", NULL);
+		if(hr != S_OK) return false;
+
+		hr = writer->WriteAttributeString(NULL, L"x", NULL, _ultow(illrect->x, value, 10));
+		if(hr != S_OK) return false;
+
+		hr = writer->WriteAttributeString(NULL, L"y", NULL, _ultow(illrect->y, value, 10));
+		if(hr != S_OK) return false;
+
+		hr = writer->WriteAttributeString(NULL, L"width", NULL, _ultow(illrect->width, value, 10));
+		if(hr != S_OK) return false;
+
+		hr = writer->WriteAttributeString(NULL, L"height", NULL, _ultow(illrect->height, value, 10));
+		if(hr != S_OK) return false;
+
+		hr = writer->WriteEndElement();
+		if(hr != S_OK) return false;
+
+		return true;
+	}
+
+	bool CPage::DeserializeIllRect(IXmlReader *reader, depress_illustration_rect_type *illrect)
+	{
+		const wchar_t *value;
+
+		memset(illrect, 0, sizeof(depress_illustration_rect_type));
+
+		if(reader->MoveToFirstAttribute() != S_OK) return true;
+		while(1) {
+			if(reader->GetLocalName(&value, NULL) != S_OK) goto PROCESSING_FAILED;
+
+			if(wcscmp(value, L"x") == 0) {
+				if(reader->GetValue(&value, NULL) != S_OK) goto PROCESSING_FAILED;
+
+				illrect->x = _wtoi(value);
+			} else if(wcscmp(value, L"y") == 0) {
+				if(reader->GetValue(&value, NULL) != S_OK) goto PROCESSING_FAILED;
+
+				illrect->y = _wtoi(value);
+			} else if(wcscmp(value, L"width") == 0) {
+				if(reader->GetValue(&value, NULL) != S_OK) goto PROCESSING_FAILED;
+
+				illrect->width = _wtoi(value);
+			} else if(wcscmp(value, L"height") == 0) {
+				if(reader->GetValue(&value, NULL) != S_OK) goto PROCESSING_FAILED;
+
+				illrect->height = _wtoi(value);
+			}
+
+			if(reader->MoveToNextAttribute() != S_OK) break;
+		}
+
+		return true;
+
+	PROCESSING_FAILED:
+		memset(illrect, 0, sizeof(depress_illustration_rect_type));
 		return false;
 	}
 }

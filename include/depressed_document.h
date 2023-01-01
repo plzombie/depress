@@ -1,7 +1,7 @@
 /*
 BSD 2-Clause License
 
-Copyright (c) 2022, Mikhail Morozov
+Copyright (c) 2022-2023, Mikhail Morozov
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -44,7 +44,8 @@ enum class DocumentProcessStatus {
 	CantStartTasks,
 	CantProcessTasks,
 	CantFinalizeTasks,
-	CantReInitDocument
+	CantReInitDocument,
+	DocumentNotInit
 };
 
 class CDocument {

@@ -30,12 +30,12 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <Windows.h>
 
-uintptr_t InterlockedAddPtr(uintptr_t volatile *addend, uintptr_t value)
+uintptr_t InterlockedExchangeAddPtr(uintptr_t volatile *addend, uintptr_t value)
 {
-#if defined(_M_AMD64) || defined(_M_ARM64) 
-	return InterlockedAdd64(addend, value);
+#if defined(_M_AMD64) || defined(_M_ARM64)
+	return InterlockedExchangeAdd64(addend, value);
 #elif defined(_M_IX86) || defined(_M_ARM)
-	return InterlockedAdd(addend, value);
+	return InterlockedExchangeAdd((LONG *)addend, value);
 #else
 #error Define specific interlocked operation here
 	return 0;
@@ -44,10 +44,10 @@ uintptr_t InterlockedAddPtr(uintptr_t volatile *addend, uintptr_t value)
 
 uintptr_t InterlockedExchangePtr(uintptr_t volatile *target, uintptr_t value)
 {
-#if defined(_M_AMD64) || defined(_M_ARM64) 
+#if defined(_M_AMD64) || defined(_M_ARM64)
 	return InterlockedExchange64(target, value);
 #elif defined(_M_IX86) || defined(_M_ARM)
-	return InterlockedExchange(target, value);
+	return InterlockedExchange((LONG *)target, value);
 #else
 #error Define specific interlocked operation here
 	return 0;

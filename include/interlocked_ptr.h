@@ -35,7 +35,7 @@ extern "C" {
 
 #include <stdint.h>
 
-extern uintptr_t InterlockedAddPtr(uintptr_t volatile *addend, uintptr_t value);
+extern uintptr_t InterlockedExchangeAddPtr(uintptr_t volatile *addend, uintptr_t value);
 extern uintptr_t InterlockedExchangePtr(uintptr_t volatile *target, uintptr_t value);
 
 #ifdef __cplusplus

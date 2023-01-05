@@ -360,7 +360,7 @@ bool depressDocumentFinalize(depress_document_type *document)
 
 size_t depressDocumentGetPagesProcessed(depress_document_type *document)
 {
-	return InterlockedAddPtr((uintptr_t *)(&document->tasks_processed), 0);
+	return InterlockedExchangeAddPtr((uintptr_t *)(&document->tasks_processed), 0);
 }
 
 bool depressDocumentAddTask(depress_document_type *document, const wchar_t *inputfile, depress_flags_type flags)

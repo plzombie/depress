@@ -34,12 +34,17 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 bool depressLoadImageFromFileAndApplyFlags(wchar_t *filename, int *sizex, int *sizey, int *channels, unsigned char **buf, depress_flags_type flags)
 {
 	FILE *f = 0;
+	bool is_bw = false;
 
 	f = _wfopen(filename, L"rb");
 	if(!f)
 		return false;
 
-	*buf = depressLoadImage(f, sizex, sizey, channels, flags.type == DEPRESS_PAGE_TYPE_BW);
+	if(flags.type == DEPRESS_PAGE_TYPE_BW) {
+		if(!flags.nof_illrects) is_bw = true;
+	}
+
+	*buf = depressLoadImage(f, sizex, sizey, channels, is_bw);
 
 	fclose(f);
 

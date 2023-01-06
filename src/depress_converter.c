@@ -62,8 +62,13 @@ bool depressConvertPage(depress_flags_type flags, wchar_t *inputfile, wchar_t *t
 		goto EXIT;
 
 	if(flags.type == DEPRESS_PAGE_TYPE_BW) {
-		if(!pbmSave(sizex, sizey, buffer, f_temp))
-			goto EXIT;
+		if(!flags.nof_illrects) {
+			if(!pbmSave(sizex, sizey, buffer, f_temp))
+				goto EXIT;
+		} else {
+			if(!ppmSave(sizex, sizey, channels, buffer, f_temp))
+				goto EXIT;
+		}
 	} else {
 		if(!ppmSave(sizex, sizey, channels, buffer, f_temp))
 			goto EXIT;

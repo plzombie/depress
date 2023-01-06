@@ -101,3 +101,13 @@ bool pbmSave(unsigned int sizex, unsigned int sizey, unsigned char *buf, FILE *f
 
  	return true;
 }
+
+bool pbmRleSave(unsigned int sizex, unsigned int sizey, unsigned char* buf, FILE* f)
+{
+	if(sizex || sizey) return false; // Unimplemented
+
+	fprintf(f, "R4\n%u %u\n", sizex, sizey);
+
+	return true;
+}
+

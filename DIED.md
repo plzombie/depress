@@ -6,7 +6,8 @@ Document
 - Pages
 - - Page
 - - - Flags
-- - - Filename		
+- - - Filename
+- - - IllRect
 
 ## Document
 
@@ -35,6 +36,15 @@ Describes page flags. No body. Arguments:
 * param1 - if type is 1 then 0 stands for threshold binarization, 1 stands for error diffusion, 2 stands for adaptive binarization.
 * quality - image quality between 0 and 100.
 * dpi - image dpi.
+
+## IllRect.
+
+Rectangular illustrations. Define color regions on image. Can be only on black and white images. Arguments:
+
+* x - x coordinate from 0 (left) to page width-1
+* y - y coordinate from 0 (top) to page height-1
+* width - width of rectangle
+* height - height of rectangle
 
 ## Filename
 

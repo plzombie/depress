@@ -51,9 +51,9 @@ bool depressLoadImageFromFileAndApplyFlags(wchar_t *filename, int *sizex, int *s
 	if(!(*buf))
 		return false;
 
-	if(flags.type == DEPRESS_PAGE_TYPE_BW && flags.param1 == DEPRESS_PAGE_TYPE_BW_PARAM1_ERRDIFF)
+	if(is_bw && flags.param1 == DEPRESS_PAGE_TYPE_BW_PARAM1_ERRDIFF)
 		depressImageApplyErrorDiffusion(*buf, *sizex, *sizey);
-	else if(flags.type == DEPRESS_PAGE_TYPE_BW && flags.param1 == DEPRESS_PAGE_TYPE_BW_PARAM1_ADAPTIVE) {
+	else if(is_bw && flags.param1 == DEPRESS_PAGE_TYPE_BW_PARAM1_ADAPTIVE) {
 		if(!depressImageApplyAdaptiveBinarization(*buf, *sizex, *sizey))
 			return false;
 	}

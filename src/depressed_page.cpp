@@ -171,8 +171,6 @@ namespace Depressed {
 	bool CPage::Deserialize(IXmlReader *reader, const wchar_t *basepath, depress_flags_type default_flags)
 	{
 		bool read_filename = false;
-		size_t nof_illrects = 0;
-		depress_illustration_rect_type *illrects = 0;
 
 		if(!m_is_init) return false;
 
@@ -197,12 +195,12 @@ namespace Depressed {
 					} else if(wcscmp(value, L"IllRect") == 0) {
 						depress_illustration_rect_type *_illrects;
 
-						_illrects = (depress_illustration_rect_type *)realloc(illrects, (nof_illrects+1)*sizeof(depress_illustration_rect_type));
+						_illrects = (depress_illustration_rect_type *)realloc(m_flags.illrects, (m_flags.nof_illrects+1)*sizeof(depress_illustration_rect_type));
 						if(!_illrects) goto PROCESSING_FAILED;
 
-						illrects = _illrects;
+						m_flags.illrects = _illrects;
 
-						if(!DeserializeIllRect(reader, illrects+(nof_illrects++))) goto PROCESSING_FAILED;
+						if(!DeserializeIllRect(reader, m_flags.illrects+(m_flags.nof_illrects++))) goto PROCESSING_FAILED;
 					} else if(wcscmp(value, L"Filename") == 0) read_filename = true;
 				} if(nodetype == XmlNodeType_EndElement) {
 					if(reader->GetLocalName(&value, NULL) != S_OK) goto PROCESSING_FAILED;
@@ -229,7 +227,7 @@ namespace Depressed {
 		return true;
 
 	PROCESSING_FAILED:
-		if(nof_illrects) free(illrects);
+		if(m_flags.nof_illrects) free(m_flags.illrects);
 
 		return false;
 	}

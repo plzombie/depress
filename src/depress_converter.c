@@ -79,7 +79,7 @@ bool depressConvertPage(depress_flags_type flags, wchar_t *inputfile, wchar_t *t
 
 	*arg_options = 0;
 
-	if(flags.type == DEPRESS_PAGE_TYPE_BW) {
+	if(flags.type == DEPRESS_PAGE_TYPE_BW && !flags.nof_illrects) {
 		djvulibre_path = djvulibre_paths->cjb2_path;
 
 		if(flags.quality > 0 || flags.quality < 100) {

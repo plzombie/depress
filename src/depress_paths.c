@@ -76,10 +76,12 @@ bool depressGetDjvulibrePaths(depress_djvulibre_paths_type *djvulibre_paths)
 
 bool depressGetTempFolder(wchar_t *temp_path, wchar_t *userdef_temp_dir)
 {
-	wchar_t appdatalocalpath[MAX_PATH], tempstr[30], *temp_path_end;
+	wchar_t tempstr[30], *temp_path_end;
 	long long counter = 0;
 
 	if(!userdef_temp_dir) { // Temp dir not defined, use user-wide temp path
+		wchar_t appdatalocalpath[MAX_PATH];
+
 		if(SHGetFolderPathW(NULL, CSIDL_LOCAL_APPDATA, NULL, SHGFP_TYPE_CURRENT, appdatalocalpath) != S_OK) return false;
 
 		// 32768 is much greater than 260, no checks needed

@@ -47,7 +47,7 @@ public:
 	~CPage();
 	void Create(void);
 	void Destroy(void);
-	void SetFlags(depress_flags_type flags) { m_flags = flags; }
+	void SetFlags(const depress_flags_type &flags) { m_flags = flags; }
 	depress_flags_type GetFlags(void) { return m_flags; }
 	bool SetFilename(const wchar_t *filename, const wchar_t *basepath = nullptr);
 	wchar_t *GetFilename(void) { if(!m_is_init) return 0; return m_filename; }

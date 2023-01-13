@@ -50,7 +50,7 @@ typedef struct {
 	bool is_completed;
 } depress_task_type;
 
-extern bool depressAddTask(depress_task_type *task, depress_task_type **tasks_out, size_t *tasks_num_out, size_t *tasks_max_out);
+extern bool depressAddTask(const depress_task_type *task, depress_task_type **tasks_out, size_t *tasks_num_out, size_t *tasks_max_out);
 extern void depressDestroyTasks(depress_task_type *tasks, size_t tasks_num);
 
 #ifdef __cplusplus

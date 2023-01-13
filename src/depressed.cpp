@@ -96,7 +96,7 @@ bool depressedProcessBarConsole(Depressed::CDocument &document, const wchar_t *o
 
 	while(true) {
 		bool exit_loop = WaitForSingleObject(saver_thread, 500) == WAIT_OBJECT_0;
-		size_t new_processed_pages;
+		size_t new_processed_pages = 0;
 		
 		if(exit_loop)
 			new_processed_pages = pages_count;

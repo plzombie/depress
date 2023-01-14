@@ -26,6 +26,16 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
+#if defined(_DEBUG) && defined(USE_STB_LEAKCHECK)
+#include <stdio.h>
+FILE *g_stb_leakcheck_f;
+#define STB_LEAKCHECK_IMPLEMENTATION
+#define STB_LEAKCHECK_OUTPUT_PIPE g_stb_leakcheck_f
+extern "C" {
+#include "third_party/stb_leakcheck.h"
+}
+#endif
+
 #include <Windows.h>
 #include <process.h>
 
@@ -180,6 +190,14 @@ INT WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine
 	document.Destroy();
 
 	LocalFree(argv);
+
+#if defined(_DEBUG)
+	g_stb_leakcheck_f = fopen("depressed_stb_leakcheck.txt", "w");
+	if(g_stb_leakcheck_f) {
+		stb_leakcheck_dumpmem();
+		fclose(g_stb_leakcheck_f);
+	}
+#endif
 
 	return 0;
 }

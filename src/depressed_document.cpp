@@ -26,6 +26,12 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
+#if defined(_DEBUG) && defined(USE_STB_LEAKCHECK)
+extern "C" {
+#include "third_party/stb_leakcheck.h"
+}
+#endif
+
 #include "../include/depressed_document.h"
 
 namespace Depressed {

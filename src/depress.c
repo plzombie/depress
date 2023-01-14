@@ -26,6 +26,11 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
+#if defined(_DEBUG) && defined(USE_STB_LEAKCHECK)
+#define STB_LEAKCHECK_IMPLEMENTATION
+#include "third_party/stb_leakcheck.h"
+#endif
+
 #include <Windows.h>
 
 #include <stdio.h>
@@ -209,6 +214,10 @@ int wmain(int argc, wchar_t **argv)
 			_wremove(*(argsp + 1));
 	} else
 		wprintf(L"Converted in %f s\n", (float)(clock()-time_start)/CLOCKS_PER_SEC);
+
+#if defined(_DEBUG) && defined(USE_STB_LEAKCHECK)
+	stb_leakcheck_dumpmem();
+#endif
 
 	return 0;
 }

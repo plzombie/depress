@@ -50,8 +50,8 @@ GetActiveProcessorCount
 SetThreadGroupAffinity
 GetSystemInfo
 _beginthreadex
-InterlockedExchange
-InterlockedExchange64
+InterlockedExchange replaced from https://gcc.gnu.org/onlinedocs/gcc/_005f_005fatomic-Builtins.html#g_t_005f_005fatomic-Builtins
+InterlockedExchange64 replaced from https://gcc.gnu.org/onlinedocs/gcc/_005f_005fatomic-Builtins.html#g_t_005f_005fatomic-Builtins
 
 
 Shell Api

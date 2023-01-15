@@ -38,7 +38,8 @@ extern "C" {
 
 enum {
 	DEPRESS_PAGE_TYPE_COLOR,
-	DEPRESS_PAGE_TYPE_BW
+	DEPRESS_PAGE_TYPE_BW,
+	DEPRESS_PAGE_TYPE_LAYERED
 };
 
 enum {
@@ -59,6 +60,7 @@ typedef struct {
 	size_t nof_illrects;
 	int type;
 	int param1;
+	int param2;
 	int quality; // 0..100
 	int dpi;
 } depress_flags_type;

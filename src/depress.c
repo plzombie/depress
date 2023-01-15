@@ -51,6 +51,9 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define DEPRESS_ARG_PAGETYPE_BW L"-bw"
 #define DEPRESS_ARG_PAGETYPE_BW_PARAM1_ERRDIFF L"-errdiff"
 #define DEPRESS_ARG_PAGETYPE_BW_PARAM1_ADAPTIVE L"-adaptive"
+#define DEPRESS_ARG_PAGETYPE_LAYERED L"-layered"
+#define DEPRESS_ARG_PAGETYPE_LAYERED_PARAM1_DOWNSAMPLEALL L"-laydownall"
+#define DEPRESS_ARG_PAGETYPE_LAYERED_PARAM2_DOWNSAMPLEFG L"-laydownfg"
 #define DEPRESS_ARG_PAGETITLEAUTO L"-pta"
 #define DEPRESS_ARG_PAGETITLEAUTO_SHORTNAME L"-shortfntitle"
 #define DEPRESS_ARG_TEMP L"-temp"
@@ -103,6 +106,39 @@ int wmain(int argc, wchar_t **argv)
 				flags.param1 = DEPRESS_PAGE_TYPE_BW_PARAM1_ADAPTIVE;
 			else
 				wprintf(L"Warning: argument %ls can be set only with %ls\n", DEPRESS_ARG_PAGETYPE_BW_PARAM1_ADAPTIVE, DEPRESS_ARG_PAGETYPE_BW);
+		} else if(!wcscmp(*argsp, DEPRESS_ARG_PAGETYPE_LAYERED)) {
+			flags.type = DEPRESS_PAGE_TYPE_LAYERED;
+			flags.param1 = 3;
+		} else if(!wcscmp(*argsp, DEPRESS_ARG_PAGETYPE_LAYERED_PARAM1_DOWNSAMPLEALL)) {
+			if(argsc > 0) {
+				argsc--;
+				if(flags.type == DEPRESS_PAGE_TYPE_LAYERED) {
+					flags.param1 = _wtoi(*(++argsp));
+					if(flags.param1 < 1) {
+						wprintf(L"Warning: downsample rate should be greater than 0\n");
+						flags.param2 = 1;
+					}
+				} else {
+					argsp++;
+					wprintf(L"Warning: argument %ls can be set only with %ls\n", DEPRESS_ARG_PAGETYPE_LAYERED_PARAM1_DOWNSAMPLEALL, DEPRESS_ARG_PAGETYPE_LAYERED);
+				}
+			} else
+				wprintf(L"Warning: argument " DEPRESS_ARG_PAGETYPE_LAYERED_PARAM1_DOWNSAMPLEALL L" should have parameter\n");
+		} else if(!wcscmp(*argsp, DEPRESS_ARG_PAGETYPE_LAYERED_PARAM2_DOWNSAMPLEFG)) {
+			if(argsc > 0) {
+				argsc--;
+				if(flags.type == DEPRESS_PAGE_TYPE_LAYERED) {
+					flags.param2 = _wtoi(*(++argsp));
+					if(flags.param2 < 1) {
+						wprintf(L"Warning: downsample rate should be greater than 0\n");
+						flags.param2 = 1;
+					}
+				} else {
+					argsp++;
+					wprintf(L"Warning: argument %ls can be set only with %ls\n", DEPRESS_ARG_PAGETYPE_LAYERED_PARAM2_DOWNSAMPLEFG, DEPRESS_ARG_PAGETYPE_LAYERED);
+				}
+			} else
+				wprintf(L"Warning: argument " DEPRESS_ARG_PAGETYPE_LAYERED_PARAM2_DOWNSAMPLEFG L" should have parameter\n");
 		} else if(!wcscmp(*argsp, DEPRESS_ARG_PAGETITLEAUTO)) {
 			document_flags.page_title_type = DEPRESS_DOCUMENT_PAGE_TITLE_TYPE_AUTOMATIC;
 		} else if(!wcscmp(*argsp, DEPRESS_ARG_PAGETITLEAUTO_SHORTNAME)) {

@@ -12,3 +12,8 @@ Software to automatize creation of djvu files.
 ## License
 
 The software itself licensed under BSD license. If you use it with djvulibre it will be considered as combined work with djvulibre. So it will be licensed under GNU GPL.
+
+### Dependencies
+
+* stb - Unlicense/MIT
+* djvul - Unlicense

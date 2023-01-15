@@ -252,6 +252,9 @@ namespace Depressed {
 		hr = writer->WriteAttributeString(NULL, L"param1", NULL, _itow(flags.param1, value, 10));
 		if(hr != S_OK) return false;
 
+		hr = writer->WriteAttributeString(NULL, L"param2", NULL, _itow(flags.param2, value, 10));
+		if(hr != S_OK) return false;
+
 		hr = writer->WriteAttributeString(NULL, L"quality", NULL, _itow(flags.quality, value, 10));
 		if(hr != S_OK) return false;
 
@@ -282,6 +285,10 @@ namespace Depressed {
 				if(reader->GetValue(&value, NULL) != S_OK) goto PROCESSING_FAILED;
 
 				flags->param1 = _wtoi(value);
+			} else if(wcscmp(value, L"param2") == 0) {
+				if(reader->GetValue(&value, NULL) != S_OK) goto PROCESSING_FAILED;
+
+				flags->param2 = _wtoi(value);
 			} else if(wcscmp(value, L"quality") == 0) {
 				if(reader->GetValue(&value, NULL) != S_OK) goto PROCESSING_FAILED;
 

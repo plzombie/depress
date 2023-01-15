@@ -41,8 +41,7 @@ uintptr_t InterlockedExchangeAddPtr(uintptr_t volatile *addend, uintptr_t value)
 #elif defined(_M_IX86) || defined(_M_ARM)
 	return InterlockedExchangeAdd((LONG *)addend, value);
 #else
-#error Define specific interlocked operation here
-	return 0;
+	return __atomic_fetch_add(addend, value);
 #endif
 }
 
@@ -53,7 +52,10 @@ uintptr_t InterlockedExchangePtr(uintptr_t volatile *target, uintptr_t value)
 #elif defined(_M_IX86) || defined(_M_ARM)
 	return InterlockedExchange((LONG *)target, value);
 #else
-#error Define specific interlocked operation here
-	return 0;
+	uintptr_t ret;
+	
+	__atomic_exchange(target, &value, &ret);
+	
+	return ret;
 #endif
 }

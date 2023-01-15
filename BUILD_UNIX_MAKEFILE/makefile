@@ -4,8 +4,8 @@ CFLAGS=-O3 -c -Wall -DFASTIMAGE_USE_LIBCURL
 
 all: depress
 
-test: depress.o depress_converter.o depress_document.o depress_image.o depress_paths.o depress_tasks.o depress_threads.o ppm_save.o wmain_stdc.o
-	$(CPP) depress.o depress_converter.o depress_document.o depress_image.o depress_paths.o depress_tasks.o depress_threads.o ppm_save.o wmain_stdc.o -lcurl -o test
+test: depress.o depress_converter.o depress_document.o depress_image.o depress_paths.o depress_tasks.o depress_threads.o ppm_save.o interlocked_ptr.o waccess.o wfopen.o wmain_stdc.o wmkdir.o wpopen.o wremove.o wrmdir.o wcstombsl.o
+	$(CPP) depress.o depress_converter.o depress_document.o depress_image.o depress_paths.o depress_tasks.o depress_threads.o ppm_save.o interlocked_ptr.o waccess.o wfopen.o wmain_stdc.o wmkdir.o wpopen.o wremove.o wrmdir.o wcstombsl.o -o test
 	
 depress.o:
 	$(CC) $(CFLAGS) ../src/depress.c
@@ -31,8 +31,32 @@ depress_threads.o:
 ppm_save.o:
 	$(CC) $(CFLAGS) ../src/ppm_save.c
 	
+interlocked_ptr.o:
+	$(CC) $(CFLAGS) ../src/interlocked_ptr.c
+	
+waccess.o:
+	$(CC) $(CFLAGS) ../unixsupport/waccess.c
+	
+wfopen.o:
+	$(CC) $(CFLAGS) ../unixsupport/wfopen.c
+	
 wmain_stdc.o:
 	$(CC) $(CFLAGS) ../unixsupport/wmain_stdc.c
+	
+wmkdir.o:
+	$(CC) $(CFLAGS) ../unixsupport/wmkdir.c
+	
+wpopen.o:
+	$(CC) $(CFLAGS) ../unixsupport/wpopen.c
+	
+wremove.o:
+	$(CC) $(CFLAGS) ../unixsupport/wremove.c
+	
+wrmdir.o:
+	$(CC) $(CFLAGS) ../unixsupport/wrmdir.c
+	
+wcstombsl.o:
+	$(CC) $(CFLAGS) ../extclib/wcstombsl.c
 	
 clean:
 	rm -f *.o depress

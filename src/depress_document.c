@@ -30,6 +30,14 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "third_party/stb_leakcheck.h"
 #endif
 
+#if !defined(_WIN32)
+#include "unixsupport/pclose.h"
+#include "unixsupport/waccess.h"
+#include "unixsupport/wremove.h"
+#include "unixsupport/wfopen.h"
+#include "unixsupport/wpopen.h"
+#endif
+
 #include "../include/depress_document.h"
 #include "../include/interlocked_ptr.h"
 

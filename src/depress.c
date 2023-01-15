@@ -31,6 +31,11 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "third_party/stb_leakcheck.h"
 #endif
 
+#if !defined(_WIN32)
+#include "unixsupport/waccess.h"
+#include "unixsupport/wremove.h"
+#endif
+
 #include <Windows.h>
 
 #include <stdio.h>

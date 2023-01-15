@@ -71,10 +71,10 @@ SHGetFolderPathW
 C Library Extensions:
 
 Functions:
-_waccess
-_wremove
-_wmkdir
-_wrmdir
-_wfopen
-_wpopen
-_pclose
+_waccess - add from ne
+_wremove - add from ne
+_wmkdir - add from ne
+_wrmdir - add from ne
+_wfopen - add from ne
+_wpopen - add from scratch
+_pclose - add define

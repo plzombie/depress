@@ -30,6 +30,10 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "third_party/stb_leakcheck.h"
 #endif
 
+#if !defined(_WIN32)
+#include "unixsupport/wfopen.h"
+#endif
+
 #include "../include/depress_image.h"
 
 #define STB_IMAGE_IMPLEMENTATION

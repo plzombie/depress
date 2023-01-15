@@ -41,6 +41,8 @@ typedef struct {
 	wchar_t c44_path[32768];
 	wchar_t djvm_path[32768];
 	wchar_t djvused_path[32768];
+	wchar_t djvuextract_path[32768];
+	wchar_t djvumake_path[32768];
 } depress_djvulibre_paths_type;
 
 extern size_t depressGetFilenameToOpen(const wchar_t *inp_filename, const wchar_t *file_ext, size_t buflen, wchar_t *out_filename, wchar_t **out_filename_start);

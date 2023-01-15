@@ -39,7 +39,7 @@ extern "C" {
 #include <stdbool.h>
 
 extern bool depressLoadImageFromFileAndApplyFlags(wchar_t *filename, int *sizex, int *sizey, int *channels, unsigned char **buf, depress_flags_type flags);
-extern unsigned char *depressLoadImage(FILE *f, int *sizex, int *sizey, int *channels, bool is_bw);
+extern unsigned char *depressLoadImage(FILE *f, int *sizex, int *sizey, int *channels, int desired_channels);
 extern void depressImageApplyErrorDiffusion(unsigned char* buf, int sizex, int sizey);
 extern bool depressImageApplyAdaptiveBinarization(unsigned char* buf, int sizex, int sizey);
 

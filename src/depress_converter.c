@@ -153,22 +153,22 @@ EXIT:
 
 bool depressConvertLayeredPage(const depress_flags_type flags, wchar_t *inputfile, wchar_t *tempfile, wchar_t *outputfile, depress_djvulibre_paths_type *djvulibre_paths)
 {
-	//FILE *f_temp = 0;
+	FILE *f_temp = 0;
 	int sizex, sizey, channels;
-	wchar_t *arg0 = 0, *arg_options, *arg_temp = 0, *arg_sjbz = 0, *arg_fg44 = 0, *arg_bg44 = 0, *djvulibre_path;
+	wchar_t *arg0 = 0, *arg_options, *arg_temp = 0, *arg_sjbz = 0, *arg_fg44 = 0, *arg_bg44 = 0;
 	size_t outputfile_length = 0;
-	unsigned char *buffer = 0;
+	unsigned char *buffer = 0, *buffer_mask = 0, *buffer_bg = 0, *buffer_fg = 0;
 	bool result = false;
 
 	outputfile_length = wcslen(outputfile);
 	if(outputfile_length > (32768-5-1)) goto EXIT;
 
-	arg0 = malloc((3*32768+1536+1024+80+3*32768)*sizeof(wchar_t)); // 2*3(braces)+3(spaces)+1024(options)<1566
+	arg0 = malloc((4*32768+1536+1024+80+3*32768)*sizeof(wchar_t)); // 2*3(braces)+3(spaces)+1024(options)<1566
 
 	if(!arg0)
 		goto EXIT;
 	else {
-		arg_options = arg0 + 3 * 32768 + 1536;
+		arg_options = arg0 + 4 * 32768 + 1536;
 		arg_temp = arg_options + 1024;
 		arg_sjbz = arg_temp + 80;
 		arg_fg44 = arg_sjbz + 32768;
@@ -185,48 +185,93 @@ bool depressConvertLayeredPage(const depress_flags_type flags, wchar_t *inputfil
 	if(!depressLoadImageFromFileAndApplyFlags(inputfile, &sizex, &sizey, &channels, &buffer, flags))
 		goto EXIT;
 
-	// Start temporary code
-	*arg_options = 0;
-
 	{
-		FILE *f_temp = 0;
-		int q;
+		int level;
+		unsigned int bg_downsample, fg_downsample;
+		size_t bg_width, bg_height, fg_width, fg_height, i;
 
+		if(flags.param1 < 1) bg_downsample = 1;
+		else bg_downsample = (unsigned int)flags.param1;
+		if(flags.param2 < 1) fg_downsample = 1;
+		else fg_downsample = (unsigned int)flags.param2;
+
+		bg_width = sizex/bg_downsample+(sizex%bg_downsample>0);
+		bg_height = sizey/bg_downsample+(sizey%bg_downsample>0);
+		fg_width = bg_width/fg_downsample+(bg_width%fg_downsample>0);
+		fg_height = bg_height/fg_downsample+(bg_height%fg_downsample>0);
+
+		buffer_mask = malloc((size_t)sizex*(size_t)sizey);
+		buffer_bg = malloc(bg_width*bg_height*channels);
+		buffer_fg = malloc(bg_width*bg_height*channels);
+		if(!buffer_mask || !buffer_bg || !buffer_fg) {
+			
+
+			goto EXIT;
+		}
+
+		level = ImageDjvulThreshold(buffer, buffer_mask, buffer_bg, buffer_fg, sizex, sizey,
+			bg_downsample, 0, 1, 0.5f, 0.0f, 0.0f, 1.0f, 0.0f);
+
+		for(i = 0; i < (size_t)sizex*(size_t)sizey; i++)
+			if(buffer_mask[i]) buffer_mask[i] = 0; else buffer_mask[i] = 255;
+
+		if(fg_downsample > 1)
+			ImageFGdownsample(buffer_fg, bg_width, bg_height, flags.param2);
+
+		// Save background
 		f_temp = _wfopen(tempfile, L"wb");
 		if(!f_temp)
 			goto EXIT;
-
-		if(!ppmSave(sizex, sizey, channels, buffer, f_temp))
+		if(!ppmSave(bg_width, bg_height, channels, buffer_bg, f_temp))
 			goto EXIT;
-
-		free(buffer); buffer = 0;
+		free(buffer_bg); buffer_bg = 0;
 		fclose(f_temp); f_temp = 0;
+		swprintf(arg0, 32770, L"\"%ls\" \"%ls\" \"%ls\"", djvulibre_paths->c44_path, tempfile, outputfile);
+		if(depressSpawn(djvulibre_paths->c44_path, arg0, true, true) == INVALID_HANDLE_VALUE) goto EXIT;
+		swprintf(arg0, 32770, L"\"%ls\" \"%ls\" \"BG44=%ls\"", djvulibre_paths->djvuextract_path, outputfile, arg_bg44);
+		if(depressSpawn(djvulibre_paths->djvuextract_path, arg0, true, true) == INVALID_HANDLE_VALUE) goto EXIT;
 
-		djvulibre_path = djvulibre_paths->c44_path;
+		// Save foreground
+		f_temp = _wfopen(tempfile, L"wb");
+		if(!f_temp)
+			goto EXIT;
+		if(!ppmSave(fg_width, fg_height, channels, buffer_fg, f_temp))
+			goto EXIT;
+		free(buffer_fg); buffer_fg = 0;
+		fclose(f_temp); f_temp = 0;
+		swprintf(arg0, 32770, L"\"%ls\" -slice 100 \"%ls\" \"%ls\"", djvulibre_paths->c44_path, tempfile, outputfile);
+		if(depressSpawn(djvulibre_paths->c44_path, arg0, true, true) == INVALID_HANDLE_VALUE) goto EXIT;
+		swprintf(arg0, 32770, L"\"%ls\" \"%ls\" \"BG44=%ls\"", djvulibre_paths->djvuextract_path, outputfile, arg_fg44);
+		if(depressSpawn(djvulibre_paths->djvuextract_path, arg0, true, true) == INVALID_HANDLE_VALUE) goto EXIT;
 
-		q = flags.quality/10;
-		if(q < 1) q = 1;
-		if(q > 10) q = 10;
+		// Save mask
+		f_temp = _wfopen(tempfile, L"wb");
+		if(!f_temp)
+			goto EXIT;
+		if(!pbmSave(sizex, sizey, buffer_mask, f_temp))
+			goto EXIT;
+		free(buffer_mask); buffer_mask = 0;
+		fclose(f_temp); f_temp = 0;
+		swprintf(arg0, 32770, L"\"%ls\" \"%ls\" \"%ls\"", djvulibre_paths->cjb2_path, tempfile, outputfile);
+		if(depressSpawn(djvulibre_paths->cjb2_path, arg0, true, true) == INVALID_HANDLE_VALUE) goto EXIT;
+		swprintf(arg0, 32770, L"\"%ls\" \"%ls\" \"Sjbz=%ls\"", djvulibre_paths->djvuextract_path, outputfile, arg_sjbz);
+		if(depressSpawn(djvulibre_paths->djvuextract_path, arg0, true, true) == INVALID_HANDLE_VALUE) goto EXIT;
 
-		swprintf(arg_temp, 80, L"-percent %d", q);
-		wcscat(arg_options, arg_temp);
+		swprintf(arg_options, 1024, L"INFO=,,%d", flags.dpi);
+		swprintf(arg0, 32770, L"\"%ls\" \"%ls\" %ls \"Sjbz=%ls\" \"FG44=%ls\" \"BG44=%ls\"", djvulibre_paths->djvumake_path,
+			outputfile, arg_options, arg_sjbz, arg_fg44, arg_bg44);
+		if(depressSpawn(djvulibre_paths->djvumake_path, arg0, true, true) == INVALID_HANDLE_VALUE) goto EXIT;
 
-		if(flags.dpi > 0) {
-			swprintf(arg_temp, 80, L" -dpi %d", flags.dpi);
-			wcscat(arg_options, arg_temp);
-		}
-
-		swprintf(arg0, 32770, L"\"%ls\" %ls \"%ls\" \"%ls\"", djvulibre_path, arg_options, tempfile, outputfile);
-		//wprintf(L"dlp %ls arg0 %ls\n", djvulibre_path, arg0);
 	}
-
-	if(depressSpawn(djvulibre_path, arg0, true, true) == INVALID_HANDLE_VALUE) goto EXIT;
-	// End temporary code
 
 	result = true;
 
 EXIT:
+	if(f_temp) fclose(f_temp);
 	if(buffer) free(buffer);
+	if(buffer_mask) free(buffer_mask);
+	if(buffer_bg) free(buffer_bg);
+	if(buffer_fg) free(buffer_fg);
 
 	{
 		bool del_temp = true, del_sjbz = false, del_fg44 = false, del_bg44 = false;

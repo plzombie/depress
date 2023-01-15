@@ -109,6 +109,7 @@ int wmain(int argc, wchar_t **argv)
 		} else if(!wcscmp(*argsp, DEPRESS_ARG_PAGETYPE_LAYERED)) {
 			flags.type = DEPRESS_PAGE_TYPE_LAYERED;
 			flags.param1 = 3;
+			flags.param2 = 2;
 		} else if(!wcscmp(*argsp, DEPRESS_ARG_PAGETYPE_LAYERED_PARAM1_DOWNSAMPLEALL)) {
 			if(argsc > 0) {
 				argsc--;

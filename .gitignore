@@ -41,6 +41,9 @@
 c44.exe
 cjb2.exe
 djvm.exe
+djvuextract.exe
+djvumake.exe
+djvused.exe
 libdjvulibre.dll
 libjpeg.dll
 libtiff.dll

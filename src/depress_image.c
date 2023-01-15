@@ -38,26 +38,26 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 bool depressLoadImageFromFileAndApplyFlags(wchar_t *filename, int *sizex, int *sizey, int *channels, unsigned char **buf, depress_flags_type flags)
 {
 	FILE *f = 0;
-	bool is_bw = false;
+	int desired_channels = 0;
 
 	f = _wfopen(filename, L"rb");
 	if(!f)
 		return false;
 
 	if(flags.type == DEPRESS_PAGE_TYPE_BW) {
-		if(!flags.nof_illrects) is_bw = true;
-	}
+		if(!flags.nof_illrects) desired_channels = 1;
+	} else if(flags.type == DEPRESS_PAGE_TYPE_LAYERED) desired_channels = 3;
 
-	*buf = depressLoadImage(f, sizex, sizey, channels, is_bw);
+	*buf = depressLoadImage(f, sizex, sizey, channels, desired_channels);
 
 	fclose(f);
 
 	if(!(*buf))
 		return false;
 
-	if(is_bw && flags.param1 == DEPRESS_PAGE_TYPE_BW_PARAM1_ERRDIFF)
+	if(flags.type == DEPRESS_PAGE_TYPE_BW && flags.param1 == DEPRESS_PAGE_TYPE_BW_PARAM1_ERRDIFF)
 		depressImageApplyErrorDiffusion(*buf, *sizex, *sizey);
-	else if(is_bw && flags.param1 == DEPRESS_PAGE_TYPE_BW_PARAM1_ADAPTIVE) {
+	else if(flags.type == DEPRESS_PAGE_TYPE_BW && flags.param1 == DEPRESS_PAGE_TYPE_BW_PARAM1_ADAPTIVE) {
 		if(!depressImageApplyAdaptiveBinarization(*buf, *sizex, *sizey))
 			return false;
 	}
@@ -65,13 +65,13 @@ bool depressLoadImageFromFileAndApplyFlags(wchar_t *filename, int *sizex, int *s
 	return true;
 }
 
-unsigned char *depressLoadImage(FILE *f, int *sizex, int *sizey, int *channels, bool is_bw)
+unsigned char *depressLoadImage(FILE *f, int *sizex, int *sizey, int *channels, int desired_channels)
 {
 	unsigned char *buf = 0;
 
-	if(is_bw) {
-		buf = stbi_load_from_file(f, sizex, sizey, channels, 1);
-		*channels = 1;
+	if(desired_channels) {
+		buf = stbi_load_from_file(f, sizex, sizey, channels, desired_channels);
+		*channels = desired_channels;
 	} else if(stbi_info_from_file(f, sizex, sizey, channels)) {
 		switch(*channels) {
 			case 1:

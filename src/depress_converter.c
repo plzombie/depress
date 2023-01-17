@@ -170,12 +170,12 @@ bool depressConvertLayeredPage(const depress_flags_type flags, wchar_t *inputfil
 	outputfile_length = wcslen(outputfile);
 	if(outputfile_length > (32768-5-1)) goto EXIT;
 
-	arg0 = malloc((4*32768+1536+1024+80+3*32768)*sizeof(wchar_t)); // 2*3(braces)+3(spaces)+1024(options)<1566
+	arg0 = malloc((5*32768+1536+1024+80+3*32768)*sizeof(wchar_t)); // 2*3(braces)+3(spaces)+1024(options)<1566
 
 	if(!arg0)
 		goto EXIT;
 	else {
-		arg_options = arg0 + 4 * 32768 + 1536;
+		arg_options = arg0 + 5 * 32768 + 1536;
 		arg_temp = arg_options + 1024;
 		arg_sjbz = arg_temp + 80;
 		arg_fg44 = arg_sjbz + 32768;
@@ -183,11 +183,11 @@ bool depressConvertLayeredPage(const depress_flags_type flags, wchar_t *inputfil
 	}
 
 	memcpy(arg_sjbz, outputfile, (outputfile_length+1)*sizeof(wchar_t));
-	wcscpy(arg_sjbz+outputfile_length, L".sjbz");
+	wcscpy(arg_sjbz+outputfile_length, L".sjbz"); // Mask chunk (also I used this filename for bg/fg mask pbm)
 	memcpy(arg_fg44, outputfile, (outputfile_length+1)*sizeof(wchar_t));
-	wcscpy(arg_fg44+outputfile_length, L".fg44");
+	wcscpy(arg_fg44+outputfile_length, L".fg44"); // Foreground chunk
 	memcpy(arg_bg44, outputfile, (outputfile_length+1)*sizeof(wchar_t));
-	wcscpy(arg_bg44+outputfile_length, L".bg44");
+	wcscpy(arg_bg44+outputfile_length, L".bg44"); // Background chunk
 
 	if(!depressLoadImageFromFileAndApplyFlags(inputfile, &sizex, &sizey, &channels, &buffer, flags))
 		goto EXIT;
@@ -237,9 +237,25 @@ bool depressConvertLayeredPage(const depress_flags_type flags, wchar_t *inputfil
 			goto EXIT;
 		if(!ppmSave(bg_width, bg_height, channels, buffer_bg, f_temp))
 			goto EXIT;
+		fclose(f_temp); f_temp = 0;
+		// Save background mask
+		f_temp = _wfopen(arg_sjbz, L"wb");
+		if(!f_temp)
+			goto EXIT;
+		memset(buffer_bg, 0, bg_width*bg_height);
+		for(i = 0; i < (size_t)sizey; i++) {
+			size_t j;
+
+			for(j = 0; j < (size_t)sizex; j++)
+				if(buffer_mask[i*sizex+j])
+					buffer_bg[(i*bg_height/sizey)*bg_width+(j*bg_width/sizex)] = 255;
+		}
+		if(!pbmSave(bg_width, bg_height, buffer_bg, f_temp))
+			goto EXIT;
 		free(buffer_bg); buffer_bg = 0;
 		fclose(f_temp); f_temp = 0;
-		swprintf(arg0, 32770, L"\"%ls\" -slice %d,%d,%d \"%ls\" \"%ls\"", djvulibre_paths->c44_path, quality-25, quality-15, quality, tempfile, outputfile);
+		// Convert background
+		swprintf(arg0, 32770, L"\"%ls\" -slice %d,%d,%d -mask \"%ls\" \"%ls\" \"%ls\"", djvulibre_paths->c44_path, quality-25, quality-15, quality, arg_sjbz, tempfile, outputfile);
 		if(depressSpawn(djvulibre_paths->c44_path, arg0, true, true) == INVALID_HANDLE_VALUE) goto EXIT;
 		swprintf(arg0, 32770, L"\"%ls\" \"%ls\" \"BG44=%ls\"", djvulibre_paths->djvuextract_path, outputfile, arg_bg44);
 		if(depressSpawn(djvulibre_paths->djvuextract_path, arg0, true, true) == INVALID_HANDLE_VALUE) goto EXIT;
@@ -250,9 +266,25 @@ bool depressConvertLayeredPage(const depress_flags_type flags, wchar_t *inputfil
 			goto EXIT;
 		if(!ppmSave(fg_width, fg_height, channels, buffer_fg, f_temp))
 			goto EXIT;
+		fclose(f_temp); f_temp = 0;
+		// Save background mask
+		f_temp = _wfopen(arg_sjbz, L"wb");
+		if(!f_temp)
+			goto EXIT;
+		memset(buffer_fg, 0, fg_width*fg_height);
+		for(i = 0; i < (size_t)sizey; i++) {
+			size_t j;
+
+			for(j = 0; j < (size_t)sizex; j++)
+				if(!buffer_mask[i*sizex+j])
+					buffer_fg[(i*fg_height/sizey)*fg_width+(j*fg_width/sizex)] = 255;
+		}
+		if(!pbmSave(fg_width, fg_height, buffer_fg, f_temp))
+			goto EXIT;
 		free(buffer_fg); buffer_fg = 0;
 		fclose(f_temp); f_temp = 0;
-		swprintf(arg0, 32770, L"\"%ls\" -slice %d \"%ls\" \"%ls\"", djvulibre_paths->c44_path, quality, tempfile, outputfile);
+		// Convert foreground
+		swprintf(arg0, 32770, L"\"%ls\" -slice %d -mask \"%ls\" \"%ls\" \"%ls\"", djvulibre_paths->c44_path, quality, arg_sjbz, tempfile, outputfile);
 		if(depressSpawn(djvulibre_paths->c44_path, arg0, true, true) == INVALID_HANDLE_VALUE) goto EXIT;
 		swprintf(arg0, 32770, L"\"%ls\" \"%ls\" \"BG44=%ls\"", djvulibre_paths->djvuextract_path, outputfile, arg_fg44);
 		if(depressSpawn(djvulibre_paths->djvuextract_path, arg0, true, true) == INVALID_HANDLE_VALUE) goto EXIT;

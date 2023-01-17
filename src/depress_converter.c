@@ -119,15 +119,15 @@ bool depressConvertPage(depress_flags_type flags, wchar_t *inputfile, wchar_t *t
 
 		swprintf(arg0, 32770, L"\"%ls\" %ls \"%ls\" \"%ls\"", djvulibre_path, arg_options, tempfile, outputfile);
 	} else {
-		int q;
+		int quality;
 
 		djvulibre_path = djvulibre_paths->c44_path;
 
-		q = flags.quality/10;
-		if(q < 1) q = 1;
-		if(q > 10) q = 10;
+		quality = flags.quality + 30;
+		if(quality < 30) quality = 30;
+		if(quality > 130) quality = 130;
 
-		swprintf(arg_temp, 80, L"-percent %d", q);
+		swprintf(arg_temp, 80, L"-slice %d,%d,%d", quality-25, quality-15, quality);
 		wcscat(arg_options, arg_temp);
 
 		if(flags.dpi > 0) {
@@ -195,7 +195,13 @@ bool depressConvertLayeredPage(const depress_flags_type flags, wchar_t *inputfil
 	{
 		int level;
 		unsigned int bg_downsample, fg_downsample;
-		size_t bg_width, bg_height, fg_width, fg_height, i;
+		unsigned int bg_width, bg_height, fg_width, fg_height;
+		size_t i;
+		int quality;
+
+		quality = flags.quality + 30;
+		if(quality < 30) quality = 30;
+		if(quality > 130) quality = 130;
 
 		if(flags.param1 < 1) bg_downsample = 1;
 		else bg_downsample = (unsigned int)flags.param1;
@@ -233,7 +239,7 @@ bool depressConvertLayeredPage(const depress_flags_type flags, wchar_t *inputfil
 			goto EXIT;
 		free(buffer_bg); buffer_bg = 0;
 		fclose(f_temp); f_temp = 0;
-		swprintf(arg0, 32770, L"\"%ls\" \"%ls\" \"%ls\"", djvulibre_paths->c44_path, tempfile, outputfile);
+		swprintf(arg0, 32770, L"\"%ls\" -slice %d,%d,%d \"%ls\" \"%ls\"", djvulibre_paths->c44_path, quality-25, quality-15, quality, tempfile, outputfile);
 		if(depressSpawn(djvulibre_paths->c44_path, arg0, true, true) == INVALID_HANDLE_VALUE) goto EXIT;
 		swprintf(arg0, 32770, L"\"%ls\" \"%ls\" \"BG44=%ls\"", djvulibre_paths->djvuextract_path, outputfile, arg_bg44);
 		if(depressSpawn(djvulibre_paths->djvuextract_path, arg0, true, true) == INVALID_HANDLE_VALUE) goto EXIT;
@@ -246,7 +252,7 @@ bool depressConvertLayeredPage(const depress_flags_type flags, wchar_t *inputfil
 			goto EXIT;
 		free(buffer_fg); buffer_fg = 0;
 		fclose(f_temp); f_temp = 0;
-		swprintf(arg0, 32770, L"\"%ls\" -slice 100 \"%ls\" \"%ls\"", djvulibre_paths->c44_path, tempfile, outputfile);
+		swprintf(arg0, 32770, L"\"%ls\" -slice %d \"%ls\" \"%ls\"", djvulibre_paths->c44_path, quality, tempfile, outputfile);
 		if(depressSpawn(djvulibre_paths->c44_path, arg0, true, true) == INVALID_HANDLE_VALUE) goto EXIT;
 		swprintf(arg0, 32770, L"\"%ls\" \"%ls\" \"BG44=%ls\"", djvulibre_paths->djvuextract_path, outputfile, arg_fg44);
 		if(depressSpawn(djvulibre_paths->djvuextract_path, arg0, true, true) == INVALID_HANDLE_VALUE) goto EXIT;

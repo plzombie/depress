@@ -197,10 +197,13 @@ bool depressDocumentRunTasks(depress_document_type *document)
 		group_affinity.Mask = MAXULONG_PTR;
 	}
 
+	document->tasks_next_to_process = 0;
+
 	for(i = 0; i < document->threads_num; i++) {
 		document->thread_args[i].tasks = document->tasks;
 		document->thread_args[i].djvulibre_paths = &document->djvulibre_paths;
 		document->thread_args[i].tasks_num = document->tasks_num;
+		document->thread_args[i].tasks_next_to_process = &(document->tasks_next_to_process);
 		document->thread_args[i].thread_id = i;
 		document->thread_args[i].threads_num = document->threads_num;
 		document->thread_args[i].global_error_event = document->global_error_event;

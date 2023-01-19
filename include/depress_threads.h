@@ -44,6 +44,7 @@ typedef struct {
 	depress_task_type *tasks;
 	depress_djvulibre_paths_type *djvulibre_paths;
 	size_t tasks_num;
+	size_t *tasks_next_to_process;
 	int thread_id;
 	int threads_num;
 	HANDLE global_error_event;

@@ -34,6 +34,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "../include/depress_converter.h"
 
+#include "../include/interlocked_ptr.h"
+
 GetActiveProcessorGroupCount_type GetActiveProcessorGroupCount_funcptr = 0;
 GetActiveProcessorCount_type GetActiveProcessorCount_funcptr = 0;
 SetThreadGroupAffinity_type SetThreadGroupAffinity_funcptr;
@@ -82,7 +84,8 @@ unsigned int __stdcall depressThreadProc(void *args)
 
 	arg = *((depress_thread_arg_type *)args);
 
-	for(i = arg.thread_id; i < arg.tasks_num; i += arg.threads_num) {
+	//for(i = arg.thread_id; i < arg.tasks_num; i += arg.threads_num) {
+	while((i = InterlockedExchangeAddPtr(arg.tasks_next_to_process, 1)) < arg.tasks_num) {
 		if(global_error == false)
 			if(WaitForSingleObject(arg.global_error_event, 0) == WAIT_OBJECT_0)
 				global_error = true;

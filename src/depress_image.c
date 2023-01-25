@@ -50,7 +50,7 @@ bool depressLoadImageFromFileAndApplyFlags(wchar_t *filename, int *sizex, int *s
 
 	if(flags.type == DEPRESS_PAGE_TYPE_BW) {
 		if(!flags.nof_illrects) desired_channels = 1;
-	} else if(flags.type == DEPRESS_PAGE_TYPE_LAYERED) desired_channels = 3;
+	}
 
 	*buf = depressLoadImage(f, sizex, sizey, channels, desired_channels);
 

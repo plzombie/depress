@@ -224,14 +224,14 @@ bool depressConvertLayeredPage(const depress_flags_type flags, wchar_t *inputfil
 			goto EXIT;
 		}
 
-		level = ImageDjvulThreshold(buffer, buffer_mask, buffer_bg, buffer_fg, sizex, sizey,
+		level = ImageDjvulThreshold(buffer, buffer_mask, buffer_bg, buffer_fg, sizex, sizey, channels,
 			bg_downsample, 0, 1, 0.5f, 0.0f, 0.0f, 1.0f, 0.0f);
 
 		for(i = 0; i < (size_t)sizex*(size_t)sizey; i++)
 			if(buffer_mask[i]) buffer_mask[i] = 0; else buffer_mask[i] = 255;
 
 		if(fg_downsample > 1)
-			ImageFGdownsample(buffer_fg, bg_width, bg_height, flags.param2);
+			ImageFGdownsample(buffer_fg, bg_width, bg_height, channels, flags.param2);
 
 		// Save background
 		f_temp = _wfopen(tempfile, L"wb");

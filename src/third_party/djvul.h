@@ -119,7 +119,7 @@ DJVULAPI int ImageDjvulThreshold(unsigned char* buf, bool* bufmask, unsigned cha
     {
         doverlay = 0.0f;
     }
-    kover = doverlay + 1.0;
+    kover = doverlay + 1.0f;
 
     // w/b mode {1/-1}
     if (wbmode < 0)
@@ -152,8 +152,8 @@ DJVULAPI int ImageDjvulThreshold(unsigned char* buf, bool* bufmask, unsigned cha
         cnth = (heightbg + blsz - 1) / blsz;
         cntw = (widthbg + blsz - 1) / blsz;
         maskbl = bgs * blsz;
-        maskover = (kover * maskbl);
-        bgsover = (kover * blsz);
+        maskover = (unsigned int)(kover * maskbl);
+        bgsover = (unsigned int)(kover * blsz);
         partl = (float)(level - l) / (float)level;
         for (i = 0; i < cnth; i++)
         {
@@ -306,7 +306,7 @@ DJVULAPI int ImageDjvulThreshold(unsigned char* buf, bool* bufmask, unsigned cha
                         for (d = 0; d < channels; d++)
                         {
                             pim[d] = (int)buf[k + d];
-                            tim[d] = pim[d] +  contrast * (pim[d] - gim[d]);
+                            tim[d] = pim[d] +  (int)(contrast * (pim[d] - gim[d]));
                         }
 
                         fgdistf = 0.0f;
@@ -348,7 +348,7 @@ DJVULAPI int ImageDjvulThreshold(unsigned char* buf, bool* bufmask, unsigned cha
                 {
                     for (d = 0; d < channels; d++)
                     {
-                        fgsum[d] /= (float)fgnum;
+                        fgsum[d] /= (float)fgnum; // Should here be just fgnum?
                         fgim[d] = (int)(fgsum[d] + 0.5f);
                     }
                 }
@@ -356,7 +356,7 @@ DJVULAPI int ImageDjvulThreshold(unsigned char* buf, bool* bufmask, unsigned cha
                 {
                     for (d = 0; d < channels; d++)
                     {
-                        bgsum[d] /= (float)bgnum;
+                        bgsum[d] /= (float)bgnum; // should here be just bgnum?
                         bgim[d] = (int)(bgsum[d] + 0.5f);
                     }
                 }
@@ -528,7 +528,7 @@ DJVULAPI int ImageDjvulGround(unsigned char* buf, bool* bufmask, unsigned char* 
     {
         doverlay = 0.0f;
     }
-    kover = doverlay + 1.0;
+    kover = doverlay + 1.0f;
 
     fgbase = 127;
     bgbase = 127;
@@ -552,8 +552,8 @@ DJVULAPI int ImageDjvulGround(unsigned char* buf, bool* bufmask, unsigned char* 
         cnth = (heightbg + blsz - 1) / blsz;
         cntw = (widthbg + blsz - 1) / blsz;
         maskbl = bgs * blsz;
-        maskover = (kover * maskbl);
-        bgsover = (kover * blsz);
+        maskover = (unsigned int)(kover * maskbl);
+        bgsover = (unsigned int)(kover * blsz);
         partl = (float)(level - l) / (float)level;
         for (i = 0; i < cnth; i++)
         {
@@ -610,7 +610,7 @@ DJVULAPI int ImageDjvulGround(unsigned char* buf, bool* bufmask, unsigned char* 
                 {
                     for (d = 0; d < channels; d++)
                     {
-                        fgsum[d] /= (float)fgnum;
+                        fgsum[d] /= (float)fgnum; // Should here be just fgnum?
                         fgim[d] = (int)(fgsum[d] + 0.5f);
                     }
                 }
@@ -618,7 +618,7 @@ DJVULAPI int ImageDjvulGround(unsigned char* buf, bool* bufmask, unsigned char* 
                 {
                     for (d = 0; d < channels; d++)
                     {
-                        bgsum[d] /= (float)bgnum;
+                        bgsum[d] /= (float)bgnum; // Should here be just bgnum?
                         bgim[d] = (int)(bgsum[d] + 0.5f);
                     }
                 }

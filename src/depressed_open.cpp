@@ -107,7 +107,7 @@ namespace Depressed {
 		IXmlReader *reader;
 		IStream *filestream;
 
-		fn_length = depressGetFilenameToOpen(filename, L".died", max_fn_len, full_filename, &full_filename_start);
+		fn_length = depressGetFilenameToOpen(0, filename, L".died", max_fn_len, full_filename, &full_filename_start);
 		if(fn_length == 0 || fn_length > max_fn_len) return false;
 		depressGetFilenamePath(full_filename, full_filename_start, basepath);
 

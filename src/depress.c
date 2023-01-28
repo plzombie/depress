@@ -34,9 +34,12 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #if !defined(_WIN32)
 #include "unixsupport/waccess.h"
 #include "unixsupport/wremove.h"
-#endif
-
+#else
 #include <Windows.h>
+
+#include <fcntl.h>
+#include <io.h>
+#endif
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -46,10 +49,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <process.h>
 #include <wchar.h>
 #include <time.h>
-
-#include <sys/types.h>
-#include <fcntl.h>
-#include <io.h>
 
 #include "../include/depress_document.h"
 
@@ -206,7 +205,7 @@ int wmain(int argc, wchar_t **argv)
 	}
 
 	// Searching for files list with picture names
-	text_list_fn_length = depressGetFilenameToOpen(*argsp, L".txt", 32768, text_list_filename, &text_list_name_start);
+	text_list_fn_length = depressGetFilenameToOpen(0, *argsp, L".txt", 32768, text_list_filename, &text_list_name_start);
 	if(!text_list_fn_length) {
 		wprintf(L"Can't find files list\n");
 
@@ -219,8 +218,10 @@ int wmain(int argc, wchar_t **argv)
 	}
 	depressGetFilenamePath(text_list_filename, text_list_name_start, text_list_path);
 
+#if defined(_WIN32)
 	// Enabling safe search mode
 	SetSearchPathMode(BASE_SEARCH_PATH_ENABLE_SAFE_SEARCHMODE | BASE_SEARCH_PATH_PERMANENT);
+#endif
 
 	// Initialize document
 	if(!depressDocumentInit(&document, document_flags))

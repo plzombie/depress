@@ -458,7 +458,8 @@ bool depressDocumentCreateTasksFromTextFile(depress_document_type *document, con
 			continue;
 
 		// Adding textfile path to inputfile
-		task_inputfile_length = SearchPathW(textfilepath, inputfile, NULL, 32768, inputfile_fullname, NULL);
+		task_inputfile_length = depressGetFilenameToOpen(textfilepath, inputfile, 0, 32768, inputfile_fullname, 0);
+		
 		if(task_inputfile_length > 32768 || task_inputfile_length == 0) goto LABEL_ERROR;
 
 		if(!depressDocumentAddTask(document, inputfile_fullname, flags)) goto LABEL_ERROR;
@@ -478,7 +479,7 @@ LABEL_ERROR:
 		size_t i;
 
 		for (i = 0; i < document->tasks_num; i++)
-			CloseHandle(document->tasks[i].finished);
+			depressCloseEventHandle(document->tasks[i].finished);
 	}
 
 	free(document->tasks);

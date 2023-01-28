@@ -32,7 +32,9 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "../include/interlocked_ptr.h"
 
+#if defined(_WIN32)
 #include <Windows.h>
+#endif
 
 uintptr_t InterlockedExchangeAddPtr(uintptr_t volatile *addend, uintptr_t value)
 {

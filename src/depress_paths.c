@@ -39,13 +39,13 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <io.h>
 
-size_t depressGetFilenameToOpen(const wchar_t *inp_filename, const wchar_t *file_ext, size_t buflen, wchar_t *out_filename, wchar_t **out_filename_start)
+size_t depressGetFilenameToOpen(const wchar_t *inp_path, const wchar_t *inp_filename, const wchar_t *file_ext, size_t buflen, wchar_t *out_filename, wchar_t **out_filename_start)
 {
 	DWORD fn_length;
 	
 	if(buflen > MAXDWORD) return 0;
 
-	fn_length = SearchPathW(NULL, inp_filename, file_ext, (DWORD)buflen, out_filename, out_filename_start);
+	fn_length = SearchPathW(inp_path, inp_filename, file_ext, (DWORD)buflen, out_filename, out_filename_start);
 	
 	return fn_length;
 }

@@ -32,15 +32,18 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "../include/depress_paths.h"
 
+#if defined(_WIN32)
 #include <Windows.h>
 #include <ShlObj.h>
 
 #include <direct.h>
 
 #include <io.h>
+#endif
 
 size_t depressGetFilenameToOpen(const wchar_t *inp_path, const wchar_t *inp_filename, const wchar_t *file_ext, size_t buflen, wchar_t *out_filename, wchar_t **out_filename_start)
 {
+#if defined(_WIN32)
 	DWORD fn_length;
 	
 	if(buflen > MAXDWORD) return 0;
@@ -48,6 +51,18 @@ size_t depressGetFilenameToOpen(const wchar_t *inp_path, const wchar_t *inp_file
 	fn_length = SearchPathW(inp_path, inp_filename, file_ext, (DWORD)buflen, out_filename, out_filename_start);
 	
 	return fn_length;
+#else
+	size_t inp_len;
+
+	inp_len = wcslen(inp_filename);
+
+	if(inp_len >= buflen) return 0;
+
+	wcscpy(out_filename, inp_filename);
+	if(out_filename_start) *out_filename_start = out_filename;
+
+	return inp_len;
+#endif
 }
 
 void depressGetFilenamePath(const wchar_t *filename, const wchar_t *filename_start, wchar_t *filepath)
@@ -61,6 +76,7 @@ void depressGetFilenamePath(const wchar_t *filename, const wchar_t *filename_sta
 
 bool depressGetDjvulibrePaths(depress_djvulibre_paths_type *djvulibre_paths)
 {
+#if defined(_WIN32)
 	DWORD filename_len;
 
 	filename_len = SearchPathW(NULL, L"c44.exe", NULL, 32768, djvulibre_paths->c44_path, NULL);
@@ -80,6 +96,14 @@ bool depressGetDjvulibrePaths(depress_djvulibre_paths_type *djvulibre_paths)
 
 	filename_len = SearchPathW(NULL, L"djvumake.exe", NULL, 32768, djvulibre_paths->djvumake_path, NULL);
 	if(filename_len == 0 || filename_len > 32768) return false;
+#else
+	wcscpy(djvulibre_paths->c44_path, L"c44");
+	wcscpy(djvulibre_paths->cjb2_path, L"cjb2");
+	wcscpy(djvulibre_paths->djvm_path, L"djvm");
+	wcscpy(djvulibre_paths->djvused_path, L"djvused");
+	wcscpy(djvulibre_paths->djvuextract_path, L"djvuextract");
+	wcscpy(djvulibre_paths->djvumake_path, L"djvumake");
+#endif
 
 	return true;
 }
@@ -90,6 +114,7 @@ bool depressGetTempFolder(wchar_t *temp_path, wchar_t *userdef_temp_dir)
 	long long counter = 0;
 
 	if(!userdef_temp_dir) { // Temp dir not defined, use user-wide temp path
+#if defined(_WIN32)
 		wchar_t appdatalocalpath[MAX_PATH];
 
 		if(SHGetFolderPathW(NULL, CSIDL_LOCAL_APPDATA, NULL, SHGFP_TYPE_CURRENT, appdatalocalpath) != S_OK) return false;
@@ -99,6 +124,10 @@ bool depressGetTempFolder(wchar_t *temp_path, wchar_t *userdef_temp_dir)
 		wcscat(temp_path, L"\\Temp");
 		if(_waccess(temp_path, 06))
 			return false;
+#else
+		// Todo: XDG directories here
+		wcscpy(temp_path, "/tmp");
+#endif
 	} else { // Temp dir defined
 		if(wcslen(userdef_temp_dir) >= 32700) return false; // Path too long
 
@@ -113,7 +142,7 @@ bool depressGetTempFolder(wchar_t *temp_path, wchar_t *userdef_temp_dir)
 	while(1) {
 		*temp_path_end = 0;
 
-		swprintf(tempstr, 30, L"\\depress%lld", counter);
+		swprintf(tempstr, 30, L"/depress%lld", counter);
 
 		wcscat(temp_path, tempstr);
 

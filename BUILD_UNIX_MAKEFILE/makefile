@@ -5,8 +5,8 @@ CPPFLAGS=-pthread
 
 all: depress
 
-depress: depress.o depress_converter.o depress_document.o depress_image.o depress_paths.o depress_tasks.o depress_threads.o ppm_save.o interlocked_ptr.o waccess.o wfopen.o wmain_stdc.o wmkdir.o wpopen.o wremove.o wrmdir.o wcstombsl.o
-	$(CPP) $(CPPFLAGS) depress.o depress_converter.o depress_document.o depress_image.o depress_paths.o depress_tasks.o depress_threads.o ppm_save.o interlocked_ptr.o waccess.o wfopen.o wmain_stdc.o wmkdir.o wpopen.o wremove.o wrmdir.o wcstombsl.o -o test
+depress: depress.o depress_converter.o depress_document.o depress_image.o depress_paths.o depress_tasks.o depress_threads.o ppm_save.o interlocked_ptr.o waccess.o wfopen.o wmain_stdc.o wmkdir.o wpopen.o wremove.o wrmdir.o wtoi.o wcstombsl.o
+	$(CPP) $(CPPFLAGS) depress.o depress_converter.o depress_document.o depress_image.o depress_paths.o depress_tasks.o depress_threads.o ppm_save.o interlocked_ptr.o waccess.o wfopen.o wmain_stdc.o wmkdir.o wpopen.o wremove.o wrmdir.o wtoi.o wcstombsl.o -o test
 	
 depress.o:
 	$(CC) $(CFLAGS) ../src/depress.c
@@ -55,6 +55,9 @@ wremove.o:
 	
 wrmdir.o:
 	$(CC) $(CFLAGS) ../src/unixsupport/wrmdir.c
+	
+wtoi.o:
+	$(CC) $(CFLAGS) ../src/unixsupport/wtoi.c
 	
 wcstombsl.o:
 	$(CC) $(CFLAGS) ../src/extclib/wcstombsl.c

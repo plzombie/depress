@@ -134,7 +134,9 @@ bool depressDocumentInit(depress_document_type *document, depress_document_flags
 		return false;
 	}
 
+#if defined(_WIN32)
 	depressGetProcessGroupFunctions();
+#endif
 
 	return true;
 }

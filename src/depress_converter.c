@@ -343,21 +343,33 @@ EXIT:
 			if(arg_sjbz) {
 				if(!_waccess(arg_sjbz, 06)) {
 					if(_wremove(arg_sjbz) == -1)
+#if defined(_WIN32)
 						Sleep(0);
+#else
+						usleep(1000);
+#endif
 				} else del_sjbz = false;
 			}
 
 			if(arg_fg44) {
 				if(!_waccess(arg_fg44, 06)) {
 					if(_wremove(arg_fg44) == -1)
+#if defined(_WIN32)
 						Sleep(0);
+#else
+						usleep(1000);
+#endif
 				} else del_fg44 = false;
 			} 
 
 			if(arg_bg44) {
 				if(!_waccess(arg_bg44, 06)) {
 					if(_wremove(arg_bg44) == -1)
+#if defined(_WIN32)
 						Sleep(0);
+#else
+						usleep(1000);
+#endif
 				} else del_bg44 = false;
 			}
 		}

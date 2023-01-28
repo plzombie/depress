@@ -42,6 +42,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../include/interlocked_ptr.h"
 
 #include <stdio.h>
+#include <string.h>
 
 #ifndef MAXULONG_PTR
 #define MAXULONG_PTR !((ULONG_PTR)0)
@@ -176,7 +177,7 @@ bool depressDocumentRunTasks(depress_document_type *document)
 	if(document->threads_num == 0) document->threads_num = 1;
 	if(document->threads_num > 64) document->threads_num = 64;
 
-	document->threads = malloc(sizeof(HANDLE) * document->threads_num);
+	document->threads = malloc(sizeof(depress_thread_handle_t) * document->threads_num);
 	document->thread_args = malloc(sizeof(depress_thread_task_arg_type) * document->threads_num);
 	if(!document->threads || !document->thread_args) {
 		wprintf(L"Can't allocate memory\n");

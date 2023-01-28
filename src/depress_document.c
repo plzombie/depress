@@ -441,7 +441,7 @@ bool depressDocumentCreateTasksFromTextFile(depress_document_type *document, con
 
 #ifdef _MSC_VER
 	f = _wfopen(textfile, L"rt, ccs=UTF-8");
-#elif defined(_WIN32)
+#else
 	f = _wfopen(textfile, L"rt");
 #endif
 	if(!f) {

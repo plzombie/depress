@@ -84,9 +84,9 @@ depress_process_handle_t depressSpawn(wchar_t *filename, wchar_t *args, bool wai
 #else
 	pid_t handle;
 	char /**cfilename, */*cargs;
-	size_t filename_len, args_len;
+	size_t /*filename_len, */args_len;
 
-	filename_len = wcslen(filename)*4;
+	//filename_len = wcslen(filename)*4;
 	args_len = wcslen(args)*4;
 
 	//cfilename = malloc(filename_len+1);

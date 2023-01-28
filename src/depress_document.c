@@ -286,7 +286,7 @@ bool depressDocumentProcessTasks(depress_document_type *document)
 			if(depressWaitForEvent(document->global_error_event, 0))
 				success = false;
 
-		while(depressWaitForEvent(document->tasks[filecount].finished, DEPRESS_WAIT_TIME_INFINITE));
+		while(!depressWaitForEvent(document->tasks[filecount].finished, DEPRESS_WAIT_TIME_INFINITE));
 
 		if(!document->tasks[filecount].is_completed)
 			continue;

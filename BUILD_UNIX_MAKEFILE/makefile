@@ -1,6 +1,6 @@
 CC=gcc
 CPP=g++
-CFLAGS=-O3 -c -Wall -DFASTIMAGE_USE_LIBCURL -pthread
+CFLAGS=-O3 -c -Wall -pthread
 CPPFLAGS=-pthread
 
 all: depress

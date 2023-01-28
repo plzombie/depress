@@ -35,6 +35,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "unixsupport/waccess.h"
 #include "unixsupport/wremove.h"
 #include "unixsupport/wfopen.h"
+#include <unistd.h>
 #endif
 
 #include "../include/depress_converter.h"
@@ -44,6 +45,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../include/ppm_save.h"
 
 #include <stdlib.h>
+#include <string.h>
 
 #define DJVUL_IMPLEMENTATION
 #include "third_party/djvul.h"
@@ -149,7 +151,11 @@ EXIT:
 	while(1) {
 		if(!_waccess(tempfile, 06)) {
 			if(_wremove(tempfile) == -1)
+#if defined(_WIN32)
 				Sleep(0);
+#else
+				usleep(1000);
+#endif
 		} else break;
 	}
 

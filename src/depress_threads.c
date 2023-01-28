@@ -113,7 +113,7 @@ depress_process_handle_t depressSpawn(wchar_t *filename, wchar_t *args, bool wai
 		return handle;
 	}
 
-	execlp(cfilename, cargs, 0);
+	execlp(cfilename, cargs, NULL);
 
 	return handle;
 #endif
@@ -162,7 +162,7 @@ bool depressWaitForEvent(depress_event_handle_t handle, uint32_t milliseconds)
 	while(!milliseconds) {
 		size_t event_val;
 
-		__atomic_load(handle, &event_val);
+		__atomic_load(handle, &event_val, __ATOMIC_SEQ_CST);
 		if(!event_val) return true;
 
 		usleep(1000);
@@ -180,7 +180,7 @@ void depressSetEvent(depress_event_handle_t handle)
 #else
 	size_t event_val = 1;
 
-	__atomic_store(handle, &event_val);
+	__atomic_store(handle, &event_val, __ATOMIC_SEQ_CST);
 #endif
 }
 
@@ -207,7 +207,7 @@ depress_thread_handle_t depressCreateThread(depress_threadfunc_t threadfunc, voi
 
 	if(pthread_attr_init(&attr)) goto LABEL_ERROR;
 
-	res = pthread_create(thread, &attr, threadfunc, threadargs));
+	res = pthread_create(thread, &attr, threadfunc, threadargs);
 
 	pthread_attr_destroy(&attr);
 

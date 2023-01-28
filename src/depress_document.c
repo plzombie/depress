@@ -41,8 +41,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../include/depress_document.h"
 #include "../include/interlocked_ptr.h"
 
-#include <io.h>
-#include <process.h>
 #include <stdio.h>
 
 #ifndef MAXULONG_PTR
@@ -117,7 +115,7 @@ bool depressDocumentInit(depress_document_type *document, depress_document_flags
 {
 	memset(document, 0, sizeof(depress_document_type));
 	
-	document->global_error_event = INVALID_HANDLE_VALUE;
+	document->global_error_event = DEPRESS_INVALID_EVENT_HANDLE;
 
 	document->document_flags = document_flags;
 
@@ -150,10 +148,10 @@ bool depressDocumentDestroy(depress_document_type *document)
 		document->tasks_num = document->tasks_max = 0;
 	}
 
-	if(document->global_error_event != INVALID_HANDLE_VALUE) {
-		CloseHandle(document->global_error_event);
+	if(document->global_error_event != DEPRESS_INVALID_EVENT_HANDLE) {
+		depressCloseEventHandle(document->global_error_event);
 		
-		document->global_error_event = INVALID_HANDLE_VALUE;
+		document->global_error_event = DEPRESS_INVALID_EVENT_HANDLE;
 	}
 
 	return true;
@@ -162,10 +160,14 @@ bool depressDocumentDestroy(depress_document_type *document)
 bool depressDocumentRunTasks(depress_document_type *document)
 {
 	unsigned int i;
-	bool success = true, need_set_thread_group = false;
+	bool success = true;
+#if defined(_WIN32)
+	// Thread affinity stuff
 	DWORD threads_in_current_groups = 0;
+	bool need_set_thread_group = false;
 	WORD current_thread_affinity = (WORD)-1;
 	GROUP_AFFINITY group_affinity;
+#endif
 
 	if(document->tasks == 0)
 		return false;
@@ -189,6 +191,7 @@ bool depressDocumentRunTasks(depress_document_type *document)
 		goto LABEL_ERROR;
 	}
 
+#if defined(_WIN32)
 	if(GetActiveProcessorGroupCount_funcptr && GetActiveProcessorCount_funcptr && SetThreadGroupAffinity_funcptr) {
 		need_set_thread_group = true;
 	
@@ -196,6 +199,7 @@ bool depressDocumentRunTasks(depress_document_type *document)
 
 		group_affinity.Mask = MAXULONG_PTR;
 	}
+#endif
 
 	document->tasks_next_to_process = 0;
 
@@ -208,10 +212,11 @@ bool depressDocumentRunTasks(depress_document_type *document)
 		document->thread_args[i].threads_num = document->threads_num;
 		document->thread_args[i].global_error_event = document->global_error_event;
 
-		document->threads[i] = (HANDLE)_beginthreadex(0, 0, depressThreadTaskProc, document->thread_args + i, 0, 0);
+		document->threads[i] = depressCreateThread(depressThreadTaskProc, document->thread_args + i);
 
-		if(document->threads[i] == INVALID_HANDLE_VALUE) success = false;
+		if(document->threads[i] == DEPRESS_INVALID_THREAD_HANDLE) success = false;
 
+#if defined(_WIN32)
 		if(success && need_set_thread_group) {
 			// We actually should not use this logic on Windows 11 and 2022 because it don't assign thread to specific processor group by default
 			// https://docs.microsoft.com/en-us/windows/win32/api/processtopologyapi/nf-processtopologyapi-setthreadgroupaffinity
@@ -224,18 +229,19 @@ bool depressDocumentRunTasks(depress_document_type *document)
 			}
 			if(!SetThreadGroupAffinity_funcptr(document->threads[i], &group_affinity, NULL)) success = false;
 		}
+#endif
 
 		if(!success) {
 			unsigned int j;
 
 			wprintf(L"Can't create thread\n");
 
-			WaitForMultipleObjects(i+1, document->threads, TRUE, INFINITE);
+			depressWaitForMultipleThreads(i+1, document->threads);
 
-			if(document->threads[i] != INVALID_HANDLE_VALUE) CloseHandle(document->threads[i]);
+			if(document->threads[i] != DEPRESS_INVALID_THREAD_HANDLE) depressCloseThreadHandle(document->threads[i]);
 
 			for(j = 0; j < i; j++)
-				CloseHandle(document->threads[j]);
+				depressCloseThreadHandle(document->threads[j]);
 
 			depressCloseEventHandle(document->global_error_event);
 			document->global_error_event = DEPRESS_INVALID_EVENT_HANDLE;
@@ -312,10 +318,10 @@ bool depressDocumentProcessTasks(depress_document_type *document)
 		}
 	}
 
-	WaitForMultipleObjects(document->threads_num, document->threads, TRUE, INFINITE);
+	depressWaitForMultipleThreads(document->threads_num, document->threads);
 
 	for(i = 0; i < document->threads_num; i++)
-		CloseHandle(document->threads[i]);
+		depressCloseThreadHandle(document->threads[i]);
 
 	free(arg0);
 	free(document->threads);

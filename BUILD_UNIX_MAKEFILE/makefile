@@ -1,11 +1,12 @@
 CC=gcc
 CPP=g++
-CFLAGS=-O3 -c -Wall -DFASTIMAGE_USE_LIBCURL
+CFLAGS=-O3 -c -Wall -DFASTIMAGE_USE_LIBCURL -pthread
+CPPFLAGS=-pthread
 
 all: depress
 
 test: depress.o depress_converter.o depress_document.o depress_image.o depress_paths.o depress_tasks.o depress_threads.o ppm_save.o interlocked_ptr.o waccess.o wfopen.o wmain_stdc.o wmkdir.o wpopen.o wremove.o wrmdir.o wcstombsl.o
-	$(CPP) depress.o depress_converter.o depress_document.o depress_image.o depress_paths.o depress_tasks.o depress_threads.o ppm_save.o interlocked_ptr.o waccess.o wfopen.o wmain_stdc.o wmkdir.o wpopen.o wremove.o wrmdir.o wcstombsl.o -o test
+	$(CPP) $(CPPFLAGS) depress.o depress_converter.o depress_document.o depress_image.o depress_paths.o depress_tasks.o depress_threads.o ppm_save.o interlocked_ptr.o waccess.o wfopen.o wmain_stdc.o wmkdir.o wpopen.o wremove.o wrmdir.o wcstombsl.o -o test
 	
 depress.o:
 	$(CC) $(CFLAGS) ../src/depress.c

@@ -7,8 +7,8 @@
 
 */
 
-#ifndef WPOPEN_H
-#define WPOPEN_H
+#ifndef PCLOSE_H
+#define PCLOSE_H
 
 #ifdef __cplusplus
 extern "C" {

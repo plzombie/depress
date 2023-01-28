@@ -63,6 +63,10 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define DEPRESS_ARG_QUALITY L"-quality"
 #define DEPRESS_ARG_DPI L"-dpi"
 
+#if !defined(_WIN32)
+#include "unixsupport/wtoi.h"
+#endif
+
 int wmain(int argc, wchar_t **argv)
 {
 	wchar_t **argsp;

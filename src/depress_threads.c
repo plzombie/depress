@@ -159,12 +159,13 @@ bool depressWaitForEvent(depress_event_handle_t handle, uint32_t milliseconds)
 	return WaitForSingleObject(handle, milliseconds) == WAIT_OBJECT_0;
 #else
 
-	while(!milliseconds) {
+	while(1) {
 		size_t event_val;
 
 		__atomic_load(handle, &event_val, __ATOMIC_SEQ_CST);
-		if(!event_val) return true;
+		if(event_val) return true;
 
+		if(milliseconds == 0) break;
 		usleep(1000);
 		if(milliseconds != DEPRESS_WAIT_TIME_INFINITE) milliseconds -= 1;
 	}

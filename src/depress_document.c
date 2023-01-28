@@ -399,13 +399,13 @@ bool depressDocumentAddTask(depress_document_type *document, const wchar_t *inpu
 
 	// Filling task
 	wcscpy(task.inputfile, inputfile);
-	swprintf(tempstr, 32, L"\\temp%lld.ppm", (long long)(document->tasks_num));
+	swprintf(tempstr, 32, L"/temp%lld.ppm", (long long)(document->tasks_num));
 	wcscpy(task.tempfile, document->temp_path);
 	wcscat(task.tempfile, tempstr);
 	if(document->tasks_num == 0)
 		wcscpy(task.outputfile, document->output_file);
 	else {
-		swprintf(tempstr, 32, L"\\temp%lld.djvu", (long long)(document->tasks_num));
+		swprintf(tempstr, 32, L"/temp%lld.djvu", (long long)(document->tasks_num));
 		wcscpy(task.outputfile, document->temp_path);
 		wcscat(task.outputfile, tempstr);
 	}
@@ -441,7 +441,7 @@ bool depressDocumentCreateTasksFromTextFile(depress_document_type *document, con
 
 #ifdef _MSC_VER
 	f = _wfopen(textfile, L"rt, ccs=UTF-8");
-#else
+#elif defined(_WIN32)
 	f = _wfopen(textfile, L"rt");
 #endif
 	if(!f) {

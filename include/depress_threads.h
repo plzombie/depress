@@ -87,12 +87,10 @@ extern void depressCloseEventHandle(depress_event_handle_t handle);
 extern depress_thread_handle_t depressCreateThread(depress_threadfunc_t threadfunc, void *threadargs);
 extern void depressWaitForMultipleThreads(unsigned int threads_num, depress_thread_handle_t* threads);
 extern void depressCloseThreadHandle(depress_thread_handle_t handle);
-extern void depressGetProcessGroupFunctions(void);
 extern unsigned int depressGetNumberOfThreads(void);
 #if defined(_WIN32)
+extern void depressGetProcessGroupFunctions(void);
 extern KAFFINITY depressGetMaskForProcessorCount(DWORD processor_count);
-#else
-
 #endif
 
 #ifdef __cplusplus

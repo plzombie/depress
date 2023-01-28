@@ -287,4 +287,9 @@ KAFFINITY depressGetMaskForProcessorCount(DWORD processor_count)
 {
 	return ((KAFFINITY)1 << (KAFFINITY)processor_count) - 1;
 }
+#else
+unsigned int depressGetNumberOfThreads(void)
+{
+	return 4;
+}
 #endif

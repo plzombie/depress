@@ -43,11 +43,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../include/depress_threads.h"
 #include "../include/ppm_save.h"
 
-#include <Windows.h>
-
-#include <io.h>
-#include <process.h>
-
 #define DJVUL_IMPLEMENTATION
 #include "third_party/djvul.h"
 
@@ -139,7 +134,7 @@ bool depressConvertPage(depress_flags_type flags, wchar_t *inputfile, wchar_t *t
 		swprintf(arg0, arg0_size, L"\"%ls\" %ls \"%ls\" \"%ls\"", djvulibre_path, arg_options, tempfile, outputfile);
 	}
 
-	if(depressSpawn(djvulibre_path, arg0, true, true) == INVALID_HANDLE_VALUE) goto EXIT;
+	if(depressSpawn(djvulibre_path, arg0, true, true) == DEPRESS_INVALID_PROCESS_HANDLE) goto EXIT;
 
 	result = true;
 
@@ -258,9 +253,9 @@ bool depressConvertLayeredPage(const depress_flags_type flags, wchar_t *inputfil
 		fclose(f_temp); f_temp = 0;
 		// Convert background
 		swprintf(arg0, arg0_size, L"\"%ls\" -slice %d,%d,%d -mask \"%ls\" \"%ls\" \"%ls\"", djvulibre_paths->c44_path, quality-25, quality-15, quality, arg_sjbz, tempfile, outputfile);
-		if(depressSpawn(djvulibre_paths->c44_path, arg0, true, true) == INVALID_HANDLE_VALUE) goto EXIT;
+		if(depressSpawn(djvulibre_paths->c44_path, arg0, true, true) == DEPRESS_INVALID_PROCESS_HANDLE) goto EXIT;
 		swprintf(arg0, arg0_size, L"\"%ls\" \"%ls\" \"BG44=%ls\"", djvulibre_paths->djvuextract_path, outputfile, arg_bg44);
-		if(depressSpawn(djvulibre_paths->djvuextract_path, arg0, true, true) == INVALID_HANDLE_VALUE) goto EXIT;
+		if(depressSpawn(djvulibre_paths->djvuextract_path, arg0, true, true) == DEPRESS_INVALID_PROCESS_HANDLE) goto EXIT;
 
 		// Save foreground
 		f_temp = _wfopen(tempfile, L"wb");
@@ -287,9 +282,9 @@ bool depressConvertLayeredPage(const depress_flags_type flags, wchar_t *inputfil
 		fclose(f_temp); f_temp = 0;
 		// Convert foreground
 		swprintf(arg0, arg0_size, L"\"%ls\" -slice %d -mask \"%ls\" \"%ls\" \"%ls\"", djvulibre_paths->c44_path, quality, arg_sjbz, tempfile, outputfile);
-		if(depressSpawn(djvulibre_paths->c44_path, arg0, true, true) == INVALID_HANDLE_VALUE) goto EXIT;
+		if(depressSpawn(djvulibre_paths->c44_path, arg0, true, true) == DEPRESS_INVALID_PROCESS_HANDLE) goto EXIT;
 		swprintf(arg0, arg0_size, L"\"%ls\" \"%ls\" \"BG44=%ls\"", djvulibre_paths->djvuextract_path, outputfile, arg_fg44);
-		if(depressSpawn(djvulibre_paths->djvuextract_path, arg0, true, true) == INVALID_HANDLE_VALUE) goto EXIT;
+		if(depressSpawn(djvulibre_paths->djvuextract_path, arg0, true, true) == DEPRESS_INVALID_PROCESS_HANDLE) goto EXIT;
 
 		// Save mask
 		f_temp = _wfopen(tempfile, L"wb");
@@ -300,14 +295,14 @@ bool depressConvertLayeredPage(const depress_flags_type flags, wchar_t *inputfil
 		free(buffer_mask); buffer_mask = 0;
 		fclose(f_temp); f_temp = 0;
 		swprintf(arg0, arg0_size, L"\"%ls\" \"%ls\" \"%ls\"", djvulibre_paths->cjb2_path, tempfile, outputfile);
-		if(depressSpawn(djvulibre_paths->cjb2_path, arg0, true, true) == INVALID_HANDLE_VALUE) goto EXIT;
+		if(depressSpawn(djvulibre_paths->cjb2_path, arg0, true, true) == DEPRESS_INVALID_PROCESS_HANDLE) goto EXIT;
 		swprintf(arg0, arg0_size, L"\"%ls\" \"%ls\" \"Sjbz=%ls\"", djvulibre_paths->djvuextract_path, outputfile, arg_sjbz);
-		if(depressSpawn(djvulibre_paths->djvuextract_path, arg0, true, true) == INVALID_HANDLE_VALUE) goto EXIT;
+		if(depressSpawn(djvulibre_paths->djvuextract_path, arg0, true, true) == DEPRESS_INVALID_PROCESS_HANDLE) goto EXIT;
 
 		swprintf(arg_options, 1024, L"INFO=,,%d", flags.dpi);
 		swprintf(arg0, arg0_size, L"\"%ls\" \"%ls\" %ls \"Sjbz=%ls\" \"FG44=%ls\" \"BG44=%ls\"", djvulibre_paths->djvumake_path,
 			outputfile, arg_options, arg_sjbz, arg_fg44, arg_bg44);
-		if(depressSpawn(djvulibre_paths->djvumake_path, arg0, true, true) == INVALID_HANDLE_VALUE) goto EXIT;
+		if(depressSpawn(djvulibre_paths->djvumake_path, arg0, true, true) == DEPRESS_INVALID_PROCESS_HANDLE) goto EXIT;
 
 	}
 

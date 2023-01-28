@@ -40,7 +40,7 @@ GetActiveProcessorGroupCount_type GetActiveProcessorGroupCount_funcptr = 0;
 GetActiveProcessorCount_type GetActiveProcessorCount_funcptr = 0;
 SetThreadGroupAffinity_type SetThreadGroupAffinity_funcptr;
 
-HANDLE depressSpawn(wchar_t *filename, wchar_t *args, bool wait, bool close_handle)
+depress_process_handle_t depressSpawn(wchar_t *filename, wchar_t *args, bool wait, bool close_handle)
 {
 	STARTUPINFOW si;
 	PROCESS_INFORMATION pi;
@@ -76,7 +76,21 @@ HANDLE depressSpawn(wchar_t *filename, wchar_t *args, bool wait, bool close_hand
 	return pi.hProcess;
 }
 
+void depressWaitForProcess(depress_process_handle_t handle)
+{
+	WaitForSingleObject(handle, INFINITE);
+}
+
+void depressCloseProcessHandle(depress_process_handle_t handle)
+{
+	CloseHandle(handle);
+}
+
+#if defined(_WIN32)
 unsigned int __stdcall depressThreadProc(void *args)
+#else
+void *depressThreadProc(void* args)
+#endif
 {
 	size_t i;
 	depress_thread_arg_type arg;

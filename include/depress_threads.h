@@ -50,6 +50,7 @@ typedef struct {
 	HANDLE global_error_event;
 } depress_thread_arg_type;
 
+#if defined(_WIN32)
 typedef WORD (__stdcall *GetActiveProcessorGroupCount_type)(void);
 typedef DWORD (__stdcall *GetActiveProcessorCount_type)(WORD GroupNumber);
 typedef BOOL(__stdcall *SetThreadGroupAffinity_type)(HANDLE hThread, const GROUP_AFFINITY *GroupAffinity, PGROUP_AFFINITY PreviousGroupAffinity);
@@ -58,11 +59,26 @@ extern GetActiveProcessorGroupCount_type GetActiveProcessorGroupCount_funcptr;
 extern GetActiveProcessorCount_type GetActiveProcessorCount_funcptr;
 extern SetThreadGroupAffinity_type SetThreadGroupAffinity_funcptr;
 
-extern HANDLE depressSpawn(wchar_t *filename, wchar_t *args, bool wait, bool close_handle);
+typedef HANDLE depress_process_handle_t;
+
+#define DEPRESS_INVALID_PROCESS_HANDLE INVALID_HANDLE_VALUE
+#else
+typedef void *depress_process_handle_t;
+
+#define DEPRESS_INVALID_PROCESS_HANDLE 0
+#endif
+
+extern depress_process_handle_t depressSpawn(wchar_t *filename, wchar_t *args, bool wait, bool close_handle);
+extern void depressWaitForProcess(depress_process_handle_t handle);
+extern void depressCloseProcessHandle(depress_process_handle_t handle);
 extern void depressGetProcessGroupFunctions(void);
 extern unsigned int depressGetNumberOfThreads(void);
+#if defined(_WIN32)
 extern KAFFINITY depressGetMaskForProcessorCount(DWORD processor_count);
 extern unsigned int __stdcall depressThreadProc(void *args);
+#else
+extern void *depressThreadProc(void *args);
+#endif
 
 #ifdef __cplusplus
 }

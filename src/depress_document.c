@@ -300,7 +300,7 @@ bool depressDocumentProcessTasks(depress_document_type *document)
 
 				swprintf(arg0, 3 * 32770 + 1024, L"\"%ls\" -i \"%ls\" \"%ls\"", document->djvulibre_paths.djvm_path, document->output_file, document->tasks[filecount].outputfile);
 
-				if(depressSpawn(document->djvulibre_paths.djvm_path, arg0, true, true) == INVALID_HANDLE_VALUE) {
+				if(depressSpawn(document->djvulibre_paths.djvm_path, arg0, true, true) == DEPRESS_INVALID_PROCESS_HANDLE) {
 					wprintf(L"Can't merge djvu files\n");
 					success = false;
 				} else

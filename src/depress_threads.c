@@ -104,7 +104,7 @@ depress_process_handle_t depressSpawn(wchar_t *filename, wchar_t *args, bool wai
 	handle = fork();
 
 	if(handle) {
-		free(cfilename);
+		//free(cfilename);
 		free(cargs);
 
 		if(wait) depressWaitForProcess(handle);

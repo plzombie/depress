@@ -227,7 +227,7 @@ bool depressConvertLayeredPage(const depress_flags_type flags, wchar_t *inputfil
 			goto EXIT;
 		}
 
-		level = ImageDjvulThreshold(buffer, buffer_mask, buffer_bg, buffer_fg, sizex, sizey, channels,
+		level = ImageDjvulThreshold(buffer, (bool *)buffer_mask, buffer_bg, buffer_fg, sizex, sizey, channels,
 			bg_downsample, 0, 1, 0.5f, 0.0f, 0.0f, 1.0f, 0.0f);
 
 		for(i = 0; i < (size_t)sizex*(size_t)sizey; i++)
@@ -333,7 +333,11 @@ EXIT:
 		while(del_temp || del_sjbz || del_fg44 || del_bg44) {
 			if(!_waccess(tempfile, 06)) {
 				if(_wremove(tempfile) == -1)
+#if defined(_WIN32)
 					Sleep(0);
+#else
+					usleep(1000);
+#endif
 			} else del_temp = false;
 
 			if(arg_sjbz) {

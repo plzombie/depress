@@ -66,7 +66,7 @@ typedef _beginthreadex_proc_type depress_threadfunc_t;
 #define DEPRESS_WAIT_TIME_INFINITE INFINITE
 #else
 typedef pid_t depress_process_handle_t;
-typedef void *depress_event_handle_t;
+typedef size_t *depress_event_handle_t;
 typedef pthread_t *depress_thread_handle_t;
 
 typedef void * (* depress_threadfunc_t)(void *args);

@@ -38,10 +38,13 @@ GetActiveProcessorCount_type GetActiveProcessorCount_funcptr = 0;
 SetThreadGroupAffinity_type SetThreadGroupAffinity_funcptr;
 
 #include <process.h>
+#else
+#include <unistd.h>
 #endif
 
 depress_process_handle_t depressSpawn(wchar_t *filename, wchar_t *args, bool wait, bool close_handle)
 {
+#if defined(_WIN32)
 	STARTUPINFOW si;
 	PROCESS_INFORMATION pi;
 	
@@ -74,6 +77,20 @@ depress_process_handle_t depressSpawn(wchar_t *filename, wchar_t *args, bool wai
 		CloseHandle(pi.hProcess);
 
 	return pi.hProcess;
+#else
+	pid_t handle;
+
+	handle = fork();
+
+	if(handle) {
+		if(wait) depressWaitForProcess(handle);
+		if(close_handle) depressCloseProcessHandle(handle);
+
+		return handle;
+	}
+
+	execlp(filename, args, 0);
+#endif
 }
 
 void depressWaitForProcess(depress_process_handle_t handle)
@@ -96,22 +113,47 @@ void depressCloseProcessHandle(depress_process_handle_t handle)
 
 depress_event_handle_t depressCreateEvent(void)
 {
+#if defined(_WIN32)
 	return CreateEventW(NULL, TRUE, FALSE, NULL);
+#else
+	size_t *handle;
+
+	handle = malloc(sizeof(size_t));
+	if(!handle) return DEPRESS_INVALID_EVENT_HANDLE;
+
+	*handle = 0;
+
+	return handle;
+#endif
 }
 
 bool depressWaitForEvent(depress_event_handle_t handle, uint32_t milliseconds)
 {
+#if defined(_WIN32)
 	return WaitForSingleObject(handle, milliseconds) == WAIT_OBJECT_0;
+#else
+	while(!__atomic_load_n(handle)) {
+		usleep(1000);
+	}
+#endif
 }
 
 void depressSetEvent(depress_event_handle_t handle)
 {
+#if defined(_WIN32)
 	SetEvent(handle);
+#else
+	__atomic_store_n(handle, 1);
+#endif
 }
 
 void depressCloseEventHandle(depress_event_handle_t handle)
 {
+#if defined(_WIN32)
 	CloseHandle(handle);
+#else
+	free(handle);
+#endif
 }
 
 depress_thread_handle_t depressCreateThread(depress_threadfunc_t threadfunc, void* threadargs)
@@ -170,6 +212,7 @@ void depressCloseThreadHandle(depress_thread_handle_t handle)
 #endif
 }
 
+#if defined(_WIN32)
 void depressGetProcessGroupFunctions(void)
 {
 	HANDLE kernel32_handle;
@@ -207,4 +250,4 @@ KAFFINITY depressGetMaskForProcessorCount(DWORD processor_count)
 {
 	return ((KAFFINITY)1 << (KAFFINITY)processor_count) - 1;
 }
-
+#endif

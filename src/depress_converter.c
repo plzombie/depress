@@ -43,6 +43,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../include/depress_threads.h"
 #include "../include/ppm_save.h"
 
+#include <stdlib.h>
+
 #define DJVUL_IMPLEMENTATION
 #include "third_party/djvul.h"
 

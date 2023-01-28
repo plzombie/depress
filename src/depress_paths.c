@@ -39,6 +39,10 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <direct.h>
 
 #include <io.h>
+#else
+#include "unixsupport/waccess.h"
+#include "unixsupport/wmkdir.h"
+#include "unixsupport/wrmdir.h"
 #endif
 
 size_t depressGetFilenameToOpen(const wchar_t *inp_path, const wchar_t *inp_filename, const wchar_t *file_ext, size_t buflen, wchar_t *out_filename, wchar_t **out_filename_start)
@@ -126,7 +130,7 @@ bool depressGetTempFolder(wchar_t *temp_path, wchar_t *userdef_temp_dir)
 			return false;
 #else
 		// Todo: XDG directories here
-		wcscpy(temp_path, "/tmp");
+		wcscpy(temp_path, L"/tmp");
 #endif
 	} else { // Temp dir defined
 		if(wcslen(userdef_temp_dir) >= 32700) return false; // Path too long

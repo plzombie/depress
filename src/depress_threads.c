@@ -32,6 +32,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "../include/depress_threads.h"
 
+#include <stdlib.h>
+
 #if defined(_WIN32)
 GetActiveProcessorGroupCount_type GetActiveProcessorGroupCount_funcptr = 0;
 GetActiveProcessorCount_type GetActiveProcessorCount_funcptr = 0;
@@ -40,6 +42,8 @@ SetThreadGroupAffinity_type SetThreadGroupAffinity_funcptr;
 #include <process.h>
 #else
 #include <unistd.h>
+#include <sys/types.h>
+#include <sys/wait.h>
 #endif
 
 depress_process_handle_t depressSpawn(wchar_t *filename, wchar_t *args, bool wait, bool close_handle)
@@ -79,17 +83,39 @@ depress_process_handle_t depressSpawn(wchar_t *filename, wchar_t *args, bool wai
 	return pi.hProcess;
 #else
 	pid_t handle;
+	char *cfilename, *cargs;
+	size_t filename_len, args_len;
+
+	filename_len = wcslen(filename)*4;
+	args_len = wcslen(args)*4;
+
+	cfilename = malloc(filename_len+1);
+	cargs = malloc(args_len+1);
+	if(!cfilename || !cargs) {
+		if(cfilename) free(cfilename);
+		if(cargs) free(cargs);
+
+		return DEPRESS_INVALID_PROCESS_HANDLE;
+	}
+
+	wcstombs(cfilename, filename, filename_len+1);
+	wcstombs(cargs, args, args_len+1);
 
 	handle = fork();
 
 	if(handle) {
+		free(cfilename);
+		free(cargs);
+
 		if(wait) depressWaitForProcess(handle);
 		if(close_handle) depressCloseProcessHandle(handle);
 
 		return handle;
 	}
 
-	execlp(filename, args, 0);
+	execlp(cfilename, cargs, 0);
+
+	return handle;
 #endif
 }
 
@@ -132,9 +158,18 @@ bool depressWaitForEvent(depress_event_handle_t handle, uint32_t milliseconds)
 #if defined(_WIN32)
 	return WaitForSingleObject(handle, milliseconds) == WAIT_OBJECT_0;
 #else
-	while(!__atomic_load_n(handle)) {
+
+	while(!milliseconds) {
+		size_t event_val;
+
+		__atomic_load(handle, &event_val);
+		if(!event_val) return true;
+
 		usleep(1000);
+		if(milliseconds != DEPRESS_WAIT_TIME_INFINITE) milliseconds -= 1;
 	}
+
+	return false;
 #endif
 }
 
@@ -143,7 +178,9 @@ void depressSetEvent(depress_event_handle_t handle)
 #if defined(_WIN32)
 	SetEvent(handle);
 #else
-	__atomic_store_n(handle, 1);
+	size_t event_val = 1;
+
+	__atomic_store(handle, &event_val);
 #endif
 }
 
@@ -170,7 +207,7 @@ depress_thread_handle_t depressCreateThread(depress_threadfunc_t threadfunc, voi
 
 	if(pthread_attr_init(&attr)) goto LABEL_ERROR;
 
-	res = pthread_create(&thread, &attr, threadfunc, threadargs));
+	res = pthread_create(thread, &attr, threadfunc, threadargs));
 
 	pthread_attr_destroy(&attr);
 
@@ -198,7 +235,7 @@ void depressWaitForMultipleThreads(unsigned int threads_num, depress_thread_hand
 
 		if(threads[i] == DEPRESS_INVALID_THREAD_HANDLE) continue;
 
-		pthread_join(*threads[i], *retval);
+		pthread_join(*threads[i], &retval);
 	}
 #endif
 }

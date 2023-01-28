@@ -32,10 +32,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "../include/depress_threads.h"
 
-#include "../include/depress_converter.h"
-
-#include "../include/interlocked_ptr.h"
-
 GetActiveProcessorGroupCount_type GetActiveProcessorGroupCount_funcptr = 0;
 GetActiveProcessorCount_type GetActiveProcessorCount_funcptr = 0;
 SetThreadGroupAffinity_type SetThreadGroupAffinity_funcptr;
@@ -86,38 +82,24 @@ void depressCloseProcessHandle(depress_process_handle_t handle)
 	CloseHandle(handle);
 }
 
-#if defined(_WIN32)
-unsigned int __stdcall depressThreadProc(void *args)
-#else
-void *depressThreadProc(void* args)
-#endif
+depress_event_handle_t depressCreateEvent(void)
 {
-	size_t i;
-	depress_thread_arg_type arg;
-	bool global_error = false;
+	return CreateEventW(NULL, TRUE, FALSE, NULL);
+}
 
-	arg = *((depress_thread_arg_type *)args);
+bool depressWaitForEvent(depress_event_handle_t handle, uint32_t milliseconds)
+{
+	return WaitForSingleObject(handle, milliseconds) == WAIT_OBJECT_0;
+}
 
-	//for(i = arg.thread_id; i < arg.tasks_num; i += arg.threads_num) {
-	while((i = InterlockedExchangeAddPtr(arg.tasks_next_to_process, 1)) < arg.tasks_num) {
-		if(global_error == false)
-			if(WaitForSingleObject(arg.global_error_event, 0) == WAIT_OBJECT_0)
-				global_error = true;
+void depressSetEvent(depress_event_handle_t handle)
+{
+	SetEvent(handle);
+}
 
-		if(global_error == false) {
-			if(!depressConvertPage(arg.tasks[i].flags, arg.tasks[i].inputfile, arg.tasks[i].tempfile, arg.tasks[i].outputfile, arg.djvulibre_paths))
-				arg.tasks[i].is_error = true;
-
-			if(arg.tasks[i].is_error == true)
-				SetEvent(arg.global_error_event);
-
-			arg.tasks[i].is_completed = true;
-		}
-
-		SetEvent(arg.tasks[i].finished);
-	}
-
-	return 0;
+void depressCloseEventHandle(depress_event_handle_t handle)
+{
+	CloseHandle(handle);
 }
 
 void depressGetProcessGroupFunctions(void)

@@ -37,18 +37,7 @@ extern "C" {
 
 #include <stdint.h>
 
-#include "depress_tasks.h"
 #include "depress_paths.h"
-
-typedef struct {
-	depress_task_type *tasks;
-	depress_djvulibre_paths_type *djvulibre_paths;
-	size_t tasks_num;
-	size_t *tasks_next_to_process;
-	int thread_id;
-	int threads_num;
-	HANDLE global_error_event;
-} depress_thread_arg_type;
 
 #if defined(_WIN32)
 typedef WORD (__stdcall *GetActiveProcessorGroupCount_type)(void);
@@ -60,24 +49,35 @@ extern GetActiveProcessorCount_type GetActiveProcessorCount_funcptr;
 extern SetThreadGroupAffinity_type SetThreadGroupAffinity_funcptr;
 
 typedef HANDLE depress_process_handle_t;
+typedef HANDLE depress_event_handle_t;
+typedef HANDLE depress_thread_handle_t;
 
 #define DEPRESS_INVALID_PROCESS_HANDLE INVALID_HANDLE_VALUE
+#define DEPRESS_INVALID_EVENT_HANDLE INVALID_HANDLE_VALUE
+#define DEPRESS_WAIT_TIME_INFINITE INFINITE
 #else
 typedef void *depress_process_handle_t;
+typedef void *depress_event_handle_t;
+typedef void *depress_thread_handle_t;
 
 #define DEPRESS_INVALID_PROCESS_HANDLE 0
+#define DEPRESS_INVALID_EVENT_HANDLE 0
+#define DEPRESS_WAIT_TIME_INFINITE UINT32_MAX
 #endif
 
 extern depress_process_handle_t depressSpawn(wchar_t *filename, wchar_t *args, bool wait, bool close_handle);
 extern void depressWaitForProcess(depress_process_handle_t handle);
 extern void depressCloseProcessHandle(depress_process_handle_t handle);
+extern depress_event_handle_t depressCreateEvent(void);
+extern bool depressWaitForEvent(depress_event_handle_t handle, uint32_t milliseconds);
+extern void depressSetEvent(depress_event_handle_t handle);
+extern void depressCloseEventHandle(depress_event_handle_t handle);
 extern void depressGetProcessGroupFunctions(void);
 extern unsigned int depressGetNumberOfThreads(void);
 #if defined(_WIN32)
 extern KAFFINITY depressGetMaskForProcessorCount(DWORD processor_count);
-extern unsigned int __stdcall depressThreadProc(void *args);
 #else
-extern void *depressThreadProc(void *args);
+
 #endif
 
 #ifdef __cplusplus

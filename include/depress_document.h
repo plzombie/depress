@@ -37,8 +37,6 @@ extern "C" {
 #include <stdint.h>
 #include <wchar.h>
 
-#include <Windows.h>
-
 #include "../include/depress_tasks.h"
 #include "../include/depress_threads.h"
 #include "../include/depress_paths.h"
@@ -66,8 +64,8 @@ typedef struct {
 	size_t tasks_processed;
 	size_t tasks_next_to_process;
 	// Threads
-	HANDLE *threads;
-	depress_thread_arg_type *thread_args;
+	depress_thread_handle_t *threads;
+	depress_thread_task_arg_type *thread_args;
 	unsigned int threads_num;
 	// Paths
 	depress_djvulibre_paths_type djvulibre_paths;
@@ -77,7 +75,7 @@ typedef struct {
 	wchar_t temp_path[32768];
 	const wchar_t *output_file;
 	// Handles
-	HANDLE global_error_event;
+	depress_event_handle_t global_error_event;
 } depress_document_type;
 
 extern bool depressDocumentInit(depress_document_type *document, depress_document_flags_type document_flags);

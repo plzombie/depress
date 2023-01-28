@@ -31,6 +31,9 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #endif
 
 #include "../include/depress_tasks.h"
+#include "../include/depress_converter.h"
+
+#include "../include/interlocked_ptr.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -71,7 +74,7 @@ bool depressAddTask(const depress_task_type *task, depress_task_type **tasks_out
 	tasks[tasks_num].is_error = false;
 	tasks[tasks_num].is_completed = false;
 
-	tasks[tasks_num].finished = CreateEventW(NULL, TRUE, FALSE, NULL);
+	tasks[tasks_num].finished = depressCreateEvent();
 	if(!tasks[tasks_num].finished)
 		success = false;
 
@@ -93,7 +96,41 @@ void depressDestroyTasks(depress_task_type *tasks, size_t tasks_num)
 	size_t i;
 
 	for(i = 0; i < tasks_num; i++)
-		CloseHandle(tasks[i].finished);
+		depressCloseEventHandle(tasks[i].finished);
 
 	free(tasks);
+}
+
+#if defined(_WIN32)
+unsigned int __stdcall depressThreadTaskProc(void *args)
+#else
+void *depressThreadTaskProc(void *args)
+#endif
+{
+	size_t i;
+	depress_thread_task_arg_type arg;
+	bool global_error = false;
+
+	arg = *((depress_thread_task_arg_type *)args);
+
+	//for(i = arg.thread_id; i < arg.tasks_num; i += arg.threads_num) {
+	while((i = InterlockedExchangeAddPtr(arg.tasks_next_to_process, 1)) < arg.tasks_num) {
+		if(global_error == false)
+			if(depressWaitForEvent(arg.global_error_event, 0))
+				global_error = true;
+
+		if(global_error == false) {
+			if(!depressConvertPage(arg.tasks[i].flags, arg.tasks[i].inputfile, arg.tasks[i].tempfile, arg.tasks[i].outputfile, arg.djvulibre_paths))
+				arg.tasks[i].is_error = true;
+
+			if(arg.tasks[i].is_error == true)
+				depressSetEvent(arg.global_error_event);
+
+			arg.tasks[i].is_completed = true;
+		}
+
+		depressSetEvent(arg.tasks[i].finished);
+	}
+
+	return 0;
 }

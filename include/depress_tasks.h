@@ -33,25 +33,40 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 extern "C" {
 #endif
 
-#include <Windows.h>
-
 #include <stdbool.h>
 #include <wchar.h>
 
 #include "depress_flags.h"
+#include "depress_threads.h"
 
 typedef struct {
 	wchar_t inputfile[32768];
 	wchar_t tempfile[32768];
 	wchar_t outputfile[32768];
-	HANDLE finished;
+	depress_event_handle_t finished;
 	depress_flags_type flags;
 	bool is_error;
 	bool is_completed;
 } depress_task_type;
 
+typedef struct {
+	depress_task_type *tasks;
+	depress_djvulibre_paths_type *djvulibre_paths;
+	size_t tasks_num;
+	size_t *tasks_next_to_process;
+	int thread_id;
+	int threads_num;
+	depress_event_handle_t global_error_event;
+} depress_thread_task_arg_type;
+
 extern bool depressAddTask(const depress_task_type *task, depress_task_type **tasks_out, size_t *tasks_num_out, size_t *tasks_max_out);
 extern void depressDestroyTasks(depress_task_type *tasks, size_t tasks_num);
+
+#if defined(_WIN32)
+extern unsigned int __stdcall depressThreadTaskProc(void *args);
+#else
+extern void *depressThreadTaskProc(void *args);
+#endif
 
 #ifdef __cplusplus
 }

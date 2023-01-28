@@ -175,14 +175,14 @@ bool depressDocumentRunTasks(depress_document_type *document)
 	if(document->threads_num > 64) document->threads_num = 64;
 
 	document->threads = malloc(sizeof(HANDLE) * document->threads_num);
-	document->thread_args = malloc(sizeof(depress_thread_arg_type) * document->threads_num);
+	document->thread_args = malloc(sizeof(depress_thread_task_arg_type) * document->threads_num);
 	if(!document->threads || !document->thread_args) {
 		wprintf(L"Can't allocate memory\n");
 
 		goto LABEL_ERROR;
 	}
 
-	document->global_error_event = CreateEventW(NULL, TRUE, FALSE, NULL);
+	document->global_error_event = depressCreateEvent();
 	if(document->global_error_event == NULL) {
 		wprintf(L"Can't create event\n");
 
@@ -208,7 +208,7 @@ bool depressDocumentRunTasks(depress_document_type *document)
 		document->thread_args[i].threads_num = document->threads_num;
 		document->thread_args[i].global_error_event = document->global_error_event;
 
-		document->threads[i] = (HANDLE)_beginthreadex(0, 0, depressThreadProc, document->thread_args + i, 0, 0);
+		document->threads[i] = (HANDLE)_beginthreadex(0, 0, depressThreadTaskProc, document->thread_args + i, 0, 0);
 
 		if(document->threads[i] == INVALID_HANDLE_VALUE) success = false;
 
@@ -234,11 +234,11 @@ bool depressDocumentRunTasks(depress_document_type *document)
 
 			if(document->threads[i] != INVALID_HANDLE_VALUE) CloseHandle(document->threads[i]);
 
-			for (j = 0; j < i; j++)
+			for(j = 0; j < i; j++)
 				CloseHandle(document->threads[j]);
 
-			CloseHandle(document->global_error_event);
-			document->global_error_event = INVALID_HANDLE_VALUE;
+			depressCloseEventHandle(document->global_error_event);
+			document->global_error_event = DEPRESS_INVALID_EVENT_HANDLE;
 
 			free(document->threads);
 			document->threads = 0;
@@ -283,10 +283,10 @@ bool depressDocumentProcessTasks(depress_document_type *document)
 
 	for(filecount = 0; filecount < document->tasks_num; filecount++) {
 		if(success)
-			if(WaitForSingleObject(document->global_error_event, 0) == WAIT_OBJECT_0)
+			if(depressWaitForEvent(document->global_error_event, 0))
 				success = false;
 
-		while(WaitForSingleObject(document->tasks[filecount].finished, INFINITE) != WAIT_OBJECT_0);
+		while(depressWaitForEvent(document->tasks[filecount].finished, DEPRESS_WAIT_TIME_INFINITE));
 
 		if(!document->tasks[filecount].is_completed)
 			continue;

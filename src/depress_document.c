@@ -36,6 +36,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "unixsupport/wremove.h"
 #include "unixsupport/wfopen.h"
 #include "unixsupport/wpopen.h"
+#else
+#include <io.h>
 #endif
 
 #include "../include/depress_document.h"

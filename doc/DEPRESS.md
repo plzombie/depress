@@ -31,5 +31,5 @@ depress "C:\My Album\album.txt" "C:\My Album\album.djvu"
 Let's imagine you want to create a textbook with illustrations scanned at 600 dpi. You can use following command:
 
 ``` sh
-depress -quality 70 -dpi 600 -layered  -laydownall 2 -laydownfg 2 "C:\My Album\album.txt" "C:\My Album\album.djvu"
+depress -quality 70 -dpi 600 -layered -laydownall 2 -laydownfg 2 "C:\My Album\album.txt" "C:\My Album\album.djvu"
 ```

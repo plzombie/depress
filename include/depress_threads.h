@@ -58,7 +58,7 @@ typedef HANDLE depress_process_handle_t;
 typedef HANDLE depress_event_handle_t;
 typedef HANDLE depress_thread_handle_t;
 
-typedef _beginthreadex_proc_type depress_threadfunc_t;
+typedef unsigned (__stdcall * depress_threadfunc_t)(void *args);
 
 #define DEPRESS_INVALID_PROCESS_HANDLE INVALID_HANDLE_VALUE
 #define DEPRESS_INVALID_EVENT_HANDLE INVALID_HANDLE_VALUE

@@ -62,7 +62,7 @@ typedef struct {
 	size_t tasks_num;
 	size_t tasks_max;
 	size_t tasks_processed;
-	size_t tasks_next_to_process;
+	uintptr_t tasks_next_to_process;
 	// Threads
 	depress_thread_handle_t *threads;
 	depress_thread_task_arg_type *thread_args;

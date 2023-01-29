@@ -292,6 +292,7 @@ KAFFINITY depressGetMaskForProcessorCount(DWORD processor_count)
 #else
 unsigned int depressGetNumberOfThreads(void)
 {
-	return 4;
+	// Should work on linux and freebsd
+	return sysconf(_SC_NPROCESSORS_ONLN);
 }
 #endif

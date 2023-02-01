@@ -63,7 +63,7 @@ size_t depressGetFilenameToOpen(const wchar_t *inp_path, const wchar_t *inp_file
 
 	inp_len = wcslen(inp_filename);
 
-	if(inp_filename[0] != '.' && inp_filename != '/') {
+	if(inp_filename[0] != '.' && inp_filename[0] != '/') {
 		bool out_filename_found = false;
 
 		if(inp_len >= buflen) return 0;
@@ -77,7 +77,7 @@ size_t depressGetFilenameToOpen(const wchar_t *inp_path, const wchar_t *inp_file
 				out_filename[0] = 0;
 				wcscpy(out_filename, inp_path);
 				wcscpy(out_filename + inppath_len, L"/");
-				wcscpy(out_filemane + inppath_len + 1, inp_filename);
+				wcscpy(out_filename + inppath_len + 1, inp_filename);
 				if(!_waccess(out_filename, 04)) out_filename_found = true;
 			}
 		}
@@ -91,7 +91,7 @@ size_t depressGetFilenameToOpen(const wchar_t *inp_path, const wchar_t *inp_file
 				cwd_len = wcslen(cwd);
 
 				if(cwd_len + inp_len + 2 < buflen) {
-					out_filename[0];
+					out_filename[0] = 0;
 					wcscpy(out_filename, cwd);
 					wcscpy(out_filename + cwd_len, L"/");
 					wcscpy(out_filename + cwd_len + 1, inp_filename);

@@ -83,28 +83,23 @@ depress_process_handle_t depressSpawn(wchar_t *filename, wchar_t *args, bool wai
 	return pi.hProcess;
 #else
 	pid_t handle;
-	char /**cfilename, */*cargs;
-	size_t /*filename_len, */args_len;
+	char *cargs;
+	size_t args_len;
 
-	//filename_len = wcslen(filename)*4;
 	args_len = wcslen(args)*4;
 
-	//cfilename = malloc(filename_len+1);
 	cargs = malloc(args_len+1);
-	if(/*!cfilename || */!cargs) {
-		//if(cfilename) free(cfilename);
+	if(!cargs) {
 		if(cargs) free(cargs);
 
 		return DEPRESS_INVALID_PROCESS_HANDLE;
 	}
 
-	//wcstombs(cfilename, filename, filename_len+1);
 	wcstombs(cargs, args, args_len+1);
 
 	handle = fork();
 
 	if(handle) {
-		//free(cfilename);
 		free(cargs);
 
 		if(wait) depressWaitForProcess(handle);
@@ -113,7 +108,6 @@ depress_process_handle_t depressSpawn(wchar_t *filename, wchar_t *args, bool wai
 		return handle;
 	}
 
-	//execlp(cfilename, cargs, NULL);
 	execlp("/bin/sh", "/bin/sh", "-c", cargs, NULL);
 
 	return handle;

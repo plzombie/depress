@@ -40,9 +40,12 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <io.h>
 #else
+#include <limits.h>
+
 #include "unixsupport/waccess.h"
 #include "unixsupport/wmkdir.h"
 #include "unixsupport/wrmdir.h"
+#include "unixsupport/wgetcwd.h"
 #endif
 
 size_t depressGetFilenameToOpen(const wchar_t *inp_path, const wchar_t *inp_filename, const wchar_t *file_ext, size_t buflen, wchar_t *out_filename, wchar_t **out_filename_start)
@@ -60,10 +63,58 @@ size_t depressGetFilenameToOpen(const wchar_t *inp_path, const wchar_t *inp_file
 
 	inp_len = wcslen(inp_filename);
 
-	if(inp_len >= buflen) return 0;
+	if(inp_filename[0] != '.' && inp_filename != '/') {
+		bool out_filename_found = false;
 
-	wcscpy(out_filename, inp_filename);
-	if(out_filename_start) *out_filename_start = out_filename;
+		if(inp_len >= buflen) return 0;
+
+		if(inp_path) {
+			size_t inppath_len;
+
+			inppath_len = wcslen(inp_path);
+
+			if(inppath_len + inp_len + 2 < buflen) {
+				out_filename[0] = 0;
+				wcscpy(out_filename, inp_path);
+				wcscpy(out_filename + inppath_len, L"/");
+				wcscpy(out_filemane + inppath_len + 1, inp_filename);
+				if(!_waccess(out_filename, 04)) out_filename_found = true;
+			}
+		}
+
+		if(!out_filename_found) {
+			wchar_t cwd[PATH_MAX+1];
+
+			if(_wgetcwd(cwd, PATH_MAX + 1)) {
+				size_t cwd_len;
+
+				cwd_len = wcslen(cwd);
+
+				if(cwd_len + inp_len + 2 < buflen) {
+					out_filename[0];
+					wcscpy(out_filename, cwd);
+					wcscpy(out_filename + cwd_len, L"/");
+					wcscpy(out_filename + cwd_len + 1, inp_filename);
+					if(!_waccess(out_filename, 04)) out_filename_found = true;
+				}
+			}
+		}
+		
+
+		if(!out_filename_found) wcscpy(out_filename, inp_filename);
+	} else {
+		if(inp_len >= buflen) return 0;
+
+		// Should use realpath here
+		out_filename[0] = 0;
+		wcscpy(out_filename, inp_filename);
+	}
+
+	if(out_filename_start) {
+		*out_filename_start = wcsrchr(out_filename, L'/');
+
+		if(!out_filename_start) *out_filename_start = out_filename;
+	}
 
 	return inp_len;
 #endif

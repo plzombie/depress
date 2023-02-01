@@ -30,6 +30,7 @@ FILE *_wpopen(const wchar_t *filename, const wchar_t *mode)
 
 	// Преобразование mode
 	cmode = malloc(2);
+	cmode[0] = 0;
 	if(!cmode) { free(cfilename); return 0; }
 	while(*mode) {
 		if(*mode == 'r' || *mode == 'w')
@@ -37,8 +38,6 @@ FILE *_wpopen(const wchar_t *filename, const wchar_t *mode)
 		mode++;
 	}
 	cmode[1] = 0;
-
-	wcstombsl(cmode, mode, strsize);
 
 
 	result = popen(cfilename, cmode);

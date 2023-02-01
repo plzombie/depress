@@ -49,4 +49,6 @@ libjpeg.dll
 libtiff.dll
 libz.dll
 
-
+# IUP
+!iup.lib
+!iup.dll

@@ -1,7 +1,7 @@
 /*
 BSD 2-Clause License
 
-Copyright (c) 2022, Mikhail Morozov
+Copyright (c) 2022-2023, Mikhail Morozov
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -36,106 +36,28 @@ extern "C" {
 }
 #endif
 
+#include <iup.h>
+
 #include <Windows.h>
 #include <process.h>
 
 #include "../include/depressed_document.h"
 #include "../include/depressed_open.h"
+#include "../include/depressed_console.h"
+#include "../include/depressed_gui.h"
+#include "../include/depressed_app.h"
 
-HANDLE g_h_stdin = INVALID_HANDLE_VALUE, g_h_stdout = INVALID_HANDLE_VALUE;
-
-bool depressedCreateConsole(void)
-{
-	if(!AttachConsole(ATTACH_PARENT_PROCESS))
-		if(!AllocConsole())
-			return false;
-
-	g_h_stdin = GetStdHandle(STD_INPUT_HANDLE);
-	g_h_stdout = GetStdHandle(STD_OUTPUT_HANDLE);
-
-	if(g_h_stdin == NULL || g_h_stdin == INVALID_HANDLE_VALUE)
-		return false;
-	if(g_h_stdout == NULL || g_h_stdout == INVALID_HANDLE_VALUE)
-		return false;
-
-	return true;
-}
-
-void depressedPrint(const wchar_t * const text, bool is_error = false)
-{
-	if(g_h_stdout == NULL || g_h_stdout == INVALID_HANDLE_VALUE) {
-		MessageBoxW(NULL, text, L"Depressed", MB_OK | MB_TASKMODAL | ( is_error?(MB_ICONSTOP):(MB_ICONINFORMATION) ));
-		return;
-	}
-
-	WriteConsoleW(g_h_stdout, text, (DWORD)wcslen(text), NULL, NULL);
-}
-
-unsigned __stdcall depressedSaverThread(void *param)
-{
-	void **args;
-	Depressed::CDocument *document;
-	wchar_t *output_file;
-	
-	args = (void **)param;
-	document = (Depressed::CDocument *)args[0];
-	output_file = (wchar_t *)args[1];
-
-	if(document->Process(output_file) == Depressed::DocumentProcessStatus::OK)
-		return EXIT_SUCCESS;
-	else
-		return EXIT_FAILURE;
-}
-
-bool depressedProcessBarConsole(Depressed::CDocument &document, const wchar_t *output_file)
-{
-	HANDLE saver_thread;
-	void *args[2];
-	DWORD exit_code = EXIT_FAILURE;
-	size_t processed_pages = 0, pages_count = document.PagesCount();
-	wchar_t tempstr[80];
-	
-	tempstr[79] = 0;
-	args[0] = &document;
-	args[1] = (void *)output_file;
-
-	saver_thread = (HANDLE)_beginthreadex(NULL, 0, depressedSaverThread, args, 0, NULL);
-	if(!saver_thread) return false;
-
-	depressedPrint(L"Saving djvu:\n");
-
-	while(true) {
-		bool exit_loop = WaitForSingleObject(saver_thread, 500) == WAIT_OBJECT_0;
-		size_t new_processed_pages = 0;
-		
-		if(exit_loop)
-			new_processed_pages = pages_count;
-		else if(document.GetLastDocumentProcessStatus() == Depressed::DocumentProcessStatus::OK)
-			new_processed_pages = document.GetPagesProcessed();
-
-		if(processed_pages != new_processed_pages) {
-			swprintf(tempstr, 79, L"Processed %f%%\n", (double)new_processed_pages/(double)pages_count*100.0);
-			depressedPrint(tempstr);
-			processed_pages = new_processed_pages;
-		}
-
-		if(exit_loop) break;
-	}
-	GetExitCodeThread(saver_thread, &exit_code);
-
-	CloseHandle(saver_thread);
-
-	return exit_code == EXIT_SUCCESS;
-}
+struct SDepressedApp depressed_app;
 
 INT WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine, int nCmdShow)
 {
-	wchar_t **argv, *default_project = 0, *default_output = 0;
-	int argc;
-	Depressed::CDocument document;
+	wchar_t **argv = 0, *default_project = 0, *default_output = 0;
+	int argc = 0;
 
-	argv = CommandLineToArgvW(pCmdLine, &argc);
-	if(!argv) return EXIT_FAILURE;
+	if(*pCmdLine) {
+		argv = CommandLineToArgvW(pCmdLine, &argc);
+		if(!argv) return EXIT_FAILURE;
+	}
 
 	if(argc > 0) default_project = argv[0];
 	if(argc > 1) default_output = argv[1];
@@ -143,7 +65,7 @@ INT WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine
 	SetSearchPathMode(BASE_SEARCH_PATH_ENABLE_SAFE_SEARCHMODE | BASE_SEARCH_PATH_PERMANENT);
 	CoInitializeEx(NULL, COINIT_MULTITHREADED);
 
-	if(!document.Create()) {
+	if(!depressed_app.document.Create()) {
 		MessageBoxW(NULL, L"Can't create empty document, probably not enough memory", L"Depressed", MB_OK | MB_TASKMODAL | MB_ICONSTOP);
 
 		return EXIT_FAILURE;
@@ -151,17 +73,19 @@ INT WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine
 
 	if(argc < 2) {
 		// Run GUI
-		MessageBoxW(NULL, L"Depressed GUI unimplemented", L"Depressed", MB_OK | MB_TASKMODAL | MB_ICONSTOP);
+		if(default_project) Depressed::OpenDied(default_project, depressed_app.document);
+
+		depressedRunGui();
 	} else if(argc == 2) {
 		// Process project file and create djvu
 
 		if(!depressedCreateConsole())
 			depressedPrint(L"Can't create console\n", true);
 
-		if(Depressed::OpenDied(default_project, document)) {
-			if(document.PagesCount() == 0)
+		if(Depressed::OpenDied(default_project, depressed_app.document)) {
+			if(depressed_app.document.PagesCount() == 0)
 				depressedPrint(L"No pages in document");
-			else if(!depressedProcessBarConsole(document, default_output))
+			else if(!depressedProcessBarConsole(depressed_app.document, default_output))
 				depressedPrint(L"Can't save djvu file", true);
 			else
 				depressedPrint(L"File saved");
@@ -187,9 +111,9 @@ INT WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine
 		MessageBoxW(NULL, L"Too many arguments", L"Depressed", MB_OK | MB_TASKMODAL | MB_ICONINFORMATION);
 	}
 	
-	document.Destroy();
+	depressed_app.document.Destroy();
 
-	LocalFree(argv);
+	if(argv) LocalFree(argv);
 
 #if defined(_DEBUG)
 	g_stb_leakcheck_f = fopen("depressed_stb_leakcheck.txt", "w");

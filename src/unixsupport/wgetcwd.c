@@ -5,7 +5,7 @@
 
 #include <unistd.h>
 
-wchar_t *_wgetcwd(const wchar_t *buffer, const int maxlen)
+wchar_t *_wgetcwd(wchar_t *buffer, const int maxlen)
 {
 	char *cbuf;
 	size_t cbuf_len;

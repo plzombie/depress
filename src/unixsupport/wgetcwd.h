@@ -16,7 +16,7 @@ extern "C" {
 
 #include <wchar.h>
 
-extern wchar_t *_wgetcwd(const wchar_t *buffer, const int maxlen);
+extern wchar_t *_wgetcwd(wchar_t *buffer, const int maxlen);
 
 #ifdef __cplusplus
 }

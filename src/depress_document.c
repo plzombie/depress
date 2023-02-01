@@ -355,7 +355,11 @@ bool depressDocumentFinalize(depress_document_type *document)
 		return false;
 	}
 
+#if defined(_WIN32)
 	swprintf(opencommand, 65622, L"\"\"%ls\" \"%ls\"\"", document->djvulibre_paths.djvused_path, document->output_file);
+#else
+	swprintf(opencommand, 65622, L"\"%ls\" \"%ls\"", document->djvulibre_paths.djvused_path, document->output_file);
+#endif
 
 	djvused = _wpopen(opencommand, L"wt");
 	if(!djvused) {

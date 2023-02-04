@@ -285,6 +285,7 @@
     <ClCompile Include="..\..\src\depressed_console.cpp" />
     <ClCompile Include="..\..\src\depressed_document.cpp" />
     <ClCompile Include="..\..\src\depressed_gui.cpp" />
+    <ClCompile Include="..\..\src\depressed_gui_maindlg.cpp" />
     <ClCompile Include="..\..\src\depressed_open.cpp" />
     <ClCompile Include="..\..\src\depressed_page.cpp" />
     <ClCompile Include="..\..\src\depress_converter.c" />

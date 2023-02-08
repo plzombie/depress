@@ -1,4 +1,4 @@
-# DEPRESS ( [en](DEPRESS.ru.md) )
+# DEPRESS ( [en](DEPRESS.md) )
 
 ``` shell
 depress [options] inputfile.txt outputfile.djvu

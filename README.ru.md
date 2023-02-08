@@ -9,7 +9,7 @@
 * Скопируйте `depress.exe` в папку djvulibre (например "c:\Program Files (x86)\DjVuLibre\")
 * Запустите `depress.exe pictures_list.txt output.djvu`
 
-Смотрите [документацию](doc/DEPRESS.md).
+Смотрите [документацию](doc/DEPRESS.ru.md).
 
 ## Лицензия
 

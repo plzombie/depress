@@ -1,4 +1,4 @@
-# Depress
+# Depress ( [ru](README.ru.md) )
 
 Software to automatize creation of djvu files.
 

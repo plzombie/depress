@@ -1,21 +1,21 @@
 # Depress ( [en](README.md) )
 
-Программа для автоматизации создания djvu файлов.
+РџСЂРѕРіСЂР°РјРјР° РґР»СЏ Р°РІС‚РѕРјР°С‚РёР·Р°С†РёРё СЃРѕР·РґР°РЅРёСЏ djvu С„Р°Р№Р»РѕРІ.
 
 ## How to use
 
-* Соберите программу (или скачайте бинарники по [ссылке](https://github.com/plzombie/depress/releases))
-* Установите [djvulibre](https://sourceforge.net/projects/djvu/files/)
-* Скопируйте `depress.exe` в папку djvulibre (например "c:\Program Files (x86)\DjVuLibre\")
-* Запустите `depress.exe pictures_list.txt output.djvu`
+* РЎРѕР±РµСЂРёС‚Рµ РїСЂРѕРіСЂР°РјРјСѓ (РёР»Рё СЃРєР°С‡Р°Р№С‚Рµ Р±РёРЅР°СЂРЅРёРєРё РїРѕ [СЃСЃС‹Р»РєРµ](https://github.com/plzombie/depress/releases))
+* РЈСЃС‚Р°РЅРѕРІРёС‚Рµ [djvulibre](https://sourceforge.net/projects/djvu/files/)
+* РЎРєРѕРїРёСЂСѓР№С‚Рµ `depress.exe` РІ РїР°РїРєСѓ djvulibre (РЅР°РїСЂРёРјРµСЂ "c:\Program Files (x86)\DjVuLibre\")
+* Р—Р°РїСѓСЃС‚РёС‚Рµ `depress.exe pictures_list.txt output.djvu`
 
-Смотрите [документацию](doc/DEPRESS.md).
+РЎРјРѕС‚СЂРёС‚Рµ [РґРѕРєСѓРјРµРЅС‚Р°С†РёСЋ](doc/DEPRESS.md).
 
-## Лицензия
+## Р›РёС†РµРЅР·РёСЏ
 
-Программа сама по себе распространяется по лицензии [BSD](https://github.com/plzombie/depress/blob/master/LICENSE). Если вы используете её вместе с djvulibre, это будет считаться комбинированной работой с djvulibre. Таким образом, она будет под лицензией GNU GPL.
+РџСЂРѕРіСЂР°РјРјР° СЃР°РјР° РїРѕ СЃРµР±Рµ СЂР°СЃРїСЂРѕСЃС‚СЂР°РЅСЏРµС‚СЃСЏ РїРѕ Р»РёС†РµРЅР·РёРё [BSD](https://github.com/plzombie/depress/blob/master/LICENSE). Р•СЃР»Рё РІС‹ РёСЃРїРѕР»СЊР·СѓРµС‚Рµ РµС‘ РІРјРµСЃС‚Рµ СЃ djvulibre, СЌС‚Рѕ Р±СѓРґРµС‚ СЃС‡РёС‚Р°С‚СЊСЃСЏ РєРѕРјР±РёРЅРёСЂРѕРІР°РЅРЅРѕР№ СЂР°Р±РѕС‚РѕР№ СЃ djvulibre. РўР°РєРёРј РѕР±СЂР°Р·РѕРј, РѕРЅР° Р±СѓРґРµС‚ РїРѕРґ Р»РёС†РµРЅР·РёРµР№ GNU GPL.
 
-### Зависимости
+### Р—Р°РІРёСЃРёРјРѕСЃС‚Рё
 
 * [djvulibre](https://djvu.sourceforge.net/) - [GNU GPL 2](https://opensource.org/licenses/GPL-2.0)
 * [stb](https://github.com/nothings/stb) - [Unlicense/MIT](https://github.com/nothings/stb/blob/master/LICENSE)

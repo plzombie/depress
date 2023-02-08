@@ -1,4 +1,4 @@
-# DEPRESS
+# DEPRESS ( [ru](DEPRESS.ru.md) )
 
 ``` shell
 depress [options] inputfile.txt outputfile.djvu
@@ -20,7 +20,7 @@ depress [options] inputfile.txt outputfile.djvu
 
 ## Example
 
-Create a text file (for example "C:\My Album\album.txt"). Put images you want to have in your document into text file. Each line of file should have one image name. Image file name can be relative to text file path.
+Create a text file (for example "C:\My Album\album.txt"). Put images names you want to have in your document into text file. Each line of file should have one image name. Image file name can be relative to text file path.
 
 Run following command to create document:
 

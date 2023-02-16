@@ -29,7 +29,65 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../include/depressed_app.h"
 #include "../include/depressed_gui_documentflags.h"
 
+static int depressedDocumentFlagsOkCallback(Ihandle *self)
+{
+	IupSetAttribute(IupGetDialog(self), "STATUS", "1");
+
+	return IUP_CLOSE;
+}
+
+static int depressedDocumentFlagsCancelCallback(Ihandle *self)
+{
+	IupSetAttribute(IupGetDialog(self), "STATUS", "0");
+
+	return IUP_CLOSE;
+}
+
 bool depressedShowDocumentFlagsDlg(depress_document_flags_type &flags)
 {
+	bool result = false;
+	Ihandle *dlg = 0, *vbox_main = 0,
+		*hbox_ptt,
+		*hbox_buttons = 0,
+		*ptt, *ptt_flags,
+		*btn_ok = 0, *btn_cancel = 0;
+
+	ptt = IupToggle("Use authomatic page title (APT)", NULL);
+	ptt_flags = IupToggle("Short APT", NULL);
+
+	btn_ok = IupButton("OK", NULL);
+	btn_cancel = IupButton("Cancel", NULL);
+
+	IupSetCallback(btn_ok, "ACTION", (Icallback)depressedDocumentFlagsOkCallback);
+	IupSetCallback(btn_cancel, "ACTION", (Icallback)depressedDocumentFlagsCancelCallback);
+
+	hbox_ptt = IupHbox(ptt, ptt_flags, NULL);
+
+	hbox_buttons = IupHbox(IupFill(), btn_ok, btn_cancel, NULL);
+	IupSetAttributes(hbox_buttons, "NORMALIZESIZE=HORIZONTAL");
+
+	vbox_main = IupVbox(hbox_ptt, hbox_buttons, NULL);
+
+	// Set default values
+	IupSetInt(ptt, "VALUE", flags.page_title_type);
+	IupSetInt(ptt_flags, "VALUE", flags.page_title_type_flags);
+
+	dlg = IupDialog(vbox_main);
+
+	IupSetAttribute(dlg, "TITLE", "Document flags");
+	IupSetAttributeHandle(dlg, "DEFAULTENTER", btn_ok);
+	IupSetAttributeHandle(dlg, "DEFAULTESC", btn_cancel);
+
+	IupPopup(dlg, IUP_CENTERPARENT, IUP_CENTERPARENT);
+
+	if(IupGetInt(dlg, "STATUS") == 1) {
+		result = true;
+
+		flags.page_title_type = IupGetInt(ptt, "VALUE");
+		flags.page_title_type_flags = IupGetInt(ptt_flags, "VALUE");
+	}
+
+	IupDestroy(dlg);
+
 	return true;
 }

@@ -27,6 +27,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 #include "../include/depressed_gui_maindlg.h"
+#include "../include/depressed_gui_pageflags.h"
+#include "../include/depressed_gui_documentflags.h"
 #include "../include/depressed_app.h"
 #include "../include/depressed_open.h"
 
@@ -211,6 +213,32 @@ static int depressedProjectSaveAsCallback(Ihandle *self)
 	return IUP_DEFAULT;
 }
 
+static int depressedProjectDocumentFlagsCallback(Ihandle *self)
+{
+	depress_document_flags_type flags;
+
+	flags = depressed_app.document.GetDocumentFlags();
+	if(depressedShowDocumentFlagsDlg(flags)) {
+		depressed_app.document.SetDocumentFlags(flags);
+		depressed_app.document_changed = true;
+	}
+
+	return IUP_DEFAULT;
+}
+
+static int depressedProjectDefaultPageFlagsCallback(Ihandle *self)
+{
+	depress_flags_type flags;
+
+	flags = depressed_app.document.GetGlobalPageFlags();
+
+	if(depressedShowPageFlagsDlg(flags)) {
+		depressed_app.document.SetGlobalPageFlags(flags);
+		depressed_app.document_changed = true;
+	}
+
+	return IUP_DEFAULT;
+}
 static int depressedProjectCreateDocumentCallback(Ihandle *self)
 {
 	Ihandle *savedlg;
@@ -308,6 +336,8 @@ bool depressedCreateMainDlgMenu(void)
 	IupSetCallback(depressed_app.item_project_open, "ACTION", (Icallback)depressedProjectOpenCallback);
 	IupSetCallback(depressed_app.item_project_save, "ACTION", (Icallback)depressedProjectSaveCallback);
 	IupSetCallback(depressed_app.item_project_save_as, "ACTION", (Icallback)depressedProjectSaveAsCallback);
+	IupSetCallback(depressed_app.item_project_document_flags, "ACTION", (Icallback)depressedProjectDocumentFlagsCallback);
+	IupSetCallback(depressed_app.item_project_default_page_flags, "ACTION", (Icallback)depressedProjectDefaultPageFlagsCallback);
 	IupSetCallback(depressed_app.item_project_create_document, "ACTION", (Icallback)depressedProjectCreateDocumentCallback);
 	IupSetCallback(depressed_app.item_project_exit, "ACTION", (Icallback)depressedProjectExitCallback);
 

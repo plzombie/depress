@@ -65,6 +65,8 @@ public:
 	void DestroyPages(void);
 	depress_document_flags_type GetDocumentFlags(void) { return m_document_flags; }
 	void SetDocumentFlags(depress_document_flags_type document_flags) { m_document_flags = document_flags; }
+	depress_flags_type GetGlobalPageFlags(void) { return m_global_page_flags; }
+	void SetGlobalPageFlags(depress_flags_type flags) { m_global_page_flags = flags; }
 	DocumentProcessStatus Process(const wchar_t *outputfile);
 	size_t GetPagesProcessed(void);
 	DocumentProcessStatus GetLastDocumentProcessStatus(void) { return m_last_document_process_status; }

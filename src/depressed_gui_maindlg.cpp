@@ -44,7 +44,7 @@ static int depressedLoadProjectCallback(Ihandle *self)
 
 	IupMessage("Project filename", cfilename);
 
-	if (!Depressed::OpenDied(wfilename, depressed_app.document))
+	if(!Depressed::OpenDied(wfilename, depressed_app.document))
 		IupMessage(DEPRESSED_APP_TITLE, "Can't open project");
 
 	free(wfilename);
@@ -76,10 +76,25 @@ static int depressedSaveDjvuCallback(Ihandle *self)
 	return IUP_DEFAULT;
 }
 
-bool depressedDoBeforeNewOrSave(void)
-{
-	if (depressed_app.document_changed) return true;
+static int depressedProjectSaveCallback(Ihandle *self);
+static int depressedProjectSaveAsCallback(Ihandle *self);
 
+bool depressedDoBeforeNewOrSave(Ihandle *self)
+{
+	if(depressed_app.document_changed) {
+		// TODO: Messagebox with "Project is changed. Do you want to save it first?"
+		if(!depressed_app.filename)
+			depressedProjectSaveAsCallback(self);
+		else if(depressed_app.filename[0] == 0)
+			depressedProjectSaveAsCallback(self);
+		else
+			depressedProjectSaveCallback(self);
+
+		if(!depressed_app.document_changed)
+			return true;
+		else
+			return false;
+	}
 	depressed_app.document_changed = false;
 
 	return true;
@@ -87,7 +102,7 @@ bool depressedDoBeforeNewOrSave(void)
 
 static int depressedProjectNewCallback(Ihandle *self)
 {
-	if (!depressedDoBeforeNewOrSave()) return IUP_DEFAULT;
+	if(!depressedDoBeforeNewOrSave(self)) return IUP_DEFAULT;
 
 	depressed_app.document.Destroy();
 	if (!depressed_app.document.Create()) {
@@ -99,14 +114,147 @@ static int depressedProjectNewCallback(Ihandle *self)
 	return IUP_DEFAULT;
 }
 
+static int depressedProjectOpenCallback(Ihandle *self)
+{
+	Ihandle *opendlg;
+
+	if(!depressedDoBeforeNewOrSave(self)) return IUP_DEFAULT;
+
+	opendlg = IupFileDlg();
+	if(!opendlg) {
+		IupMessage(DEPRESSED_APP_TITLE, "Error: Can't open file dialog");
+	}
+
+	IupSetAttribute(opendlg, "DIALOGTYPE", "OPEN");
+	IupSetAttribute(opendlg, "EXTFILTER", "DepressED project (*.died)|*.died|All files (*.*)|*.*|");
+
+	IupPopup(opendlg, IUP_CENTER, IUP_CENTER);
+
+	if(IupGetInt(opendlg, "STATUS") != -1) {
+		char *cfilename;
+		size_t cfilename_length;
+		wchar_t *wfilename;
+
+		cfilename = IupGetAttribute(opendlg, "VALUE");
+		cfilename_length = strlen(cfilename) + 1;
+		wfilename = (wchar_t*)malloc(cfilename_length * sizeof(wchar_t));
+
+		MultiByteToWideChar(CP_UTF8, 0, cfilename, -1, wfilename, cfilename_length);
+
+		if(!Depressed::OpenDied(wfilename, depressed_app.document)) {
+			IupMessage(DEPRESSED_APP_TITLE, "Error: Can't open project");
+			free(wfilename);
+		} else {
+			if(depressed_app.filename) free(depressed_app.filename);
+			depressed_app.filename = wfilename;
+			depressed_app.document_changed = false;
+		}
+
+		IupDestroy(opendlg);
+	}
+
+	IupDestroy(opendlg);
+
+	return IUP_DEFAULT;
+}
+
+static int depressedProjectSaveCallback(Ihandle *self)
+{
+	if(!depressed_app.filename) return IUP_DEFAULT;
+	if(depressed_app.filename[0] == 0) return IUP_DEFAULT;
+
+	if(!Depressed::SaveDied(depressed_app.filename, depressed_app.document))
+	{
+		IupMessage(DEPRESSED_APP_TITLE, "Error: Can't save file");
+	} else
+		depressed_app.document_changed = false;
+
+	return IUP_DEFAULT;
+}
+
+static int depressedProjectSaveAsCallback(Ihandle *self)
+{
+	Ihandle *savedlg;
+
+	savedlg = IupFileDlg();
+	if(!savedlg) {
+		IupMessage(DEPRESSED_APP_TITLE, "Error: Can't open file dialog");
+	}
+
+	IupSetAttribute(savedlg, "DIALOGTYPE", "SAVE");
+	IupSetAttribute(savedlg, "EXTFILTER", "DepressED project (*.died)|*.died|All files (*.*)|*.*|");
+
+	IupPopup(savedlg, IUP_CENTER, IUP_CENTER);
+
+	if(IupGetInt(savedlg, "STATUS") != -1) {
+		char *cfilename;
+		size_t cfilename_length;
+		wchar_t *wfilename;
+
+		cfilename = IupGetAttribute(savedlg, "VALUE");
+		cfilename_length = strlen(cfilename) + 1;
+		wfilename = (wchar_t*)malloc(cfilename_length * sizeof(wchar_t));
+
+		MultiByteToWideChar(CP_UTF8, 0, cfilename, -1, wfilename, cfilename_length);
+
+		if(depressed_app.filename) free(depressed_app.filename);
+		depressed_app.filename = wfilename;
+
+		IupDestroy(savedlg);
+
+		return depressedProjectSaveCallback(self);
+	} else
+		IupMessage(DEPRESSED_APP_TITLE, "Error: Can't open file dialog");
+
+	IupDestroy(savedlg);
+
+	return IUP_DEFAULT;
+}
+
 static int depressedProjectCreateDocumentCallback(Ihandle *self)
 {
-	return depressedSaveDjvuCallback(self);
+	Ihandle *savedlg;
+
+	if(!depressedDoBeforeNewOrSave(self)) return IUP_DEFAULT;
+
+	savedlg = IupFileDlg();
+	if(!savedlg) {
+		IupMessage(DEPRESSED_APP_TITLE, "Error: Can't open file dialog");
+	}
+
+	IupSetAttribute(savedlg, "DIALOGTYPE", "SAVE");
+	IupSetAttribute(savedlg, "EXTFILTER", "Djvu file (*.djvu)|*.djvu|All files (*.*)|*.*|");
+
+	IupPopup(savedlg, IUP_CENTER, IUP_CENTER);
+
+	if(IupGetInt(savedlg, "STATUS") != -1) {
+		char *cfilename;
+		size_t cfilename_length;
+		wchar_t *wfilename;
+
+		cfilename = IupGetAttribute(savedlg, "VALUE");
+		cfilename_length = strlen(cfilename) + 1;
+		wfilename = (wchar_t*)malloc(cfilename_length * sizeof(wchar_t));
+
+		MultiByteToWideChar(CP_UTF8, 0, cfilename, -1, wfilename, cfilename_length);
+
+		if(depressed_app.document.Process(wfilename) == Depressed::DocumentProcessStatus::OK)
+			IupMessage(DEPRESSED_APP_TITLE, "DJVU Saved");
+		else
+			IupMessage(DEPRESSED_APP_TITLE, "Can't save DJVU");
+
+		free(wfilename);
+		IupDestroy(savedlg);
+	}
+
+	IupDestroy(savedlg);
+
+	return IUP_DEFAULT;
 }
 
 static int depressedProjectExitCallback(Ihandle *self)
 {
-	if (!depressedDoBeforeNewOrSave()) return IUP_DEFAULT;
+	if(!depressedDoBeforeNewOrSave(self)) return IUP_DEFAULT;
 
 	return IUP_CLOSE;
 }
@@ -157,6 +305,9 @@ bool depressedCreateMainDlgMenu(void)
 		return false;
 	
 	IupSetCallback(depressed_app.item_project_new, "ACTION", (Icallback)depressedProjectNewCallback);
+	IupSetCallback(depressed_app.item_project_open, "ACTION", (Icallback)depressedProjectOpenCallback);
+	IupSetCallback(depressed_app.item_project_save, "ACTION", (Icallback)depressedProjectSaveCallback);
+	IupSetCallback(depressed_app.item_project_save_as, "ACTION", (Icallback)depressedProjectSaveAsCallback);
 	IupSetCallback(depressed_app.item_project_create_document, "ACTION", (Icallback)depressedProjectCreateDocumentCallback);
 	IupSetCallback(depressed_app.item_project_exit, "ACTION", (Icallback)depressedProjectExitCallback);
 

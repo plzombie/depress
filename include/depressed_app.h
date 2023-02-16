@@ -37,6 +37,8 @@ struct SDepressedApp {
 	Depressed::CDocument document;
 	bool document_changed;
 
+	wchar_t *filename;
+
 	// Main window
 	Ihandle *main_dlg, *main_menu, *main_box;
 	// Main dialog - Menus

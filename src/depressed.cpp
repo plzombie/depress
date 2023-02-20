@@ -74,7 +74,7 @@ INT WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine
 	if(argc < 2) {
 		// Run GUI
 		if(default_project) Depressed::OpenDied(default_project, depressed_app.document);
-
+		
 		depressedRunGui();
 	} else if(argc == 2) {
 		// Process project file and create djvu

@@ -34,6 +34,12 @@ list(APPEND EXTRA_LIBS libdepress)
 
 add_executable(depress ../src/depress.c)
 
+if(WIN32)
+else()
+  target_compile_options(depress PUBLIC "-pthread")
+  list(APPEND EXTRA_LIBS m)
+endif()
+
 target_link_libraries(depress PUBLIC ${EXTRA_LIBS})
 
 if(BUILD_DEPRESSED)

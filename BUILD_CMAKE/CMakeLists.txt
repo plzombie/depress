@@ -38,6 +38,7 @@ if(WIN32)
 else()
   target_compile_options(depress PUBLIC "-pthread")
   list(APPEND EXTRA_LIBS m)
+  list(APPEND EXTRA_LIBS pthread)
 endif()
 
 target_link_libraries(depress PUBLIC ${EXTRA_LIBS})

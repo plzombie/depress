@@ -115,7 +115,7 @@ INT WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine
 
 	if(argv) LocalFree(argv);
 
-#if defined(_DEBUG)
+#if defined(_DEBUG) && defined(USE_STB_LEAKCHECK)
 	g_stb_leakcheck_f = fopen("depressed_stb_leakcheck.txt", "w");
 	if(g_stb_leakcheck_f) {
 		stb_leakcheck_dumpmem();

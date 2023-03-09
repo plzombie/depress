@@ -42,7 +42,7 @@ static int depressedLoadProjectCallback(Ihandle *self)
 	cfilename_length = strlen(cfilename) + 1;
 	wfilename = (wchar_t*)malloc(cfilename_length * sizeof(wchar_t));
 
-	MultiByteToWideChar(CP_UTF8, 0, cfilename, -1, wfilename, cfilename_length);
+	MultiByteToWideChar(CP_UTF8, 0, cfilename, -1, wfilename, (int)cfilename_length);
 
 	IupMessage("Project filename", cfilename);
 
@@ -64,7 +64,7 @@ static int depressedSaveDjvuCallback(Ihandle *self)
 	cfilename_length = strlen(cfilename) + 1;
 	wfilename = (wchar_t*)malloc(cfilename_length * sizeof(wchar_t));
 
-	MultiByteToWideChar(CP_UTF8, 0, cfilename, -1, wfilename, cfilename_length);
+	MultiByteToWideChar(CP_UTF8, 0, cfilename, -1, wfilename, (int)cfilename_length);
 
 	IupMessage("Project filename", cfilename);
 
@@ -141,7 +141,7 @@ static int depressedProjectOpenCallback(Ihandle *self)
 		cfilename_length = strlen(cfilename) + 1;
 		wfilename = (wchar_t*)malloc(cfilename_length * sizeof(wchar_t));
 
-		MultiByteToWideChar(CP_UTF8, 0, cfilename, -1, wfilename, cfilename_length);
+		MultiByteToWideChar(CP_UTF8, 0, cfilename, -1, wfilename, (int)cfilename_length);
 
 		if(!Depressed::OpenDied(wfilename, depressed_app.document)) {
 			IupMessage(DEPRESSED_APP_TITLE, "Error: Can't open project");
@@ -197,7 +197,7 @@ static int depressedProjectSaveAsCallback(Ihandle *self)
 		cfilename_length = strlen(cfilename) + 1;
 		wfilename = (wchar_t*)malloc(cfilename_length * sizeof(wchar_t));
 
-		MultiByteToWideChar(CP_UTF8, 0, cfilename, -1, wfilename, cfilename_length);
+		MultiByteToWideChar(CP_UTF8, 0, cfilename, -1, wfilename, (int)cfilename_length);
 
 		if(depressed_app.filename) free(depressed_app.filename);
 		depressed_app.filename = wfilename;
@@ -264,7 +264,7 @@ static int depressedProjectCreateDocumentCallback(Ihandle *self)
 		cfilename_length = strlen(cfilename) + 1;
 		wfilename = (wchar_t*)malloc(cfilename_length * sizeof(wchar_t));
 
-		MultiByteToWideChar(CP_UTF8, 0, cfilename, -1, wfilename, cfilename_length);
+		MultiByteToWideChar(CP_UTF8, 0, cfilename, -1, wfilename, (int)cfilename_length);
 
 		if(depressed_app.document.Process(wfilename) == Depressed::DocumentProcessStatus::OK)
 			IupMessage(DEPRESSED_APP_TITLE, "DJVU Saved");

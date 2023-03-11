@@ -210,7 +210,7 @@ WVList
 53
 MItem
 16
-..\src\depress.c
+..\..\src\depress.c
 54
 WString
 4
@@ -228,7 +228,7 @@ WVList
 57
 MItem
 26
-..\src\depress_converter.c
+..\..\src\depress_converter.c
 58
 WString
 4
@@ -246,7 +246,7 @@ WVList
 61
 MItem
 25
-..\src\depress_document.c
+..\..\src\depress_document.c
 62
 WString
 4
@@ -264,7 +264,7 @@ WVList
 65
 MItem
 22
-..\src\depress_image.c
+..\..\src\depress_image.c
 66
 WString
 4
@@ -282,7 +282,7 @@ WVList
 69
 MItem
 22
-..\src\depress_paths.c
+..\..\src\depress_paths.c
 70
 WString
 4
@@ -300,7 +300,7 @@ WVList
 73
 MItem
 22
-..\src\depress_tasks.c
+..\..\src\depress_tasks.c
 74
 WString
 4
@@ -318,7 +318,7 @@ WVList
 77
 MItem
 24
-..\src\depress_threads.c
+..\..\src\depress_threads.c
 78
 WString
 4
@@ -336,7 +336,7 @@ WVList
 81
 MItem
 24
-..\src\interlocked_ptr.c
+..\..\src\interlocked_ptr.c
 82
 WString
 4
@@ -354,7 +354,7 @@ WVList
 85
 MItem
 17
-..\src\ppm_save.c
+..\..\src\ppm_save.c
 86
 WString
 4

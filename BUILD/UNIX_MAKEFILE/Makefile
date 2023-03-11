@@ -11,13 +11,13 @@ all: $(PROJECT)
 $(PROJECT): $(OBJS)
 	$(CPP) $(CPPFLAGS) $^ -o $@
 
-%.o : ../src/%.c
+%.o : ../../src/%.c
 	$(CC) $(CFLAGS) $< -o $@
 
-%.o : ../src/unixsupport/%.c
+%.o : ../../src/unixsupport/%.c
 	$(CC) $(CFLAGS) $< -o $@
 
-%.o : ../src/extclib/%.c
+%.o : ../../src/extclib/%.c
 	$(CC) $(CFLAGS) $< -o $@
 
 clean:

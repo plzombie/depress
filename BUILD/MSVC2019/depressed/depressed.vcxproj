@@ -182,61 +182,61 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>$(ProjectDir)/../../src/third_party/iup/include;$(VC_IncludePath);$(WindowsSDK_IncludePath);</IncludePath>
-    <LibraryPath>$(ProjectDir)/../../src/third_party/iup/x86;$(VC_LibraryPath_x86);$(WindowsSDK_LibraryPath_x86)</LibraryPath>
+    <IncludePath>$(ProjectDir)/../../../src/third_party/iup/include;$(VC_IncludePath);$(WindowsSDK_IncludePath);</IncludePath>
+    <LibraryPath>$(ProjectDir)/../../../src/third_party/iup/x86;$(VC_LibraryPath_x86);$(WindowsSDK_LibraryPath_x86)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>$(ProjectDir)/../../src/third_party/iup/include;$(VC_IncludePath);$(WindowsSDK_IncludePath);</IncludePath>
+    <IncludePath>$(ProjectDir)/../../../src/third_party/iup/include;$(VC_IncludePath);$(WindowsSDK_IncludePath);</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>$(ProjectDir)/../../src/third_party/iup/include;$(VC_IncludePath);$(WindowsSDK_IncludePath);</IncludePath>
-    <LibraryPath>$(ProjectDir)/../../src/third_party/iup/x86;$(VC_LibraryPath_x86);$(WindowsSDK_LibraryPath_x86)</LibraryPath>
+    <IncludePath>$(ProjectDir)/../../../src/third_party/iup/include;$(VC_IncludePath);$(WindowsSDK_IncludePath);</IncludePath>
+    <LibraryPath>$(ProjectDir)/../../../src/third_party/iup/x86;$(VC_LibraryPath_x86);$(WindowsSDK_LibraryPath_x86)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release (2013XP)|Win32'">
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>$(ProjectDir)/../../src/third_party/iup/include;$(VC_IncludePath);$(WindowsSDK_IncludePath);</IncludePath>
-    <LibraryPath>$(ProjectDir)/../../src/third_party/iup/x86;$(VC_LibraryPath_x86);$(WindowsSDK_LibraryPath_x86)</LibraryPath>
+    <IncludePath>$(ProjectDir)/../../../src/third_party/iup/include;$(VC_IncludePath);$(WindowsSDK_IncludePath);</IncludePath>
+    <LibraryPath>$(ProjectDir)/../../../src/third_party/iup/x86;$(VC_LibraryPath_x86);$(WindowsSDK_LibraryPath_x86)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>$(ProjectDir)/../../src/third_party/iup/include;$(VC_IncludePath);$(WindowsSDK_IncludePath);</IncludePath>
-    <LibraryPath>$(ProjectDir)/../../src/third_party/iup/arm;$(VC_LibraryPath_ARM);$(WindowsSDK_LibraryPath_ARM)</LibraryPath>
+    <IncludePath>$(ProjectDir)/../../../src/third_party/iup/include;$(VC_IncludePath);$(WindowsSDK_IncludePath);</IncludePath>
+    <LibraryPath>$(ProjectDir)/../../../src/third_party/iup/arm;$(VC_LibraryPath_ARM);$(WindowsSDK_LibraryPath_ARM)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release (2013XP)|ARM'">
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>$(ProjectDir)/../../src/third_party/iup/include;$(VC_IncludePath);$(WindowsSDK_IncludePath);</IncludePath>
-    <LibraryPath>$(ProjectDir)/../../src/third_party/iup/arm;$(VC_LibraryPath_ARM);$(WindowsSDK_LibraryPath_ARM)</LibraryPath>
+    <IncludePath>$(ProjectDir)/../../../src/third_party/iup/include;$(VC_IncludePath);$(WindowsSDK_IncludePath);</IncludePath>
+    <LibraryPath>$(ProjectDir)/../../../src/third_party/iup/arm;$(VC_LibraryPath_ARM);$(WindowsSDK_LibraryPath_ARM)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>$(ProjectDir)/../../src/third_party/iup/include;$(VC_IncludePath);$(WindowsSDK_IncludePath);</IncludePath>
-    <LibraryPath>$(ProjectDir)/../../src/third_party/iup/x64;$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64)</LibraryPath>
+    <IncludePath>$(ProjectDir)/../../../src/third_party/iup/include;$(VC_IncludePath);$(WindowsSDK_IncludePath);</IncludePath>
+    <LibraryPath>$(ProjectDir)/../../../src/third_party/iup/x64;$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>$(ProjectDir)/../../src/third_party/iup/include;$(VC_IncludePath);$(WindowsSDK_IncludePath);</IncludePath>
+    <IncludePath>$(ProjectDir)/../../../src/third_party/iup/include;$(VC_IncludePath);$(WindowsSDK_IncludePath);</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>$(ProjectDir)/../../src/third_party/iup/include;$(VC_IncludePath);$(WindowsSDK_IncludePath);</IncludePath>
-    <LibraryPath>$(ProjectDir)/../../src/third_party/iup/x64;$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64)</LibraryPath>
+    <IncludePath>$(ProjectDir)/../../../src/third_party/iup/include;$(VC_IncludePath);$(WindowsSDK_IncludePath);</IncludePath>
+    <LibraryPath>$(ProjectDir)/../../../src/third_party/iup/x64;$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release (2013XP)|x64'">
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>$(ProjectDir)/../../src/third_party/iup/include;$(VC_IncludePath);$(WindowsSDK_IncludePath);</IncludePath>
-    <LibraryPath>$(ProjectDir)/../../src/third_party/iup/x64;$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64)</LibraryPath>
+    <IncludePath>$(ProjectDir)/../../../src/third_party/iup/include;$(VC_IncludePath);$(WindowsSDK_IncludePath);</IncludePath>
+    <LibraryPath>$(ProjectDir)/../../../src/third_party/iup/x64;$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>$(ProjectDir)/../../src/third_party/iup/include;$(VC_IncludePath);$(WindowsSDK_IncludePath);</IncludePath>
-    <LibraryPath>$(ProjectDir)/../../src/third_party/iup/arm64;$(VC_LibraryPath_ARM64);$(WindowsSDK_LibraryPath_ARM64)</LibraryPath>
+    <IncludePath>$(ProjectDir)/../../../src/third_party/iup/include;$(VC_IncludePath);$(WindowsSDK_IncludePath);</IncludePath>
+    <LibraryPath>$(ProjectDir)/../../../src/third_party/iup/arm64;$(VC_LibraryPath_ARM64);$(WindowsSDK_LibraryPath_ARM64)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release (2013XP)|ARM64'">
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>$(ProjectDir)/../../src/third_party/iup/include;$(VC_IncludePath);$(WindowsSDK_IncludePath);</IncludePath>
-    <LibraryPath>$(ProjectDir)/../../src/third_party/iup/arm64;$(VC_LibraryPath_ARM64);$(WindowsSDK_LibraryPath_ARM64)</LibraryPath>
+    <IncludePath>$(ProjectDir)/../../../src/third_party/iup/include;$(VC_IncludePath);$(WindowsSDK_IncludePath);</IncludePath>
+    <LibraryPath>$(ProjectDir)/../../../src/third_party/iup/arm64;$(VC_LibraryPath_ARM64);$(WindowsSDK_LibraryPath_ARM64)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -428,26 +428,26 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\src\depressed.cpp" />
-    <ClCompile Include="..\..\src\depressed_console.cpp" />
-    <ClCompile Include="..\..\src\depressed_document.cpp" />
-    <ClCompile Include="..\..\src\depressed_gui.cpp" />
-    <ClCompile Include="..\..\src\depressed_gui_documentflags.cpp" />
-    <ClCompile Include="..\..\src\depressed_gui_maindlg.cpp" />
-    <ClCompile Include="..\..\src\depressed_gui_pageflags.cpp" />
-    <ClCompile Include="..\..\src\depressed_open.cpp" />
-    <ClCompile Include="..\..\src\depressed_page.cpp" />
-    <ClCompile Include="..\..\src\depress_converter.c" />
-    <ClCompile Include="..\..\src\depress_document.c" />
-    <ClCompile Include="..\..\src\depress_image.c" />
-    <ClCompile Include="..\..\src\depress_paths.c" />
-    <ClCompile Include="..\..\src\depress_tasks.c" />
-    <ClCompile Include="..\..\src\depress_threads.c" />
-    <ClCompile Include="..\..\src\interlocked_ptr.c" />
-    <ClCompile Include="..\..\src\ppm_save.c" />
+    <ClCompile Include="..\..\..\src\depressed.cpp" />
+    <ClCompile Include="..\..\..\src\depressed_console.cpp" />
+    <ClCompile Include="..\..\..\src\depressed_document.cpp" />
+    <ClCompile Include="..\..\..\src\depressed_gui.cpp" />
+    <ClCompile Include="..\..\..\src\depressed_gui_documentflags.cpp" />
+    <ClCompile Include="..\..\..\src\depressed_gui_maindlg.cpp" />
+    <ClCompile Include="..\..\..\src\depressed_gui_pageflags.cpp" />
+    <ClCompile Include="..\..\..\src\depressed_open.cpp" />
+    <ClCompile Include="..\..\..\src\depressed_page.cpp" />
+    <ClCompile Include="..\..\..\src\depress_converter.c" />
+    <ClCompile Include="..\..\..\src\depress_document.c" />
+    <ClCompile Include="..\..\..\src\depress_image.c" />
+    <ClCompile Include="..\..\..\src\depress_paths.c" />
+    <ClCompile Include="..\..\..\src\depress_tasks.c" />
+    <ClCompile Include="..\..\..\src\depress_threads.c" />
+    <ClCompile Include="..\..\..\src\interlocked_ptr.c" />
+    <ClCompile Include="..\..\..\src\ppm_save.c" />
   </ItemGroup>
   <ItemGroup>
-    <Manifest Include="..\..\resources\applications.manifest" />
+    <Manifest Include="..\..\..\resources\applications.manifest" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

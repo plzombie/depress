@@ -15,35 +15,35 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\src\depress.c">
+    <ClCompile Include="..\..\..\src\depress.c">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\ppm_save.c">
+    <ClCompile Include="..\..\..\src\ppm_save.c">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\depress_converter.c">
+    <ClCompile Include="..\..\..\src\depress_converter.c">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\depress_image.c">
+    <ClCompile Include="..\..\..\src\depress_image.c">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\depress_paths.c">
+    <ClCompile Include="..\..\..\src\depress_paths.c">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\depress_tasks.c">
+    <ClCompile Include="..\..\..\src\depress_tasks.c">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\depress_threads.c">
+    <ClCompile Include="..\..\..\src\depress_threads.c">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\depress_document.c">
+    <ClCompile Include="..\..\..\src\depress_document.c">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\interlocked_ptr.c">
+    <ClCompile Include="..\..\..\src\interlocked_ptr.c">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <Manifest Include="..\..\resources\applications.manifest" />
+    <Manifest Include="..\..\..\resources\applications.manifest" />
   </ItemGroup>
 </Project>

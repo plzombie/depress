@@ -50,6 +50,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <string.h>
 
 #define DJVUL_IMPLEMENTATION
+#define THRESHOLD_IMPLEMENTATION
 #include "third_party/djvul.h"
 
 bool depressConvertLayeredPage(const depress_flags_type flags, wchar_t *inputfile, wchar_t *tempfile, wchar_t *outputfile, depress_djvulibre_paths_type *djvulibre_paths);

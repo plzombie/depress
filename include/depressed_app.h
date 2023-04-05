@@ -33,6 +33,14 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "../include/depressed_document.h"
 
+struct SDepressedAppGuiPageFlags
+{
+	Ihandle *hbox_params_param1;
+	Ihandle *hbox_params_param2;
+	Ihandle *param1_label, *param1;
+	Ihandle *param2_label, *param2;
+};
+
 struct SDepressedApp {
 	Depressed::CDocument document;
 	bool document_changed;
@@ -65,6 +73,8 @@ struct SDepressedApp {
 	// On Main dialog
 	Ihandle *input_box, *input_label, *input_filename, *input_button;
 	Ihandle *output_box, *output_label, *output_filename, *output_button;
+
+	SDepressedAppGuiPageFlags gui_pageflags;
 } ;
 
 extern struct SDepressedApp depressed_app;

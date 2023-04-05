@@ -50,7 +50,7 @@ bool depressedShowDocumentFlagsDlg(depress_document_flags_type &flags)
 		*hbox_ptt,
 		*hbox_buttons = 0,
 		*ptt, *ptt_flags,
-		*btn_ok = 0, *btn_cancel = 0;
+		*btn_fill = 0, *btn_ok = 0, *btn_cancel = 0;
 
 	ptt = IupToggle("Use authomatic page title (APT)", NULL);
 	ptt_flags = IupToggle("Short APT", NULL);
@@ -63,7 +63,8 @@ bool depressedShowDocumentFlagsDlg(depress_document_flags_type &flags)
 
 	hbox_ptt = IupHbox(ptt, ptt_flags, NULL);
 
-	hbox_buttons = IupHbox(IupFill(), btn_ok, btn_cancel, NULL);
+	if((btn_fill = IupFill()) == NULL) goto FAIL;
+	hbox_buttons = IupHbox(btn_fill, btn_ok, btn_cancel, NULL);
 	IupSetAttributes(hbox_buttons, "NORMALIZESIZE=HORIZONTAL");
 
 	vbox_main = IupVbox(hbox_ptt, hbox_buttons, NULL);
@@ -89,5 +90,29 @@ bool depressedShowDocumentFlagsDlg(depress_document_flags_type &flags)
 
 	IupDestroy(dlg);
 
-	return true;
+	return result;
+
+FAIL:
+	if(vbox_main) {
+		IupDestroy(vbox_main);
+	} else {
+		if(hbox_ptt) {
+			IupDestroy(hbox_ptt);
+		} else {
+			if(ptt) IupDestroy(ptt);
+			if(ptt_flags) IupDestroy(ptt_flags);
+		}
+
+		if(hbox_buttons) {
+			IupDestroy(hbox_buttons);
+		} else {
+			if(btn_fill) IupDestroy(btn_fill);
+			if(btn_ok) IupDestroy(btn_ok);
+			if(btn_cancel) IupDestroy(btn_cancel);
+		}
+	}
+
+	MessageBoxW(NULL, L"Depressed", L"Can't open window", MB_ICONERROR | MB_OK);
+
+	return false;
 }

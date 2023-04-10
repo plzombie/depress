@@ -248,8 +248,16 @@ int wmain(int argc, wchar_t **argv)
 	success = depressDocumentRunTasks(&document);
 
 	// Creating djvu
-	if(success)
-		success = depressDocumentProcessTasks(&document);
+	if(success) {
+		int process_status;
+
+		process_status = depressDocumentProcessTasks(&document);
+
+		wprintf(L"%ls\n", depressGetDocumentProcessStatus(process_status));
+
+		if(process_status != DEPRESS_DOCUMENT_PROCESS_STATUS_OK)
+			success = false;
+	}
 
 	if(success) {
 		if(!depressDocumentFinalize(&document))

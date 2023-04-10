@@ -39,13 +39,22 @@ extern "C" {
 #include "depress_flags.h"
 #include "depress_threads.h"
 
+enum {
+	DEPRESS_DOCUMENT_PROCESS_STATUS_OK,
+	DEPRESS_DOCUMENT_PROCESS_STATUS_GENERIC_ERROR,
+	DEPRESS_DOCUMENT_PROCESS_STATUS_CANT_ALLOC_MEMORY,
+	DEPRESS_DOCUMENT_PROCESS_STATUS_CANT_OPEN_IMAGE,
+	DEPRESS_DOCUMENT_PROCESS_STATUS_CANT_SAVE_PAGE,
+	DEPRESS_DOCUMENT_PROCESS_STATUS_CANT_ADD_PAGE
+};
+
 typedef struct {
 	wchar_t inputfile[32768];
 	wchar_t tempfile[32768];
 	wchar_t outputfile[32768];
 	depress_event_handle_t finished;
 	depress_flags_type flags;
-	bool is_error;
+	int process_status;
 	bool is_completed;
 } depress_task_type;
 

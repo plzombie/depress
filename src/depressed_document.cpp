@@ -124,7 +124,7 @@ namespace Depressed {
 
 		// Creating djvu
 		if(status == DocumentProcessStatus::OK)
-			if(!depressDocumentProcessTasks(&m_document))
+			if(depressDocumentProcessTasks(&m_document) != DEPRESS_DOCUMENT_PROCESS_STATUS_OK)
 				status = DocumentProcessStatus::CantProcessTasks;
 
 		if(status == DocumentProcessStatus::OK) {

@@ -280,9 +280,10 @@ LABEL_ERROR:
 	return false;
 }
 
-bool depressDocumentProcessTasks(depress_document_type *document)
+int depressDocumentProcessTasks(depress_document_type *document)
 {
 	bool success = true;
+	int process_status = DEPRESS_DOCUMENT_PROCESS_STATUS_OK;
 	size_t filecount = 0;
 	unsigned int i;
 	wchar_t *arg0 = 0;
@@ -296,25 +297,27 @@ bool depressDocumentProcessTasks(depress_document_type *document)
 	for(filecount = 0; filecount < document->tasks_num; filecount++) {
 		if(success)
 			if(depressWaitForEvent(document->global_error_event, 0))
-				success = false;
+				if(process_status == DEPRESS_DOCUMENT_PROCESS_STATUS_OK)
+					process_status = DEPRESS_DOCUMENT_PROCESS_STATUS_GENERIC_ERROR;
 
 		while(!depressWaitForEvent(document->tasks[filecount].finished, DEPRESS_WAIT_TIME_INFINITE));
 
 		if(!document->tasks[filecount].is_completed)
 			continue;
 
-		if(document->tasks[filecount].is_error) {
+		if(document->tasks[filecount].process_status != DEPRESS_DOCUMENT_PROCESS_STATUS_OK) {
 			wprintf(L"Error while converting file \"%ls\"\n", document->tasks[filecount].inputfile);
-			success = false;
+			if(process_status == DEPRESS_DOCUMENT_PROCESS_STATUS_OK || process_status == DEPRESS_DOCUMENT_PROCESS_STATUS_GENERIC_ERROR)
+				process_status = document->tasks[filecount].process_status;
 		} else {
-			if(success && filecount > 0) {
+			if(process_status == DEPRESS_DOCUMENT_PROCESS_STATUS_OK && filecount > 0) {
 				wprintf(L"Merging file \"%ls\"\n", document->tasks[filecount].inputfile);
 
 				swprintf(arg0, 3 * 32770 + 1024, L"\"%ls\" -i \"%ls\" \"%ls\"", document->djvulibre_paths.djvm_path, document->output_file, document->tasks[filecount].outputfile);
 
 				if(depressSpawn(document->djvulibre_paths.djvm_path, arg0, true, true) == DEPRESS_INVALID_PROCESS_HANDLE) {
-					wprintf(L"Can't merge djvu files\n");
-					success = false;
+					depressSetEvent(document->global_error_event);
+					process_status = DEPRESS_DOCUMENT_PROCESS_STATUS_CANT_ADD_PAGE;
 				} else
 					InterlockedExchangePtr((uintptr_t *)(&document->tasks_processed), filecount);
 			}
@@ -335,7 +338,26 @@ bool depressDocumentProcessTasks(depress_document_type *document)
 	document->threads = 0;
 	document->thread_args = 0;
 
-	return success;
+	return process_status;
+}
+
+const wchar_t* depressGetDocumentProcessStatus(int process_status)
+{
+	switch(process_status) {
+		case DEPRESS_DOCUMENT_PROCESS_STATUS_OK:
+			return L"Document processed successfully";
+		case DEPRESS_DOCUMENT_PROCESS_STATUS_GENERIC_ERROR:
+		default:
+			return L"Can't process document";
+		case DEPRESS_DOCUMENT_PROCESS_STATUS_CANT_ALLOC_MEMORY:
+			return L"Can't allocate memory while processing document";
+		case DEPRESS_DOCUMENT_PROCESS_STATUS_CANT_OPEN_IMAGE:
+			return L"Can't open image while processing document";
+		case DEPRESS_DOCUMENT_PROCESS_STATUS_CANT_SAVE_PAGE:
+			return L"Can't save page while processing document";
+		case DEPRESS_DOCUMENT_PROCESS_STATUS_CANT_ADD_PAGE:
+			return L"Can't add processed page to the document";
+	}
 }
 
 bool depressDocumentFinalize(depress_document_type *document)

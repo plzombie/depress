@@ -81,7 +81,8 @@ typedef struct {
 extern bool depressDocumentInit(depress_document_type *document, depress_document_flags_type document_flags);
 extern bool depressDocumentDestroy(depress_document_type *document);
 extern bool depressDocumentRunTasks(depress_document_type *document);
-extern bool depressDocumentProcessTasks(depress_document_type *document);
+extern int depressDocumentProcessTasks(depress_document_type *document);
+extern const wchar_t* depressGetDocumentProcessStatus(int process_status);
 extern bool depressDocumentFinalize(depress_document_type *document);
 extern size_t depressDocumentGetPagesProcessed(depress_document_type *document);
 extern bool depressDocumentAddTask(depress_document_type *document, const wchar_t *inputfile, depress_flags_type flags);

@@ -71,7 +71,7 @@ bool depressAddTask(const depress_task_type *task, depress_task_type **tasks_out
 
 
 	tasks[tasks_num] = *task;
-	tasks[tasks_num].is_error = false;
+	tasks[tasks_num].process_status = DEPRESS_DOCUMENT_PROCESS_STATUS_OK;
 	tasks[tasks_num].is_completed = false;
 
 	tasks[tasks_num].finished = depressCreateEvent();
@@ -121,9 +121,9 @@ void *depressThreadTaskProc(void *args)
 
 		if(global_error == false) {
 			if(!depressConvertPage(arg.tasks[i].flags, arg.tasks[i].inputfile, arg.tasks[i].tempfile, arg.tasks[i].outputfile, arg.djvulibre_paths))
-				arg.tasks[i].is_error = true;
+				arg.tasks[i].process_status = DEPRESS_DOCUMENT_PROCESS_STATUS_GENERIC_ERROR;
 
-			if(arg.tasks[i].is_error == true)
+			if(arg.tasks[i].process_status != DEPRESS_DOCUMENT_PROCESS_STATUS_OK)
 				depressSetEvent(arg.global_error_event);
 
 			arg.tasks[i].is_completed = true;

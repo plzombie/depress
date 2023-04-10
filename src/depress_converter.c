@@ -53,16 +53,16 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define THRESHOLD_IMPLEMENTATION
 #include "third_party/djvul.h"
 
-bool depressConvertLayeredPage(const depress_flags_type flags, wchar_t *inputfile, wchar_t *tempfile, wchar_t *outputfile, depress_djvulibre_paths_type *djvulibre_paths);
+int depressConvertLayeredPage(const depress_flags_type flags, wchar_t *inputfile, wchar_t *tempfile, wchar_t *outputfile, depress_djvulibre_paths_type *djvulibre_paths);
 
-bool depressConvertPage(depress_flags_type flags, wchar_t *inputfile, wchar_t *tempfile, wchar_t *outputfile, depress_djvulibre_paths_type *djvulibre_paths)
+int depressConvertPage(depress_flags_type flags, wchar_t *inputfile, wchar_t *tempfile, wchar_t *outputfile, depress_djvulibre_paths_type *djvulibre_paths)
 {
 	FILE *f_temp = 0;
 	int sizex, sizey, channels;
 	wchar_t *arg0 = 0, *arg_options, *arg_temp = 0, *djvulibre_path;
 	unsigned char *buffer = 0;
-	bool result = false;
 	const size_t arg0_size = 3*32768+1536; // 2*3(braces)+3(spaces)+1024(options)<1536
+	int convert_status = DEPRESS_CONVERT_PAGE_STATUS_OK;
 
 	// Checking for modes that needed separate complex functions
 	if(flags.type == DEPRESS_PAGE_TYPE_LAYERED)
@@ -70,31 +70,48 @@ bool depressConvertPage(depress_flags_type flags, wchar_t *inputfile, wchar_t *t
 
 	arg0 = malloc((arg0_size+1024+80)*sizeof(wchar_t)); // 
 
-	if(!arg0)
+	if(!arg0) {
+		convert_status = DEPRESS_CONVERT_PAGE_STATUS_CANT_ALLOC_MEMORY;
+
 		goto EXIT;
-	else {
+	} else {
 		arg_options = arg0 + arg0_size;
 		arg_temp = arg_options + 1024;
 	}
 
 	f_temp = _wfopen(tempfile, L"wb");
-	if(!f_temp)
-		goto EXIT;
+	if(!f_temp) {
+		convert_status = DEPRESS_CONVERT_PAGE_STATUS_CANT_SAVE_PAGE;
 
-	if(!depressLoadImageFromFileAndApplyFlags(inputfile, &sizex, &sizey, &channels, &buffer, flags))
 		goto EXIT;
+	}
+
+	if(!depressLoadImageFromFileAndApplyFlags(inputfile, &sizex, &sizey, &channels, &buffer, flags)) {
+		convert_status = DEPRESS_CONVERT_PAGE_STATUS_CANT_OPEN_IMAGE;
+
+		goto EXIT;
+	}
 
 	if(flags.type == DEPRESS_PAGE_TYPE_BW) {
 		if(!flags.nof_illrects) {
-			if(!pbmSave(sizex, sizey, buffer, f_temp))
+			if(!pbmSave(sizex, sizey, buffer, f_temp)) {
+				convert_status = DEPRESS_CONVERT_PAGE_STATUS_CANT_SAVE_PAGE;
+
 				goto EXIT;
+			}
 		} else {
-			if(!ppmSave(sizex, sizey, channels, buffer, f_temp))
+			if(!ppmSave(sizex, sizey, channels, buffer, f_temp)) {
+				convert_status = DEPRESS_CONVERT_PAGE_STATUS_CANT_SAVE_PAGE;
+
 				goto EXIT;
+			}
 		}
 	} else {
-		if(!ppmSave(sizex, sizey, channels, buffer, f_temp))
+		if(!ppmSave(sizex, sizey, channels, buffer, f_temp)) {
+			convert_status = DEPRESS_CONVERT_PAGE_STATUS_CANT_SAVE_PAGE;
+
 			goto EXIT;
+		}
 	}
 
 	free(buffer); buffer = 0;
@@ -141,9 +158,11 @@ bool depressConvertPage(depress_flags_type flags, wchar_t *inputfile, wchar_t *t
 		swprintf(arg0, arg0_size, L"\"%ls\" %ls \"%ls\" \"%ls\"", djvulibre_path, arg_options, tempfile, outputfile);
 	}
 
-	if(depressSpawn(djvulibre_path, arg0, true, true) == DEPRESS_INVALID_PROCESS_HANDLE) goto EXIT;
+	if(depressSpawn(djvulibre_path, arg0, true, true) == DEPRESS_INVALID_PROCESS_HANDLE) {
+		convert_status = DEPRESS_CONVERT_PAGE_STATUS_CANT_SAVE_PAGE;
 
-	result = true;
+		goto EXIT;
+	}
 
 EXIT:
 	if(arg0) free(arg0);
@@ -162,27 +181,33 @@ EXIT:
 		} else break;
 	}
 
-	return result;
+	return convert_status;
 }
 
-bool depressConvertLayeredPage(const depress_flags_type flags, wchar_t *inputfile, wchar_t *tempfile, wchar_t *outputfile, depress_djvulibre_paths_type *djvulibre_paths)
+int depressConvertLayeredPage(const depress_flags_type flags, wchar_t *inputfile, wchar_t *tempfile, wchar_t *outputfile, depress_djvulibre_paths_type *djvulibre_paths)
 {
 	FILE *f_temp = 0;
 	int sizex, sizey, channels;
 	wchar_t *arg0 = 0, *arg_options, *arg_temp = 0, *arg_sjbz = 0, *arg_fg44 = 0, *arg_bg44 = 0;
 	size_t outputfile_length = 0;
 	unsigned char *buffer = 0, *buffer_mask = 0, *buffer_bg = 0, *buffer_fg = 0;
-	bool result = false;
 	const size_t arg0_size = 5*32768+1536; // 2*3(braces)+3(spaces)+1024(options)<1536
+	int convert_status = DEPRESS_CONVERT_PAGE_STATUS_OK;
 
 	outputfile_length = wcslen(outputfile);
-	if(outputfile_length > (32768-5-1)) goto EXIT;
+	if(outputfile_length > (32768-5-1)) {
+		convert_status = DEPRESS_CONVERT_PAGE_STATUS_GENERIC_ERROR;
+
+		goto EXIT;
+	}
 
 	arg0 = malloc((arg0_size+1024+80+3*32768)*sizeof(wchar_t));
 
-	if(!arg0)
+	if(!arg0) {
+		convert_status = DEPRESS_CONVERT_PAGE_STATUS_CANT_ALLOC_MEMORY;
+
 		goto EXIT;
-	else {
+	} else {
 		arg_options = arg0 + arg0_size;
 		arg_temp = arg_options + 1024;
 		arg_sjbz = arg_temp + 80;
@@ -197,8 +222,11 @@ bool depressConvertLayeredPage(const depress_flags_type flags, wchar_t *inputfil
 	memcpy(arg_bg44, outputfile, (outputfile_length+1)*sizeof(wchar_t));
 	wcscpy(arg_bg44+outputfile_length, L".bg44"); // Background chunk
 
-	if(!depressLoadImageFromFileAndApplyFlags(inputfile, &sizex, &sizey, &channels, &buffer, flags))
+	if(!depressLoadImageFromFileAndApplyFlags(inputfile, &sizex, &sizey, &channels, &buffer, flags)) {
+		convert_status = DEPRESS_CONVERT_PAGE_STATUS_CANT_OPEN_IMAGE;
+
 		goto EXIT;
+	}
 
 	{
 		int level;
@@ -225,7 +253,7 @@ bool depressConvertLayeredPage(const depress_flags_type flags, wchar_t *inputfil
 		buffer_bg = malloc(bg_width*bg_height*channels);
 		buffer_fg = malloc(bg_width*bg_height*channels);
 		if(!buffer_mask || !buffer_bg || !buffer_fg) {
-			
+			convert_status = DEPRESS_CONVERT_PAGE_STATUS_CANT_ALLOC_MEMORY;
 
 			goto EXIT;
 		}
@@ -241,15 +269,24 @@ bool depressConvertLayeredPage(const depress_flags_type flags, wchar_t *inputfil
 
 		// Save background
 		f_temp = _wfopen(tempfile, L"wb");
-		if(!f_temp)
+		if(!f_temp) {
+			convert_status = DEPRESS_CONVERT_PAGE_STATUS_CANT_SAVE_PAGE;
+
 			goto EXIT;
-		if(!ppmSave(bg_width, bg_height, channels, buffer_bg, f_temp))
+		}
+		if(!ppmSave(bg_width, bg_height, channels, buffer_bg, f_temp)) {
+			convert_status = DEPRESS_CONVERT_PAGE_STATUS_CANT_SAVE_PAGE;
+
 			goto EXIT;
+		}
 		fclose(f_temp); f_temp = 0;
 		// Save background mask
 		f_temp = _wfopen(arg_sjbz, L"wb");
-		if(!f_temp)
+		if(!f_temp) {
+			convert_status = DEPRESS_CONVERT_PAGE_STATUS_CANT_SAVE_PAGE;
+
 			goto EXIT;
+		}
 		memset(buffer_bg, 0, bg_width*bg_height);
 		for(i = 0; i < (size_t)sizey; i++) {
 			size_t j;
@@ -258,27 +295,47 @@ bool depressConvertLayeredPage(const depress_flags_type flags, wchar_t *inputfil
 				if(buffer_mask[i*sizex+j])
 					buffer_bg[(i*bg_height/sizey)*bg_width+(j*bg_width/sizex)] = 255;
 		}
-		if(!pbmSave(bg_width, bg_height, buffer_bg, f_temp))
+		if(!pbmSave(bg_width, bg_height, buffer_bg, f_temp)) {
+			convert_status = DEPRESS_CONVERT_PAGE_STATUS_CANT_SAVE_PAGE;
+
 			goto EXIT;
+		}
 		free(buffer_bg); buffer_bg = 0;
 		fclose(f_temp); f_temp = 0;
 		// Convert background
 		swprintf(arg0, arg0_size, L"\"%ls\" -slice %d,%d,%d -mask \"%ls\" \"%ls\" \"%ls\"", djvulibre_paths->c44_path, quality-25, quality-15, quality, arg_sjbz, tempfile, outputfile);
-		if(depressSpawn(djvulibre_paths->c44_path, arg0, true, true) == DEPRESS_INVALID_PROCESS_HANDLE) goto EXIT;
+		if(depressSpawn(djvulibre_paths->c44_path, arg0, true, true) == DEPRESS_INVALID_PROCESS_HANDLE) {
+			convert_status = DEPRESS_CONVERT_PAGE_STATUS_CANT_SAVE_PAGE;
+			
+			goto EXIT;
+		}
 		swprintf(arg0, arg0_size, L"\"%ls\" \"%ls\" \"BG44=%ls\"", djvulibre_paths->djvuextract_path, outputfile, arg_bg44);
-		if(depressSpawn(djvulibre_paths->djvuextract_path, arg0, true, true) == DEPRESS_INVALID_PROCESS_HANDLE) goto EXIT;
+		if(depressSpawn(djvulibre_paths->djvuextract_path, arg0, true, true) == DEPRESS_INVALID_PROCESS_HANDLE) {
+			convert_status = DEPRESS_CONVERT_PAGE_STATUS_CANT_SAVE_PAGE; 
+			
+			goto EXIT;
+		}
 
 		// Save foreground
 		f_temp = _wfopen(tempfile, L"wb");
-		if(!f_temp)
+		if(!f_temp) {
+			convert_status = DEPRESS_CONVERT_PAGE_STATUS_CANT_SAVE_PAGE;
+
 			goto EXIT;
-		if(!ppmSave(fg_width, fg_height, channels, buffer_fg, f_temp))
+		}
+		if(!ppmSave(fg_width, fg_height, channels, buffer_fg, f_temp)) {
+			convert_status = DEPRESS_CONVERT_PAGE_STATUS_CANT_SAVE_PAGE;
+
 			goto EXIT;
+		}
 		fclose(f_temp); f_temp = 0;
 		// Save background mask
 		f_temp = _wfopen(arg_sjbz, L"wb");
-		if(!f_temp)
+		if(!f_temp) {
+			convert_status = DEPRESS_CONVERT_PAGE_STATUS_CANT_SAVE_PAGE;
+
 			goto EXIT;
+		}
 		memset(buffer_fg, 0, fg_width*fg_height);
 		for(i = 0; i < (size_t)sizey; i++) {
 			size_t j;
@@ -287,37 +344,62 @@ bool depressConvertLayeredPage(const depress_flags_type flags, wchar_t *inputfil
 				if(!buffer_mask[i*sizex+j])
 					buffer_fg[(i*fg_height/sizey)*fg_width+(j*fg_width/sizex)] = 255;
 		}
-		if(!pbmSave(fg_width, fg_height, buffer_fg, f_temp))
+		if(!pbmSave(fg_width, fg_height, buffer_fg, f_temp)) {
+			convert_status = DEPRESS_CONVERT_PAGE_STATUS_CANT_SAVE_PAGE;
+
 			goto EXIT;
+		}
 		free(buffer_fg); buffer_fg = 0;
 		fclose(f_temp); f_temp = 0;
 		// Convert foreground
 		swprintf(arg0, arg0_size, L"\"%ls\" -slice %d -mask \"%ls\" \"%ls\" \"%ls\"", djvulibre_paths->c44_path, quality, arg_sjbz, tempfile, outputfile);
-		if(depressSpawn(djvulibre_paths->c44_path, arg0, true, true) == DEPRESS_INVALID_PROCESS_HANDLE) goto EXIT;
+		if(depressSpawn(djvulibre_paths->c44_path, arg0, true, true) == DEPRESS_INVALID_PROCESS_HANDLE) {
+			convert_status = DEPRESS_CONVERT_PAGE_STATUS_CANT_SAVE_PAGE; 
+			
+			goto EXIT;
+		}
 		swprintf(arg0, arg0_size, L"\"%ls\" \"%ls\" \"BG44=%ls\"", djvulibre_paths->djvuextract_path, outputfile, arg_fg44);
-		if(depressSpawn(djvulibre_paths->djvuextract_path, arg0, true, true) == DEPRESS_INVALID_PROCESS_HANDLE) goto EXIT;
+		if(depressSpawn(djvulibre_paths->djvuextract_path, arg0, true, true) == DEPRESS_INVALID_PROCESS_HANDLE) {
+			convert_status = DEPRESS_CONVERT_PAGE_STATUS_CANT_SAVE_PAGE;
+			
+			goto EXIT;
+		}
 
 		// Save mask
 		f_temp = _wfopen(tempfile, L"wb");
-		if(!f_temp)
+		if(!f_temp) {
+			convert_status = DEPRESS_CONVERT_PAGE_STATUS_CANT_SAVE_PAGE;
+
 			goto EXIT;
-		if(!pbmSave(sizex, sizey, buffer_mask, f_temp))
+		}
+		if(!pbmSave(sizex, sizey, buffer_mask, f_temp)) {
+
 			goto EXIT;
+		}
 		free(buffer_mask); buffer_mask = 0;
 		fclose(f_temp); f_temp = 0;
 		swprintf(arg0, arg0_size, L"\"%ls\" \"%ls\" \"%ls\"", djvulibre_paths->cjb2_path, tempfile, outputfile);
-		if(depressSpawn(djvulibre_paths->cjb2_path, arg0, true, true) == DEPRESS_INVALID_PROCESS_HANDLE) goto EXIT;
+		if(depressSpawn(djvulibre_paths->cjb2_path, arg0, true, true) == DEPRESS_INVALID_PROCESS_HANDLE) {
+			convert_status = DEPRESS_CONVERT_PAGE_STATUS_CANT_SAVE_PAGE;
+
+			goto EXIT;
+		}
 		swprintf(arg0, arg0_size, L"\"%ls\" \"%ls\" \"Sjbz=%ls\"", djvulibre_paths->djvuextract_path, outputfile, arg_sjbz);
-		if(depressSpawn(djvulibre_paths->djvuextract_path, arg0, true, true) == DEPRESS_INVALID_PROCESS_HANDLE) goto EXIT;
+		if(depressSpawn(djvulibre_paths->djvuextract_path, arg0, true, true) == DEPRESS_INVALID_PROCESS_HANDLE) {
+			goto EXIT;
+
+			convert_status = DEPRESS_CONVERT_PAGE_STATUS_CANT_SAVE_PAGE;
+		}
 
 		swprintf(arg_options, 1024, L"INFO=,,%d", flags.dpi);
 		swprintf(arg0, arg0_size, L"\"%ls\" \"%ls\" %ls \"Sjbz=%ls\" \"FG44=%ls\" \"BG44=%ls\"", djvulibre_paths->djvumake_path,
 			outputfile, arg_options, arg_sjbz, arg_fg44, arg_bg44);
-		if(depressSpawn(djvulibre_paths->djvumake_path, arg0, true, true) == DEPRESS_INVALID_PROCESS_HANDLE) goto EXIT;
-
+		if(depressSpawn(djvulibre_paths->djvumake_path, arg0, true, true) == DEPRESS_INVALID_PROCESS_HANDLE) {
+			convert_status = DEPRESS_CONVERT_PAGE_STATUS_CANT_SAVE_PAGE;
+			
+			goto EXIT;
+		}
 	}
-
-	result = true;
 
 EXIT:
 	if(f_temp) fclose(f_temp);
@@ -380,5 +462,5 @@ EXIT:
 
 	if(arg0) free(arg0);
 
-	return result;
+	return convert_status;
 }

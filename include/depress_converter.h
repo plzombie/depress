@@ -39,7 +39,15 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 extern "C" {
 #endif
 
-extern bool depressConvertPage(depress_flags_type flags, wchar_t *inputfile, wchar_t *tempfile, wchar_t *outputfile, depress_djvulibre_paths_type *djvulibre_paths);
+enum {
+	DEPRESS_CONVERT_PAGE_STATUS_OK,
+	DEPRESS_CONVERT_PAGE_STATUS_GENERIC_ERROR,
+	DEPRESS_CONVERT_PAGE_STATUS_CANT_ALLOC_MEMORY,
+	DEPRESS_CONVERT_PAGE_STATUS_CANT_OPEN_IMAGE,
+	DEPRESS_CONVERT_PAGE_STATUS_CANT_SAVE_PAGE
+};
+
+extern int depressConvertPage(depress_flags_type flags, wchar_t *inputfile, wchar_t *tempfile, wchar_t *outputfile, depress_djvulibre_paths_type *djvulibre_paths);
 
 #ifdef __cplusplus
 }

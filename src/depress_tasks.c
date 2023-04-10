@@ -120,8 +120,27 @@ void *depressThreadTaskProc(void *args)
 				global_error = true;
 
 		if(global_error == false) {
-			if(!depressConvertPage(arg.tasks[i].flags, arg.tasks[i].inputfile, arg.tasks[i].tempfile, arg.tasks[i].outputfile, arg.djvulibre_paths))
-				arg.tasks[i].process_status = DEPRESS_DOCUMENT_PROCESS_STATUS_GENERIC_ERROR;
+			int convert_status;
+			
+			convert_status = depressConvertPage(arg.tasks[i].flags, arg.tasks[i].inputfile, arg.tasks[i].tempfile, arg.tasks[i].outputfile, arg.djvulibre_paths);
+
+			switch(convert_status) {
+				case DEPRESS_CONVERT_PAGE_STATUS_OK:
+					break;
+				case DEPRESS_CONVERT_PAGE_STATUS_GENERIC_ERROR:
+				default:
+					arg.tasks[i].process_status = DEPRESS_DOCUMENT_PROCESS_STATUS_GENERIC_ERROR;
+					break;
+				case DEPRESS_CONVERT_PAGE_STATUS_CANT_ALLOC_MEMORY:
+					arg.tasks[i].process_status = DEPRESS_DOCUMENT_PROCESS_STATUS_CANT_ALLOC_MEMORY;
+					break;
+				case DEPRESS_CONVERT_PAGE_STATUS_CANT_OPEN_IMAGE:
+					arg.tasks[i].process_status = DEPRESS_DOCUMENT_PROCESS_STATUS_CANT_OPEN_IMAGE;
+					break;
+				case DEPRESS_CONVERT_PAGE_STATUS_CANT_SAVE_PAGE:
+					arg.tasks[i].process_status = DEPRESS_DOCUMENT_PROCESS_STATUS_CANT_SAVE_PAGE;
+					break;
+			}
 
 			if(arg.tasks[i].process_status != DEPRESS_DOCUMENT_PROCESS_STATUS_OK)
 				depressSetEvent(arg.global_error_event);

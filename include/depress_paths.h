@@ -39,6 +39,8 @@ extern "C" {
 typedef struct {
 	wchar_t cjb2_path[32768];
 	wchar_t c44_path[32768];
+	wchar_t cpaldjvu_path[32768];
+	wchar_t csepdjvu_path[32768];
 	wchar_t djvm_path[32768];
 	wchar_t djvused_path[32768];
 	wchar_t djvuextract_path[32768];

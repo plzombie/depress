@@ -52,7 +52,7 @@ static void depressedPageChangeTextsByType(SDepressedAppGuiPageFlags &gui_pagefl
 			show_param1 = true;
 			IupSetAttribute(gui_pageflags.param1_label, "TITLE", "Type of binarization");
 			IupRefresh(gui_pageflags.param1_label);
-			IupSetAttribute(gui_pageflags.param1, "TIP", "0 - threshold\n1 - error diffusion\n2 - adaptive");
+			IupSetAttribute(gui_pageflags.param1, "TIP", "0 - threshold (default)\n1 - error diffusion\n2 - adaptive");
 			break;
 		case 2:
 			show_param1 = true;
@@ -63,6 +63,16 @@ static void depressedPageChangeTextsByType(SDepressedAppGuiPageFlags &gui_pagefl
 			IupRefresh(gui_pageflags.param2_label);
 			IupSetAttribute(gui_pageflags.param1, "TIP", "1 and more, defaults to 3");
 			IupSetAttribute(gui_pageflags.param2, "TIP", "1 and more, defaults to 2");
+			break;
+		case 3:
+			show_param1 = true;
+			show_param2 = true;
+			IupSetAttribute(gui_pageflags.param1_label, "TITLE", "Colors");
+			IupRefresh(gui_pageflags.param1_label);
+			IupSetAttribute(gui_pageflags.param2_label, "TITLE", "Algorithm");
+			IupRefresh(gui_pageflags.param2_label);
+			IupSetAttribute(gui_pageflags.param1, "TIP", "Color number between 2 and 256 (defaults to 8)");
+			IupSetAttribute(gui_pageflags.param2, "TIP", "0 - quantization (default)\n1 - noteshrink");
 	}
 
 	if(show_param1)
@@ -113,6 +123,7 @@ bool depressedShowPageFlagsDlg(depress_flags_type &flags)
 	IupSetAttribute(type, "1", "Color");
 	IupSetAttribute(type, "2", "Black&White");
 	IupSetAttribute(type, "3", "Layered");
+	IupSetAttribute(type, "4", "Palettized");
 	IupSetCallback(type, "VALUECHANGED_CB", (Icallback)depressedPageTypeChangedCallback);
 	IupSetAttribute(type, "VISIBLECOLUMNS", "10");
 

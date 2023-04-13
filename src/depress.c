@@ -57,6 +57,10 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define DEPRESS_ARG_PAGETYPE_LAYERED L"-layered"
 #define DEPRESS_ARG_PAGETYPE_LAYERED_PARAM1_DOWNSAMPLEALL L"-laydownall"
 #define DEPRESS_ARG_PAGETYPE_LAYERED_PARAM2_DOWNSAMPLEFG L"-laydownfg"
+#define DEPRESS_ARG_PAGETYPE_PALETTIZED L"-palettized"
+#define DEPRESS_ARG_PAGETYPE_PALETTIZED_PARAM1_PALCOLORS L"-palcolors"
+#define DEPRESS_ARG_PAGETYPE_PALETTIZED_PARAM2_QUANT L"-quant"
+#define DEPRESS_ARG_PAGETYPE_PALETTIZED_PARAM2_NOTESHRINK L"-noteshrink"
 #define DEPRESS_ARG_PAGETITLEAUTO L"-pta"
 #define DEPRESS_ARG_PAGETITLEAUTO_SHORTNAME L"-shortfntitle"
 #define DEPRESS_ARG_TEMP L"-temp"
@@ -104,7 +108,7 @@ int wmain(int argc, wchar_t **argv)
 			flags.type = DEPRESS_PAGE_TYPE_BW;
 			flags.param1 = DEPRESS_PAGE_TYPE_BW_PARAM1_SIMPLE;
 		} else if(!wcscmp(*argsp, DEPRESS_ARG_PAGETYPE_BW_PARAM1_ERRDIFF)) {
-			if (flags.type == DEPRESS_PAGE_TYPE_BW)
+			if(flags.type == DEPRESS_PAGE_TYPE_BW)
 				flags.param1 = DEPRESS_PAGE_TYPE_BW_PARAM1_ERRDIFF;
 			else
 				wprintf(L"Warning: argument %ls can be set only with %ls\n", DEPRESS_ARG_PAGETYPE_BW_PARAM1_ERRDIFF, DEPRESS_ARG_PAGETYPE_BW);
@@ -147,6 +151,39 @@ int wmain(int argc, wchar_t **argv)
 				}
 			} else
 				wprintf(L"Warning: argument " DEPRESS_ARG_PAGETYPE_LAYERED_PARAM2_DOWNSAMPLEFG L" should have parameter\n");
+		} else if(!wcscmp(*argsp, DEPRESS_ARG_PAGETYPE_PALETTIZED)) {
+			flags.type = DEPRESS_PAGE_TYPE_PALETTIZED;
+			flags.param1 = 8;
+			flags.param2 = 0;
+		} else if(!wcscmp(*argsp, DEPRESS_ARG_PAGETYPE_PALETTIZED_PARAM1_PALCOLORS)) {
+			if(argsc > 0) {
+				argsc--;
+				if(flags.type == DEPRESS_PAGE_TYPE_PALETTIZED) {
+					flags.param1 = _wtoi(*(++argsp));
+					if(flags.param1 < 2) {
+						wprintf(L"Warning: downsample rate should be greater than or equal to 2\n");
+						flags.param1 = 2;
+					}
+					if(flags.param1 > 256) {
+						wprintf(L"Warning: downsample rate should be less than or equal to 256\n");
+						flags.param1 = 256;
+					}
+				} else {
+					argsp++;
+					wprintf(L"Warning: argument %ls can be set only with %ls\n", DEPRESS_ARG_PAGETYPE_PALETTIZED_PARAM1_PALCOLORS, DEPRESS_ARG_PAGETYPE_PALETTIZED);
+				}
+			} else
+				wprintf(L"Warning: argument " DEPRESS_ARG_PAGETYPE_LAYERED_PARAM2_DOWNSAMPLEFG L" should have parameter\n");
+		} else if(!wcscmp(*argsp, DEPRESS_ARG_PAGETYPE_PALETTIZED_PARAM2_QUANT)) {
+			if(flags.type == DEPRESS_PAGE_TYPE_PALETTIZED)
+				flags.param2 = DEPRESS_PAGE_TYPE_PALETTIZED_PARAM2_QUANT;
+			else
+				wprintf(L"Warning: argument %ls can be set only with %ls\n", DEPRESS_ARG_PAGETYPE_PALETTIZED_PARAM2_QUANT, DEPRESS_ARG_PAGETYPE_PALETTIZED);
+		} else if(!wcscmp(*argsp, DEPRESS_ARG_PAGETYPE_PALETTIZED_PARAM2_NOTESHRINK)) {
+			if(flags.type == DEPRESS_PAGE_TYPE_PALETTIZED)
+				flags.param2 = DEPRESS_PAGE_TYPE_PALETTIZED_PARAM2_NOTESHRINK;
+			else
+				wprintf(L"Warning: argument %ls can be set only with %ls\n", DEPRESS_ARG_PAGETYPE_PALETTIZED_PARAM2_NOTESHRINK, DEPRESS_ARG_PAGETYPE_PALETTIZED);
 		} else if(!wcscmp(*argsp, DEPRESS_ARG_PAGETITLEAUTO)) {
 			document_flags.page_title_type = DEPRESS_DOCUMENT_PAGE_TITLE_TYPE_AUTOMATIC;
 		} else if(!wcscmp(*argsp, DEPRESS_ARG_PAGETITLEAUTO_SHORTNAME)) {
@@ -181,7 +218,7 @@ int wmain(int argc, wchar_t **argv)
 
 		argsp++;
 	}
-
+	
 	if(argsc < 2) {
 		wprintf(
 			L"\tdepress [options] input.txt output.djvu\n"
@@ -192,6 +229,10 @@ int wmain(int argc, wchar_t **argv)
 			L"\t\t\t" DEPRESS_ARG_PAGETYPE_LAYERED L" - create layered document\n"
 			L"\t\t\t" DEPRESS_ARG_PAGETYPE_LAYERED_PARAM1_DOWNSAMPLEALL L" ratio - sets downsampling ratio for background and foreground layers\n"
 			L"\t\t\t" DEPRESS_ARG_PAGETYPE_LAYERED_PARAM2_DOWNSAMPLEFG L" fgratio - sets further foreground downsampling ratio (ratio*fgratio)\n" 
+			L"\t\t\t" DEPRESS_ARG_PAGETYPE_PALETTIZED L" - create palettized document\n"
+			L"\t\t\t" DEPRESS_ARG_PAGETYPE_PALETTIZED_PARAM1_PALCOLORS L" - number of colors between 2 and 256 (defaults to 8)\n"
+			L"\t\t\t" DEPRESS_ARG_PAGETYPE_PALETTIZED_PARAM2_QUANT L" - use quantization for palettized document\n"
+			L"\t\t\t" DEPRESS_ARG_PAGETYPE_PALETTIZED_PARAM2_NOTESHRINK L" - use noteshrink for palettized document\n"
 			L"\t\t\t" DEPRESS_ARG_PAGETITLEAUTO L" - use file name as page title\n"
 			L"\t\t\t" DEPRESS_ARG_PAGETITLEAUTO_SHORTNAME L" - use short file name as page title (when using previous)\n"
 			L"\t\t\t" DEPRESS_ARG_TEMP L" tempdir - use tempdir as directory for temporary files\n"

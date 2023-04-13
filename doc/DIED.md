@@ -32,12 +32,14 @@ Describes document parameters. No body. Arguments:
 
 Describes page flags. No body. Arguments:
 
-* type - 0 for color images, 1 for bw images, 2 for layered images.
+* type - 0 for color images, 1 for bw images, 2 for layered images, 3 for palettized images
 * param1
 * * if type is 1 then 0 stands for threshold binarization, 1 stands for error diffusion, 2 stands for adaptive binarization.
 * * if type is 2 then values from 1 describing foreground and background downsampling ratio.
+* * if type is 3 then values from 2 to 256 describing number of colors.
 * param2
 * * if type is 2 then values from 1 describing foreground downsampling ratio (with respect to background downsampling ratio).
+* * if type is 3 then value 0 stands for color quantization and value 1 stands for noteshrink algorithm.
 * quality - image quality between 0 and 100.
 * dpi - image dpi.
 

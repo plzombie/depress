@@ -59,6 +59,14 @@ bool depressLoadImageFromFileAndApplyFlags(wchar_t *filename, int *sizex, int *s
 	if(!(*buf))
 		return false;
 
+	if(flags.type == DEPRESS_PAGE_TYPE_PALETTIZED) {
+		if(flags.param2 == DEPRESS_PAGE_TYPE_PALETTIZED_PARAM2_QUANT) {
+			depressImageApplyQuantization(*buf, *sizex, *sizey, flags.param1);
+		} else if(flags.param2 == DEPRESS_PAGE_TYPE_PALETTIZED_PARAM2_NOTESHRINK) {
+			depressImageApplyNoteshrink(*buf, *sizex, *sizey, flags.param1);
+		}
+	}
+
 	if(!flags.nof_illrects) {
 		if(flags.type == DEPRESS_PAGE_TYPE_BW && flags.param1 == DEPRESS_PAGE_TYPE_BW_PARAM1_ERRDIFF)
 			depressImageApplyErrorDiffusion(*buf, *sizex, *sizey);
@@ -199,4 +207,24 @@ bool depressImageApplyAdaptiveBinarization(unsigned char* buf, int sizex, int si
 	free(old_buf);
 
 	return true;
+}
+
+void depressImageApplyQuantization(unsigned char* buf, int sizex, int sizey, int colors)
+{
+	(void)buf;
+	(void)sizex;
+	(void)sizey;
+
+	if(colors < 2) colors = 2;
+	if(colors > 256) colors = 256;
+}
+
+void depressImageApplyNoteshrink(unsigned char* buf, int sizex, int sizey, int colors)
+{
+	(void)buf;
+	(void)sizex;
+	(void)sizey;
+
+	if(colors < 2) colors = 2;
+	if(colors > 256) colors = 256;
 }

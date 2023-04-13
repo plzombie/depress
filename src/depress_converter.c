@@ -138,6 +138,24 @@ int depressConvertPage(depress_flags_type flags, wchar_t *inputfile, wchar_t *te
 		}
 
 		swprintf(arg0, arg0_size, L"\"%ls\" %ls \"%ls\" \"%ls\"", djvulibre_path, arg_options, tempfile, outputfile);
+	} else if(flags.type == DEPRESS_PAGE_TYPE_PALETTIZED) {
+		int colors;
+
+		djvulibre_path = djvulibre_paths->cpaldjvu_path;
+
+		colors = flags.param1;
+		if(colors < 2) colors = 2;
+		if(colors > 256) colors = 256;
+
+		swprintf(arg_temp, 80, L"-colors %d", colors);
+		wcscat(arg_options, arg_temp);
+
+		if(flags.dpi > 0) {
+			swprintf(arg_temp, 80, L" -dpi %d", flags.dpi);
+			wcscat(arg_options, arg_temp);
+		}
+
+		swprintf(arg0, arg0_size, L"\"%ls\" %ls \"%ls\" \"%ls\"", djvulibre_path, arg_options, tempfile, outputfile);
 	} else {
 		int quality;
 

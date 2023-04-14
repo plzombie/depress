@@ -391,6 +391,7 @@ int depressConvertLayeredPage(const depress_flags_type flags, wchar_t *inputfile
 			goto EXIT;
 		}
 		if(!pbmSave(sizex, sizey, buffer_mask, f_temp)) {
+			convert_status = DEPRESS_CONVERT_PAGE_STATUS_CANT_SAVE_PAGE;
 
 			goto EXIT;
 		}
@@ -404,9 +405,9 @@ int depressConvertLayeredPage(const depress_flags_type flags, wchar_t *inputfile
 		}
 		swprintf(arg0, arg0_size, L"\"%ls\" \"%ls\" \"Sjbz=%ls\"", djvulibre_paths->djvuextract_path, outputfile, arg_sjbz);
 		if(depressSpawn(djvulibre_paths->djvuextract_path, arg0, true, true) == DEPRESS_INVALID_PROCESS_HANDLE) {
-			goto EXIT;
-
 			convert_status = DEPRESS_CONVERT_PAGE_STATUS_CANT_SAVE_PAGE;
+
+			goto EXIT;
 		}
 
 		swprintf(arg_options, 1024, L"INFO=,,%d", flags.dpi);

@@ -42,8 +42,8 @@ extern bool depressLoadImageFromFileAndApplyFlags(wchar_t *filename, int *sizex,
 extern unsigned char *depressLoadImage(FILE *f, int *sizex, int *sizey, int *channels, int desired_channels);
 extern void depressImageApplyErrorDiffusion(unsigned char* buf, int sizex, int sizey);
 extern bool depressImageApplyAdaptiveBinarization(unsigned char* buf, int sizex, int sizey);
-extern void depressImageApplyQuantization(unsigned char* buf, int sizex, int sizey, int colors);
-extern void depressImageApplyNoteshrink(unsigned char* buf, int sizex, int sizey, int colors);
+extern bool depressImageApplyQuantization(unsigned char* buf, int sizex, int sizey, int colors);
+extern bool depressImageApplyNoteshrink(unsigned char* buf, int sizex, int sizey, int colors);
 
 #ifdef __cplusplus
 }

@@ -445,6 +445,7 @@
     <ClCompile Include="..\..\src\depress_threads.c" />
     <ClCompile Include="..\..\src\interlocked_ptr.c" />
     <ClCompile Include="..\..\src\ppm_save.c" />
+    <ClCompile Include="..\..\src\third_party\noteshrink.c" />
   </ItemGroup>
   <ItemGroup>
     <Manifest Include="..\..\resources\applications.manifest" />

@@ -42,6 +42,9 @@
     <ClCompile Include="..\..\src\interlocked_ptr.c">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\third_party\noteshrink.c">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Manifest Include="..\..\resources\applications.manifest" />

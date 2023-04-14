@@ -36,6 +36,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "../include/depress_image.h"
 
+#include "third_party/noteshrink.h"
+
 #define STB_IMAGE_IMPLEMENTATION
 #include "third_party/stb_image.h"
 
@@ -61,9 +63,17 @@ bool depressLoadImageFromFileAndApplyFlags(wchar_t *filename, int *sizex, int *s
 
 	if(flags.type == DEPRESS_PAGE_TYPE_PALETTIZED) {
 		if(flags.param2 == DEPRESS_PAGE_TYPE_PALETTIZED_PARAM2_QUANT) {
-			depressImageApplyQuantization(*buf, *sizex, *sizey, flags.param1);
+			if(!depressImageApplyQuantization(*buf, *sizex, *sizey, flags.param1)) {
+				free(*buf);
+
+				return false;
+			}
 		} else if(flags.param2 == DEPRESS_PAGE_TYPE_PALETTIZED_PARAM2_NOTESHRINK) {
-			depressImageApplyNoteshrink(*buf, *sizex, *sizey, flags.param1);
+			if(!depressImageApplyNoteshrink(*buf, *sizex, *sizey, flags.param1)) {
+				free(*buf);
+
+				return false;
+			}
 		}
 	}
 
@@ -209,7 +219,7 @@ bool depressImageApplyAdaptiveBinarization(unsigned char* buf, int sizex, int si
 	return true;
 }
 
-void depressImageApplyQuantization(unsigned char* buf, int sizex, int sizey, int colors)
+bool depressImageApplyQuantization(unsigned char *buf, int sizex, int sizey, int colors)
 {
 	(void)buf;
 	(void)sizex;
@@ -217,14 +227,77 @@ void depressImageApplyQuantization(unsigned char* buf, int sizex, int sizey, int
 
 	if(colors < 2) colors = 2;
 	if(colors > 256) colors = 256;
+
+	return true;
 }
 
-void depressImageApplyNoteshrink(unsigned char* buf, int sizex, int sizey, int colors)
+bool depressImageApplyNoteshrink(unsigned char *buf, int sizex, int sizey, int colors)
 {
-	(void)buf;
-	(void)sizex;
-	(void)sizey;
+	float *palette = 0, *p3;
+	unsigned char *newbuf = 0, *p, *p2;
+	NSHOption option;
+	bool success = true;
+	size_t i;
+
+	if(INT_MAX/sizex < sizey) return false;
+	if(SIZE_MAX/(3*sizeof(float)) < colors) return false;
 
 	if(colors < 2) colors = 2;
 	if(colors > 256) colors = 256;
+	option = NSHMakeDefaultOption();
+
+	palette = malloc(3*colors*sizeof(float));
+	if(!palette) success = false;
+
+	if(success) {
+		newbuf = malloc(sizex*sizey);
+		if(!newbuf) success = false;
+	}
+
+	if(success)
+		success = NSHPaletteCreate(buf, sizex, sizey, 3, option, palette, colors);
+
+	if(success)
+		success = NSHPaletteApply(buf, sizex, sizey, 3, palette, colors, option, newbuf);
+
+	if(success) {
+		if(option.Saturate)
+			success = NSHPaletteSaturate(palette, colors, 3);
+	}
+
+	if(success) {
+		if(option.Norm)
+			success = NSHPaletteNorm(palette, colors, 3);
+	}
+
+	if(success) {
+		if(option.WhiteBackground) {
+			palette[0] = 255;
+			palette[1] = 255;
+			palette[2] = 255;
+		}
+	}
+
+	if(success) {
+		for(i = 0; i < 3*(size_t)(colors); i++) {
+			palette[i] += 0.5f;
+			if(palette[i] < 0) palette[i] = 0;
+			if(palette[i] > 255) palette[i] = 255;
+		}
+
+		p = buf;
+		p2 = newbuf;
+		for(i = 0; i < (size_t)(sizex*sizey); i++) {
+			p3 = palette+(*p2)*3;
+			*p = (unsigned int)(*p3); p++; p3++;
+			*p = (unsigned int)(*p3); p++; p3++;
+			*p = (unsigned int)(*p3); p++; p3++;
+			p2++;
+		}
+	}
+
+	if(palette) free(palette);
+	if(newbuf) free(newbuf);
+
+	return success;
 }

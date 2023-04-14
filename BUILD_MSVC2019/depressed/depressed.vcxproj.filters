@@ -69,6 +69,9 @@
     <ClCompile Include="..\..\src\depressed_gui_documentflags.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\third_party\noteshrink.c">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Manifest Include="..\..\resources\applications.manifest" />

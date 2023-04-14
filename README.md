@@ -20,3 +20,4 @@ The software itself licensed under [BSD license](https://github.com/plzombie/dep
 * [djvulibre](https://djvu.sourceforge.net/) - [GNU GPL 2](https://opensource.org/licenses/GPL-2.0)
 * [stb](https://github.com/nothings/stb) - [Unlicense/MIT](https://github.com/nothings/stb/blob/master/LICENSE)
 * [djvul](https://github.com/ImageProcessing-ElectronicPublications/stb-image-djvul) - [Unlicense](https://github.com/ImageProcessing-ElectronicPublications/stb-image-djvul/blob/main/LICENSE)
+* [noteshrink-c](https://github.com/ImageProcessing-ElectronicPublications/noteshrink-c) - [Mit](https://github.com/ImageProcessing-ElectronicPublications/noteshrink-c/blob/master/LICENSE.txt)

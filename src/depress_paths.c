@@ -160,6 +160,8 @@ bool depressGetDjvulibrePaths(depress_djvulibre_paths_type *djvulibre_paths)
 #else
 	wcscpy(djvulibre_paths->c44_path, L"c44");
 	wcscpy(djvulibre_paths->cjb2_path, L"cjb2");
+	wcscpy(djvulibre_paths->cpaldjvu_path, L"cpaldjvu");
+	wcscpy(djvulibre_paths->csepdjvu_path, L"csepdjvu");
 	wcscpy(djvulibre_paths->djvm_path, L"djvm");
 	wcscpy(djvulibre_paths->djvused_path, L"djvused");
 	wcscpy(djvulibre_paths->djvuextract_path, L"djvuextract");

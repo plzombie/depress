@@ -16,7 +16,7 @@ depress [options] inputfile.txt outputfile.djvu
 * `-shortfntitle` - Uses only file name (without path and extension) for page title (in combination with `-pta`).
 * `-temp path` - defines temporary directory.
 * `-quality n` - defines quality from 1 to 100 (defaults to 100).
-* `-dpi n` - defines dpi (defaults to 300).
+* `-dpi n` - defines dpi (defaults to 100).
 
 ## Example
 

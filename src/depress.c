@@ -238,7 +238,7 @@ int wmain(int argc, wchar_t **argv)
 			L"\t\t\t" DEPRESS_ARG_TEMP L" tempdir - use tempdir as directory for temporary files\n"
 			L"\t\t\t" DEPRESS_ARG_QUALITY L" percents - sets image quality in percents\n"
 			L"\t\t\t\t100 is lossy for BW and good for PHOTO\n"
-			L"\t\t\t" DEPRESS_ARG_DPI L" - DPI parameter (default to 300)\n\n"
+			L"\t\t\t" DEPRESS_ARG_DPI L" - DPI parameter (default to 100)\n\n"
 		);
 
 		return 0;

@@ -381,7 +381,11 @@ bool depressDocumentFinalize(depress_document_type *document)
 		return false;
 	}
 
+#if defined(WIN32)
 	swprintf(opencommand, 65622, L"\"\"%ls\" \"%ls\"\"", document->djvulibre_paths.djvused_path, document->output_file);
+#else
+	swprintf(opencommand, 65622, L"\"%ls\" \"%ls\"", document->djvulibre_paths.djvused_path, document->output_file);
+#endif
 
 	djvused = _wpopen(opencommand, L"wt");
 	if(!djvused) {
@@ -398,11 +402,11 @@ bool depressDocumentFinalize(depress_document_type *document)
 
 		for(i = 0; i < document->tasks_num; i++) {
 			depressDocumentGetTitleFromFilename(document->tasks[i].inputfile, title, full_name);
-			fwprintf(djvused, L"select %lld; set-page-title '%hs'\n", (long long)(i+1), title);
+			fprintf(djvused, "select %lld; set-page-title '%s'\n", (long long)(i+1), title);
 		}
 	}
 
-	fwprintf(djvused, L"save\n");
+	fprintf(djvused, "save\n");
 
 	_pclose(djvused);
 	free(opencommand);

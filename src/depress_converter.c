@@ -247,7 +247,6 @@ int depressConvertLayeredPage(const depress_flags_type flags, wchar_t *inputfile
 	}
 
 	{
-		int level;
 		unsigned int bg_downsample, fg_downsample;
 		unsigned int bg_width, bg_height, fg_width, fg_height;
 		size_t i;
@@ -276,7 +275,7 @@ int depressConvertLayeredPage(const depress_flags_type flags, wchar_t *inputfile
 			goto EXIT;
 		}
 
-		level = ImageDjvulThreshold(buffer, (bool *)buffer_mask, buffer_bg, buffer_fg, sizex, sizey, channels,
+		ImageDjvulThreshold(buffer, (bool *)buffer_mask, buffer_bg, buffer_fg, sizex, sizey, channels,
 			bg_downsample, 0, 1, 0.5f, 0.0f, 0.0f, 1.0f, 0.0f);
 
 		for(i = 0; i < (size_t)sizex*(size_t)sizey; i++)

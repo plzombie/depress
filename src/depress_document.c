@@ -56,7 +56,7 @@ static void depressDocumentGetTitleFromFilename(wchar_t* fname, char* title, boo
 	wchar_t temp[32768];
 	char *p;
 	size_t temp_len, i;
-	uint32_t codepoint;
+	uint32_t codepoint = 0;
 
 	if(use_full_name)
 		wcscpy(temp, fname);
@@ -88,8 +88,12 @@ static void depressDocumentGetTitleFromFilename(wchar_t* fname, char* title, boo
 			codepoint = codepoint << 10;
 			continue;
 		} else { // low surrogate
-			codepoint |= temp[i] - 0xdc00;
-			codepoint += 0x10000;
+			if(codepoint < 1024 && codepoint != 0)
+				codepoint = '?';
+			else {
+				codepoint |= temp[i] - 0xdc00;
+				codepoint += 0x10000;
+			}
 		}
 
 		if(codepoint == '\\')

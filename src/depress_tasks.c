@@ -95,8 +95,11 @@ void depressDestroyTasks(depress_task_type *tasks, size_t tasks_num)
 {
 	size_t i;
 
-	for(i = 0; i < tasks_num; i++)
+	for(i = 0; i < tasks_num; i++) {
+		tasks[i].load_image.free_ctx(tasks[i].load_image_ctx, i);
+
 		depressCloseEventHandle(tasks[i].finished);
+	}
 
 	free(tasks);
 }
@@ -121,8 +124,8 @@ void *depressThreadTaskProc(void *args)
 
 		if(global_error == false) {
 			int convert_status;
-			
-			convert_status = depressConvertPage(arg.tasks[i].flags, arg.tasks[i].inputfile, arg.tasks[i].tempfile, arg.tasks[i].outputfile, arg.djvulibre_paths);
+
+			convert_status = depressConvertPage(arg.tasks[i].flags, arg.tasks[i].load_image, arg.tasks[i].load_image_ctx, i, arg.tasks[i].tempfile, arg.tasks[i].outputfile, arg.djvulibre_paths);
 
 			switch(convert_status) {
 				case DEPRESS_CONVERT_PAGE_STATUS_OK:

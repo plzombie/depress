@@ -53,9 +53,9 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define THRESHOLD_IMPLEMENTATION
 #include "third_party/djvul.h"
 
-int depressConvertLayeredPage(const depress_flags_type flags, wchar_t *inputfile, wchar_t *tempfile, wchar_t *outputfile, depress_djvulibre_paths_type *djvulibre_paths);
+int depressConvertLayeredPage(const depress_flags_type flags, depress_load_image_type load_image, void *load_image_ctx, size_t load_image_id, wchar_t *tempfile, wchar_t *outputfile, depress_djvulibre_paths_type *djvulibre_paths);
 
-int depressConvertPage(depress_flags_type flags, wchar_t *inputfile, wchar_t *tempfile, wchar_t *outputfile, depress_djvulibre_paths_type *djvulibre_paths)
+int depressConvertPage(depress_flags_type flags, depress_load_image_type load_image, void *load_image_ctx, size_t load_image_id, wchar_t *tempfile, wchar_t *outputfile, depress_djvulibre_paths_type *djvulibre_paths)
 {
 	FILE *f_temp = 0;
 	int sizex, sizey, channels;
@@ -66,7 +66,7 @@ int depressConvertPage(depress_flags_type flags, wchar_t *inputfile, wchar_t *te
 
 	// Checking for modes that needed separate complex functions
 	if(flags.type == DEPRESS_PAGE_TYPE_LAYERED)
-		return depressConvertLayeredPage(flags, inputfile, tempfile, outputfile, djvulibre_paths);
+		return depressConvertLayeredPage(flags, load_image, load_image_ctx, load_image_id, tempfile, outputfile, djvulibre_paths);
 
 	arg0 = malloc((arg0_size+1024+80)*sizeof(wchar_t)); // 
 
@@ -86,7 +86,7 @@ int depressConvertPage(depress_flags_type flags, wchar_t *inputfile, wchar_t *te
 		goto EXIT;
 	}
 
-	if(!depressLoadImageFromFileAndApplyFlags(inputfile, &sizex, &sizey, &channels, &buffer, flags)) {
+	if(!load_image.load_from_ctx(load_image_ctx, load_image_id, &sizex, &sizey, &channels, &buffer, flags)) {
 		convert_status = DEPRESS_CONVERT_PAGE_STATUS_CANT_OPEN_IMAGE;
 
 		goto EXIT;
@@ -202,7 +202,7 @@ EXIT:
 	return convert_status;
 }
 
-int depressConvertLayeredPage(const depress_flags_type flags, wchar_t *inputfile, wchar_t *tempfile, wchar_t *outputfile, depress_djvulibre_paths_type *djvulibre_paths)
+int depressConvertLayeredPage(const depress_flags_type flags, depress_load_image_type load_image, void *load_image_ctx, size_t load_image_id, wchar_t *tempfile, wchar_t *outputfile, depress_djvulibre_paths_type *djvulibre_paths)
 {
 	FILE *f_temp = 0;
 	int sizex, sizey, channels;
@@ -240,7 +240,7 @@ int depressConvertLayeredPage(const depress_flags_type flags, wchar_t *inputfile
 	memcpy(arg_bg44, outputfile, (outputfile_length+1)*sizeof(wchar_t));
 	wcscpy(arg_bg44+outputfile_length, L".bg44"); // Background chunk
 
-	if(!depressLoadImageFromFileAndApplyFlags(inputfile, &sizex, &sizey, &channels, &buffer, flags)) {
+	if(!load_image.load_from_ctx(load_image_ctx, load_image_id, &sizex, &sizey, &channels, &buffer, flags)) {
 		convert_status = DEPRESS_CONVERT_PAGE_STATUS_CANT_OPEN_IMAGE;
 
 		goto EXIT;

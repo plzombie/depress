@@ -38,6 +38,7 @@ extern "C" {
 
 #include "depress_flags.h"
 #include "depress_threads.h"
+#include "depress_image.h"
 
 enum {
 	DEPRESS_DOCUMENT_PROCESS_STATUS_OK,
@@ -49,7 +50,8 @@ enum {
 };
 
 typedef struct {
-	wchar_t inputfile[32768];
+	depress_load_image_type load_image;
+	void *load_image_ctx;
 	wchar_t tempfile[32768];
 	wchar_t outputfile[32768];
 	depress_event_handle_t finished;

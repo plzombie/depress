@@ -310,12 +310,12 @@ int depressDocumentProcessTasks(depress_document_type *document)
 			continue;
 
 		if(document->tasks[filecount].process_status != DEPRESS_DOCUMENT_PROCESS_STATUS_OK) {
-			wprintf(L"Error while converting file \"%ls\"\n", document->tasks[filecount].inputfile);
+			wprintf(L"Error while converting file \"%ls\"\n", document->tasks[filecount].load_image.get_name(document->tasks[filecount].load_image_ctx, filecount));
 			if(process_status == DEPRESS_DOCUMENT_PROCESS_STATUS_OK || process_status == DEPRESS_DOCUMENT_PROCESS_STATUS_GENERIC_ERROR)
 				process_status = document->tasks[filecount].process_status;
 		} else {
 			if(process_status == DEPRESS_DOCUMENT_PROCESS_STATUS_OK && filecount > 0) {
-				wprintf(L"Merging file \"%ls\"\n", document->tasks[filecount].inputfile);
+				wprintf(L"Merging file \"%ls\"\n", document->tasks[filecount].load_image.get_name(document->tasks[filecount].load_image_ctx, filecount));
 
 				swprintf(arg0, 3 * 32770 + 1024, L"\"%ls\" -i \"%ls\" \"%ls\"", document->djvulibre_paths.djvm_path, document->output_file, document->tasks[filecount].outputfile);
 
@@ -401,7 +401,7 @@ bool depressDocumentFinalize(depress_document_type *document)
 		full_name = !(document->document_flags.page_title_type_flags & DEPRESS_DOCUMENT_PAGE_TITLE_AUTOMATIC_USE_SHORT_NAME);
 
 		for(i = 0; i < document->tasks_num; i++) {
-			depressDocumentGetTitleFromFilename(document->tasks[i].inputfile, title, full_name);
+			depressDocumentGetTitleFromFilename(document->tasks[i].load_image.get_name(document->tasks[i].load_image_ctx, i), title, full_name);
 			fprintf(djvused, "select %lld; set-page-title '%s'\n", (long long)(i+1), title);
 		}
 	}
@@ -420,7 +420,7 @@ size_t depressDocumentGetPagesProcessed(depress_document_type *document)
 	return InterlockedExchangeAddPtr((uintptr_t *)(&document->tasks_processed), 0);
 }
 
-bool depressDocumentAddTask(depress_document_type *document, const wchar_t *inputfile, depress_flags_type flags)
+bool depressDocumentAddTask(depress_document_type *document, const depress_load_image_type load_image, void *load_image_ctx, const depress_flags_type flags)
 {
 	depress_task_type task;
 	wchar_t tempstr[32];
@@ -430,7 +430,8 @@ bool depressDocumentAddTask(depress_document_type *document, const wchar_t *inpu
 	memset(&task, 0, sizeof(depress_task_type));
 
 	// Filling task
-	wcscpy(task.inputfile, inputfile);
+	task.load_image = load_image;
+	task.load_image_ctx = load_image_ctx;
 	swprintf(tempstr, 32, L"/temp%lld.ppm", (long long)(document->tasks_num));
 	wcscpy(task.tempfile, document->temp_path);
 	wcscat(task.tempfile, tempstr);
@@ -443,10 +444,39 @@ bool depressDocumentAddTask(depress_document_type *document, const wchar_t *inpu
 	}
 	task.flags = flags;
 
+
 	if(depressAddTask(&task, &(document->tasks), &(document->tasks_num), &(document->tasks_max)))
 		return true;
 	else
 		return false;
+}
+
+bool depressDocumentAddTaskFromImageFile(depress_document_type *document, const wchar_t *inputfile, const depress_flags_type flags)
+{
+	depress_load_image_type load_image;
+	void *load_image_ctx;
+	size_t inputfile_size;
+	bool result;
+
+	if(!document->output_file) return false;
+	
+	inputfile_size = wcslen(inputfile);
+	if((SIZE_MAX-sizeof(wchar_t))/inputfile_size < sizeof(wchar_t)) return false;
+	inputfile_size = inputfile_size*sizeof(wchar_t)+sizeof(wchar_t);
+	load_image_ctx = malloc(inputfile_size);
+	if(!load_image_ctx) return false;
+	memcpy(load_image_ctx, inputfile, inputfile_size);
+
+	memset(&load_image, 0, sizeof(depress_load_image_type));
+	load_image.load_from_ctx = depressImageLoadFromCtx;
+	load_image.free_ctx = depressImageFreeCtx;
+	load_image.get_name = depressImageGetNameCtx;
+	
+	result = depressDocumentAddTask(document, load_image, load_image_ctx, flags);
+
+	if(!result) free(load_image_ctx);
+
+	return result;
 }
 
 bool depressDocumentCreateTasksFromTextFile(depress_document_type *document, const wchar_t *textfile, const wchar_t *textfilepath, const wchar_t *outputfile, depress_flags_type flags)
@@ -504,7 +534,7 @@ bool depressDocumentCreateTasksFromTextFile(depress_document_type *document, con
 		
 		if(task_inputfile_length > 32768 || task_inputfile_length == 0) goto LABEL_ERROR;
 
-		if(!depressDocumentAddTask(document, inputfile_fullname, flags)) goto LABEL_ERROR;
+		if(!depressDocumentAddTaskFromImageFile(document, inputfile_fullname, flags)) goto LABEL_ERROR;
 	}
 
 	free(inputfile);

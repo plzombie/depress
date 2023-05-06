@@ -110,7 +110,7 @@ namespace Depressed {
 
 		// Add tasks
 		for(auto page : m_pages) {
-			if(!depressDocumentAddTask(&m_document, page->GetFilename(), page->GetFlags())) {
+			if(!depressDocumentAddTaskFromImageFile(&m_document, page->GetFilename(), page->GetFlags())) {
 				status = DocumentProcessStatus::CantAddTask;
 
 				break;

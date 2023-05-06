@@ -41,6 +41,25 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define STB_IMAGE_IMPLEMENTATION
 #include "third_party/stb_image.h"
 
+bool depressImageLoadFromCtx(void *ctx, size_t id, int *sizex, int *sizey, int *channels, unsigned char **buf, depress_flags_type flags)
+{
+	return depressLoadImageFromFileAndApplyFlags((wchar_t *)ctx, sizex, sizey, channels, buf, flags);
+}
+
+void depressImageFreeCtx(void *ctx, size_t id)
+{
+	(void)id;
+
+	free(ctx);
+}
+
+wchar_t *depressImageGetNameCtx(void *ctx, size_t id)
+{
+	(void)id;
+
+	return (wchar_t *)ctx;
+}
+
 bool depressLoadImageFromFileAndApplyFlags(wchar_t *filename, int *sizex, int *sizey, int *channels, unsigned char **buf, depress_flags_type flags)
 {
 	FILE *f = 0;

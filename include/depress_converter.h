@@ -39,6 +39,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 extern "C" {
 #endif
 
+#include "depress_image.h"
+
 enum {
 	DEPRESS_CONVERT_PAGE_STATUS_OK,
 	DEPRESS_CONVERT_PAGE_STATUS_GENERIC_ERROR,
@@ -47,7 +49,7 @@ enum {
 	DEPRESS_CONVERT_PAGE_STATUS_CANT_SAVE_PAGE
 };
 
-extern int depressConvertPage(depress_flags_type flags, wchar_t *inputfile, wchar_t *tempfile, wchar_t *outputfile, depress_djvulibre_paths_type *djvulibre_paths);
+extern int depressConvertPage(depress_flags_type flags, depress_load_image_type load_image, void* load_image_ctx, size_t load_image_id, wchar_t *tempfile, wchar_t *outputfile, depress_djvulibre_paths_type *djvulibre_paths);
 
 #ifdef __cplusplus
 }

@@ -53,9 +53,9 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define THRESHOLD_IMPLEMENTATION
 #include "third_party/djvul.h"
 
-int depressConvertLayeredPage(const depress_flags_type flags, depress_load_image_type load_image, void *load_image_ctx, size_t load_image_id, wchar_t *tempfile, wchar_t *outputfile, depress_djvulibre_paths_type *djvulibre_paths);
+int depressDjvuConvertLayeredPage(const depress_flags_type flags, depress_load_image_type load_image, void *load_image_ctx, size_t load_image_id, wchar_t *tempfile, wchar_t *outputfile, depress_djvulibre_paths_type *djvulibre_paths);
 
-int depressConvertPage(depress_flags_type flags, depress_load_image_type load_image, void *load_image_ctx, size_t load_image_id, wchar_t *tempfile, wchar_t *outputfile, depress_djvulibre_paths_type *djvulibre_paths)
+int depressDjvuConvertPage(depress_flags_type flags, depress_load_image_type load_image, void *load_image_ctx, size_t load_image_id, wchar_t *tempfile, wchar_t *outputfile, depress_djvulibre_paths_type *djvulibre_paths)
 {
 	FILE *f_temp = 0;
 	int sizex, sizey, channels;
@@ -66,7 +66,7 @@ int depressConvertPage(depress_flags_type flags, depress_load_image_type load_im
 
 	// Checking for modes that needed separate complex functions
 	if(flags.type == DEPRESS_PAGE_TYPE_LAYERED)
-		return depressConvertLayeredPage(flags, load_image, load_image_ctx, load_image_id, tempfile, outputfile, djvulibre_paths);
+		return depressDjvuConvertLayeredPage(flags, load_image, load_image_ctx, load_image_id, tempfile, outputfile, djvulibre_paths);
 
 	arg0 = malloc((arg0_size+1024+80)*sizeof(wchar_t)); // 
 
@@ -202,7 +202,7 @@ EXIT:
 	return convert_status;
 }
 
-int depressConvertLayeredPage(const depress_flags_type flags, depress_load_image_type load_image, void *load_image_ctx, size_t load_image_id, wchar_t *tempfile, wchar_t *outputfile, depress_djvulibre_paths_type *djvulibre_paths)
+int depressDjvuConvertLayeredPage(const depress_flags_type flags, depress_load_image_type load_image, void *load_image_ctx, size_t load_image_id, wchar_t *tempfile, wchar_t *outputfile, depress_djvulibre_paths_type *djvulibre_paths)
 {
 	FILE *f_temp = 0;
 	int sizex, sizey, channels;

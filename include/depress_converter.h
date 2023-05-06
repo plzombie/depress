@@ -49,7 +49,7 @@ enum {
 	DEPRESS_CONVERT_PAGE_STATUS_CANT_SAVE_PAGE
 };
 
-extern int depressConvertPage(depress_flags_type flags, depress_load_image_type load_image, void* load_image_ctx, size_t load_image_id, wchar_t *tempfile, wchar_t *outputfile, depress_djvulibre_paths_type *djvulibre_paths);
+extern int depressDjvuConvertPage(depress_flags_type flags, depress_load_image_type load_image, void *load_image_ctx, size_t load_image_id, wchar_t *tempfile, wchar_t *outputfile, depress_djvulibre_paths_type *djvulibre_paths);
 
 #ifdef __cplusplus
 }

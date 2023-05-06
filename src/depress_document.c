@@ -41,6 +41,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #endif
 
 #include "../include/depress_document.h"
+#include "../include/depress_maker_djvu.h"
 #include "../include/interlocked_ptr.h"
 
 #include <stdio.h>
@@ -51,75 +52,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define MAXULONG_PTR !((ULONG_PTR)0)
 #endif
 
-static void depressDocumentGetTitleFromFilename(wchar_t* fname, char* title, bool use_full_name)
-{
-	wchar_t temp[32768];
-	char *p;
-	size_t temp_len, i;
-	uint32_t codepoint = 0;
-
-	if(use_full_name)
-		wcscpy(temp, fname);
-	else {
-		wchar_t *last_slash, *last_backslash, *last_dot;
-
-		last_slash = wcsrchr(fname, '/');
-		if(!last_slash) last_slash = fname;
-		else last_slash++;
-
-		last_backslash = wcsrchr(last_slash, '\\');
-		if(!last_backslash) last_backslash = last_slash;
-		else last_backslash++;
-
-		wcscpy(temp, last_backslash);
-
-		last_dot = wcsrchr(temp, '.');
-		if(last_dot) *last_dot = 0;
-	}
-
-	temp_len = wcslen(temp);
-
-	p = title;
-	for(i = 0; i < temp_len; i++) {
-		if(temp[i] < 0xd800 || temp[i] > 0xdfff)
-			codepoint = temp[i];
-		else if(temp[i] < 0xdc00) { // high surrogate
-			codepoint = temp[i] - 0xd800;
-			codepoint = codepoint << 10;
-			continue;
-		} else { // low surrogate
-			if(codepoint < 1024 && codepoint != 0)
-				codepoint = '?';
-			else {
-				codepoint |= temp[i] - 0xdc00;
-				codepoint += 0x10000;
-			}
-		}
-
-		if(codepoint == '\\')
-			*(p++) = '\\';
-
-		if(codepoint <= 0x7f)
-			*(p++) = codepoint;
-		else if(codepoint <= 0x7ff) {
-			*(p++) = 0xc0 | ((codepoint >> 6) &0x1f);
-			*(p++) = 0x80 | (codepoint & 0x3f);
-		} else if(codepoint <= 0xffff) {
-			*(p++) = 0xe0 | ((codepoint >> 12) & 0xf);
-			*(p++) = 0x80 | ((codepoint >> 6) & 0x3f);
-			*(p++) = 0x80 | (codepoint & 0x3f);
-		} else if(codepoint <= 0x10ffff) {
-			/**(p++) = 0xf | ((codepoint >> 18) & 0x7);
-			*(p++) = 0x80 | ((codepoint >> 12) & 0x3f);
-			*(p++) = 0x80 | ((codepoint >> 6) & 0x3f);
-			*(p++) = 0x80 | (codepoint & 0x3f);*/
-			*(p++) = '?';
-		}
-	}
-	*p = 0;
-}
-
-bool depressDocumentInit(depress_document_type *document, depress_document_flags_type document_flags)
+bool depressDocumentInit(depress_document_type *document, depress_document_flags_type document_flags, depress_maker_type maker, void *maker_ctx)
 {
 	memset(document, 0, sizeof(depress_document_type));
 	
@@ -127,29 +60,61 @@ bool depressDocumentInit(depress_document_type *document, depress_document_flags
 
 	document->document_flags = document_flags;
 
-	// Get paths to djvulibre files
-	if(!depressGetDjvulibrePaths(&document->djvulibre_paths)) {
-		wprintf(L"Can't find djvulibre files\n");
-
-		return false;
-	}
-
-	if(!depressGetTempFolder(document->temp_path, document->document_flags.userdef_temp_dir)) {
-		wprintf(L"Can't get path for temporary files\n");
-
-		return false;
-	}
+	document->maker = maker;
+	document->maker_ctx = maker_ctx;
 
 #if defined(_WIN32)
 	depressGetProcessGroupFunctions();
 #endif
 
+	document->is_init = true;
+
 	return true;
+}
+
+bool depressDocumentInitDjvu(depress_document_type *document, depress_document_flags_type document_flags, const wchar_t *output_file)
+{
+	depress_maker_djvu_ctx_type *djvu_ctx;
+	depress_maker_type djvu;
+	bool result;
+
+	djvu_ctx = malloc(sizeof(depress_maker_djvu_ctx_type));
+	if(!djvu_ctx) return false;
+	memset(djvu_ctx, 0, sizeof(depress_maker_djvu_ctx_type));
+
+	// Get paths to djvulibre files
+	if(!depressGetDjvulibrePaths(&(djvu_ctx->djvulibre_paths))) {
+		wprintf(L"Can't find djvulibre files\n");
+		free(djvu_ctx);
+
+		return false;
+	}
+
+	if(!depressGetTempFolder(djvu_ctx->temp_path, document_flags.userdef_temp_dir)) {
+		wprintf(L"Can't get path for temporary files\n");
+		free(djvu_ctx);
+
+		return false;
+	}
+
+	djvu_ctx->output_file = output_file;
+
+	memset(&djvu, 0, sizeof(depress_maker_type));
+	djvu.convert_ctx = depressMakerDjvuConvertCtx;
+	djvu.merge_ctx = depressMakerDjvuMergeCtx;
+	djvu.finalize_ctx = depressMakerDjvuFinalizeCtx;
+	djvu.free_ctx = depressMakerDjvuFreeCtx;
+
+	result = depressDocumentInit(document, document_flags, djvu, djvu_ctx);
+
+	return result;
 }
 
 bool depressDocumentDestroy(depress_document_type *document)
 {
-	depressDestroyTempFolder(document->temp_path);
+	if(!document->is_init) return false;
+	
+	document->maker.free_ctx(document->maker_ctx);
 
 	if(document->tasks) {
 		depressDestroyTasks(document->tasks, document->tasks_num);
@@ -163,6 +128,8 @@ bool depressDocumentDestroy(depress_document_type *document)
 		
 		document->global_error_event = DEPRESS_INVALID_EVENT_HANDLE;
 	}
+
+	document->is_init = false;
 
 	return true;
 }
@@ -215,7 +182,8 @@ bool depressDocumentRunTasks(depress_document_type *document)
 
 	for(i = 0; i < document->threads_num; i++) {
 		document->thread_args[i].tasks = document->tasks;
-		document->thread_args[i].djvulibre_paths = &document->djvulibre_paths;
+		document->thread_args[i].maker = document->maker;
+		document->thread_args[i].maker_ctx = document->maker_ctx;
 		document->thread_args[i].tasks_num = document->tasks_num;
 		document->thread_args[i].tasks_next_to_process = &(document->tasks_next_to_process);
 		document->thread_args[i].thread_id = i;
@@ -279,7 +247,6 @@ LABEL_ERROR:
 		document->thread_args = 0;
 	}
 	depressDestroyTasks(document->tasks, document->tasks_num);
-	depressDestroyTempFolder(document->temp_path);
 
 	return false;
 }
@@ -290,13 +257,9 @@ int depressDocumentProcessTasks(depress_document_type *document)
 	int process_status = DEPRESS_DOCUMENT_PROCESS_STATUS_OK;
 	size_t filecount = 0;
 	unsigned int i;
-	wchar_t *arg0 = 0;
 
 	if(document->tasks == 0 || document->threads == 0 || document->thread_args == 0)
 		return false;
-
-	arg0 = malloc((3*32770+1024)*sizeof(wchar_t));
-	if(!arg0) return false;
 
 	for(filecount = 0; filecount < document->tasks_num; filecount++) {
 		if(success)
@@ -317,17 +280,12 @@ int depressDocumentProcessTasks(depress_document_type *document)
 			if(process_status == DEPRESS_DOCUMENT_PROCESS_STATUS_OK && filecount > 0) {
 				wprintf(L"Merging file \"%ls\"\n", document->tasks[filecount].load_image.get_name(document->tasks[filecount].load_image_ctx, filecount));
 
-				swprintf(arg0, 3 * 32770 + 1024, L"\"%ls\" -i \"%ls\" \"%ls\"", document->djvulibre_paths.djvm_path, document->output_file, document->tasks[filecount].outputfile);
-
-				if(depressSpawn(document->djvulibre_paths.djvm_path, arg0, true, true) == DEPRESS_INVALID_PROCESS_HANDLE) {
+				if(!document->maker.merge_ctx(document->maker_ctx, filecount)) {
 					depressSetEvent(document->global_error_event);
 					process_status = DEPRESS_DOCUMENT_PROCESS_STATUS_CANT_ADD_PAGE;
 				} else
 					InterlockedExchangePtr((uintptr_t *)(&document->tasks_processed), filecount);
 			}
-			if(filecount > 0)
-				if(!_waccess(document->tasks[filecount].outputfile, 06))
-					_wremove(document->tasks[filecount].outputfile);
 		}
 	}
 
@@ -336,7 +294,6 @@ int depressDocumentProcessTasks(depress_document_type *document)
 	for(i = 0; i < document->threads_num; i++)
 		depressCloseThreadHandle(document->threads[i]);
 
-	free(arg0);
 	free(document->threads);
 	free(document->thread_args);
 	document->threads = 0;
@@ -366,53 +323,44 @@ const wchar_t* depressGetDocumentProcessStatus(int process_status)
 
 bool depressDocumentFinalize(depress_document_type *document)
 {
-	FILE *djvused;
-	wchar_t *opencommand;
-	char *title;
+	bool result;
+	depress_maker_finalize_type finalize;
+	size_t i;
+
+	if(SIZE_MAX/sizeof(depress_maker_finalize_page_type) < document->tasks_num) return false;
+
+	finalize.pages = malloc(document->tasks_num*sizeof(depress_maker_finalize_page_type));
+	if(!finalize.pages) return false;
+	finalize.max = document->tasks_num;
 
 	if(document->document_flags.page_title_type == DEPRESS_DOCUMENT_PAGE_TITLE_TYPE_NO) // Check if there are some post processing
 		return true; // Nothing to be done
 
-	opencommand = malloc(65622*sizeof(wchar_t)); //2(whole brackets)+32768+2(brackets)+32768+2(brackets)+80(must be enough for commands)
-	if(!opencommand) return false;
-	title = malloc(131072); // backslashes and utf8 encoding needs up to 4 bytes
-	if(!title) {
-		free(opencommand);
-		return false;
-	}
+	for(i = 0; i < document->tasks_num; i++) {
+		memset(finalize.pages+i, 0, sizeof(depress_maker_finalize_page_type));
 
-#if defined(WIN32)
-	swprintf(opencommand, 65622, L"\"\"%ls\" \"%ls\"\"", document->djvulibre_paths.djvused_path, document->output_file);
-#else
-	swprintf(opencommand, 65622, L"\"%ls\" \"%ls\"", document->djvulibre_paths.djvused_path, document->output_file);
-#endif
-
-	djvused = _wpopen(opencommand, L"wt");
-	if(!djvused) {
-		free(title);
-		free(opencommand);
-		return false;
+		finalize.pages[i].page_title = document->tasks[i].flags.page_title;
+		finalize.pages[i].is_page_title_short = false;
 	}
 
 	if(document->document_flags.page_title_type == DEPRESS_DOCUMENT_PAGE_TITLE_TYPE_AUTOMATIC) {
-		size_t i;
-		bool full_name;
+		bool is_page_title_short;
 
-		full_name = !(document->document_flags.page_title_type_flags & DEPRESS_DOCUMENT_PAGE_TITLE_AUTOMATIC_USE_SHORT_NAME);
+		is_page_title_short = (document->document_flags.page_title_type_flags & DEPRESS_DOCUMENT_PAGE_TITLE_AUTOMATIC_USE_SHORT_NAME) > 0;
 
 		for(i = 0; i < document->tasks_num; i++) {
-			depressDocumentGetTitleFromFilename(document->tasks[i].load_image.get_name(document->tasks[i].load_image_ctx, i), title, full_name);
-			fprintf(djvused, "select %lld; set-page-title '%s'\n", (long long)(i+1), title);
+			if(finalize.pages[i].page_title) continue;
+
+			finalize.pages[i].page_title = document->tasks[i].load_image.get_name(document->tasks[i].load_image_ctx, i);
+			finalize.pages[i].is_page_title_short = is_page_title_short;
 		}
 	}
 
-	fprintf(djvused, "save\n");
+	result = document->maker.finalize_ctx(document->maker_ctx, finalize);
 
-	_pclose(djvused);
-	free(opencommand);
-	free(title);
+	free(finalize.pages);
 
-	return true;
+	return result;
 }
 
 size_t depressDocumentGetPagesProcessed(depress_document_type *document)
@@ -423,27 +371,15 @@ size_t depressDocumentGetPagesProcessed(depress_document_type *document)
 bool depressDocumentAddTask(depress_document_type *document, const depress_load_image_type load_image, void *load_image_ctx, const depress_flags_type flags)
 {
 	depress_task_type task;
-	wchar_t tempstr[32];
 
-	if(!document->output_file) return false;
+	if(!document->is_init) return false;
 
 	memset(&task, 0, sizeof(depress_task_type));
 
 	// Filling task
 	task.load_image = load_image;
 	task.load_image_ctx = load_image_ctx;
-	swprintf(tempstr, 32, L"/temp%lld.ppm", (long long)(document->tasks_num));
-	wcscpy(task.tempfile, document->temp_path);
-	wcscat(task.tempfile, tempstr);
-	if(document->tasks_num == 0)
-		wcscpy(task.outputfile, document->output_file);
-	else {
-		swprintf(tempstr, 32, L"/temp%lld.djvu", (long long)(document->tasks_num));
-		wcscpy(task.outputfile, document->temp_path);
-		wcscat(task.outputfile, tempstr);
-	}
 	task.flags = flags;
-
 
 	if(depressAddTask(&task, &(document->tasks), &(document->tasks_num), &(document->tasks_max)))
 		return true;
@@ -458,9 +394,10 @@ bool depressDocumentAddTaskFromImageFile(depress_document_type *document, const 
 	size_t inputfile_size;
 	bool result;
 
-	if(!document->output_file) return false;
+	if(!document->is_init) return false;
 	
 	inputfile_size = wcslen(inputfile);
+	if(inputfile_size >= 32768) return false;
 	if((SIZE_MAX-sizeof(wchar_t))/inputfile_size < sizeof(wchar_t)) return false;
 	inputfile_size = inputfile_size*sizeof(wchar_t)+sizeof(wchar_t);
 	load_image_ctx = malloc(inputfile_size);
@@ -479,7 +416,7 @@ bool depressDocumentAddTaskFromImageFile(depress_document_type *document, const 
 	return result;
 }
 
-bool depressDocumentCreateTasksFromTextFile(depress_document_type *document, const wchar_t *textfile, const wchar_t *textfilepath, const wchar_t *outputfile, depress_flags_type flags)
+bool depressDocumentCreateTasksFromTextFile(depress_document_type *document, const wchar_t *textfile, const wchar_t *textfilepath, depress_flags_type flags)
 {
 	FILE *f;
 	size_t task_inputfile_length;
@@ -499,7 +436,6 @@ bool depressDocumentCreateTasksFromTextFile(depress_document_type *document, con
 	document->tasks_num = 0;
 	document->tasks_max = 0;
 	InterlockedExchangePtr((uintptr_t *)(&document->tasks_processed), 0);
-	document->output_file = outputfile;
 
 #ifdef _MSC_VER
 	f = _wfopen(textfile, L"rt, ccs=UTF-8");
@@ -532,7 +468,7 @@ bool depressDocumentCreateTasksFromTextFile(depress_document_type *document, con
 		// Adding textfile path to inputfile
 		task_inputfile_length = depressGetFilenameToOpen(textfilepath, inputfile, 0, 32768, inputfile_fullname, 0);
 		
-		if(task_inputfile_length > 32768 || task_inputfile_length == 0) goto LABEL_ERROR;
+		if(task_inputfile_length >= 32768 || task_inputfile_length == 0) goto LABEL_ERROR;
 
 		if(!depressDocumentAddTaskFromImageFile(document, inputfile_fullname, flags)) goto LABEL_ERROR;
 	}
@@ -558,7 +494,6 @@ LABEL_ERROR:
 
 	document->tasks = 0;
 	document->tasks_num = document->tasks_max = 0;
-	document->output_file = 0;
 
 	return false;
 }

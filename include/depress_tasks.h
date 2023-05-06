@@ -39,6 +39,8 @@ extern "C" {
 #include "depress_flags.h"
 #include "depress_threads.h"
 #include "depress_image.h"
+#include "depress_converter.h"
+#include "depress_maker.h"
 
 enum {
 	DEPRESS_DOCUMENT_PROCESS_STATUS_OK,
@@ -62,7 +64,8 @@ typedef struct {
 
 typedef struct {
 	depress_task_type *tasks;
-	depress_djvulibre_paths_type *djvulibre_paths;
+	depress_maker_type maker;
+	void *maker_ctx;
 	size_t tasks_num;
 	uintptr_t *tasks_next_to_process;
 	int thread_id;

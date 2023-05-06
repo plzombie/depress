@@ -37,9 +37,9 @@ extern "C" {
 #include <stdint.h>
 #include <wchar.h>
 
-#include "../include/depress_tasks.h"
-#include "../include/depress_threads.h"
-#include "../include/depress_paths.h"
+#include "depress_tasks.h"
+#include "depress_threads.h"
+#include "depress_maker.h"
 
 enum {
 	DEPRESS_DOCUMENT_PAGE_TITLE_TYPE_NO,
@@ -67,18 +67,19 @@ typedef struct {
 	depress_thread_handle_t *threads;
 	depress_thread_task_arg_type *thread_args;
 	unsigned int threads_num;
-	// Paths
-	depress_djvulibre_paths_type djvulibre_paths;
 	// Document wide flags
 	depress_document_flags_type document_flags;
-	// Paths
-	wchar_t temp_path[32768];
-	const wchar_t *output_file;
 	// Handles
 	depress_event_handle_t global_error_event;
+	// Converter
+	depress_maker_type maker;
+	void *maker_ctx;
+	// Init flag
+	bool is_init;
 } depress_document_type;
 
-extern bool depressDocumentInit(depress_document_type *document, depress_document_flags_type document_flags);
+extern bool depressDocumentInit(depress_document_type *document, depress_document_flags_type document_flags, depress_maker_type maker, void *maker_ctx);
+extern bool depressDocumentInitDjvu(depress_document_type *document, depress_document_flags_type document_flags, const wchar_t *output_file);
 extern bool depressDocumentDestroy(depress_document_type *document);
 extern bool depressDocumentRunTasks(depress_document_type *document);
 extern int depressDocumentProcessTasks(depress_document_type *document);
@@ -87,7 +88,7 @@ extern bool depressDocumentFinalize(depress_document_type *document);
 extern size_t depressDocumentGetPagesProcessed(depress_document_type *document);
 extern bool depressDocumentAddTask(depress_document_type *document, const depress_load_image_type load_image, void *load_image_ctx, const depress_flags_type flags);
 extern bool depressDocumentAddTaskFromImageFile(depress_document_type *document, const wchar_t *inputfile, const depress_flags_type flags);
-extern bool depressDocumentCreateTasksFromTextFile(depress_document_type *document, const wchar_t *textfile, const wchar_t *textfilepath, const wchar_t *outputfile, depress_flags_type flags);
+extern bool depressDocumentCreateTasksFromTextFile(depress_document_type *document, const wchar_t *textfile, const wchar_t *textfilepath, depress_flags_type flags);
 extern void depressSetDefaultDocumentFlags(depress_document_flags_type *document_flags);
 extern void depressSetDefaultPageFlags(depress_flags_type *flags);
 

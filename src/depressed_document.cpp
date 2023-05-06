@@ -59,8 +59,7 @@ namespace Depressed {
 		CPage::SetDefaultPageFlags(&m_global_page_flags);
 		SetDefaultDocumentFlags(&m_document_flags);
 
-		if(!depressDocumentInit(&m_document, m_document_flags))
-			return false;
+		memset(&m_document, 0, sizeof(depress_document_type));
 
 		m_is_init = true;
 
@@ -103,10 +102,8 @@ namespace Depressed {
 
 		if(!m_is_init) return DocumentProcessStatus::DocumentNotInit;
 
-		if(!depressDocumentInit(&m_document, m_document_flags))
+		if(!depressDocumentInitDjvu(&m_document, m_document_flags, outputfile))
 			status = DocumentProcessStatus::CantInitDocument;
-
-		m_document.output_file = outputfile;
 
 		// Add tasks
 		for(auto page : m_pages) {
@@ -133,10 +130,6 @@ namespace Depressed {
 		}
 
 		depressDocumentDestroy(&m_document);
-
-		if(!depressDocumentInit(&m_document, m_document_flags))
-			if(status == DocumentProcessStatus::OK)
-				status = DocumentProcessStatus::CantReInitDocument;
 
 		m_last_document_process_status = status;
 

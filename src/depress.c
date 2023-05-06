@@ -272,13 +272,13 @@ int wmain(int argc, wchar_t **argv)
 #endif
 
 	// Initialize document
-	if(!depressDocumentInit(&document, document_flags))
+	if(!depressDocumentInitDjvu(&document, document_flags, *(argsp + 1)))
 		return 0;
 
 	// Creating task list from file
 	wprintf(L"Opening list: \"%ls\"\n", text_list_filename);
 
-	if(!depressDocumentCreateTasksFromTextFile(&document, text_list_filename, text_list_path, *(argsp + 1), flags)) {
+	if(!depressDocumentCreateTasksFromTextFile(&document, text_list_filename, text_list_path, flags)) {
 		wprintf(L"Can't create files list\n");
 
 		depressDocumentDestroy(&document);

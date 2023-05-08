@@ -42,6 +42,7 @@ typedef struct {
 
 extern int depressMakerDjvuConvertCtx(void *ctx, size_t id, depress_flags_type flags, depress_load_image_type load_image, void *load_image_ctx);
 extern bool depressMakerDjvuMergeCtx(void *ctx, size_t id);
+extern void depressMakerDjvuCleanupCtx(void *ctx, size_t id);
 extern bool depressMakerDjvuFinalizeCtx(void *ctx, const depress_maker_finalize_type finalize);
 extern void depressMakerDjvuFreeCtx(void *ctx);
 

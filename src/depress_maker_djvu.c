@@ -67,7 +67,24 @@ bool depressMakerDjvuMergeCtx(void *ctx, size_t id)
 
 		if(depressSpawn(djvu_ctx->djvulibre_paths.djvm_path, arg0, true, true) == DEPRESS_INVALID_PROCESS_HANDLE)
 			result = false;
-	
+
+		free(arg0);
+	}
+
+	return result;
+}
+
+void depressMakerDjvuCleanupCtx(void *ctx, size_t id)
+{
+	depress_maker_djvu_ctx_type* djvu_ctx;
+
+	djvu_ctx = (depress_maker_djvu_ctx_type*)ctx;
+
+	if(id > 0) {
+		wchar_t page_file[32768];
+
+		swprintf(page_file, 32768, L"%ls/temp%llu.djvu", djvu_ctx->temp_path, (unsigned long long)id);
+
 		if(!_waccess(page_file, 06))
 			if(_wremove(page_file) == -1)
 #if defined(_WIN32)
@@ -75,11 +92,7 @@ bool depressMakerDjvuMergeCtx(void *ctx, size_t id)
 #else
 				usleep(1000);
 #endif
-
-		free(arg0);
 	}
-
-	return result;
 }
 
 static void depressDocumentGetTitle(wchar_t *wtitle, char *title, bool use_short_name)

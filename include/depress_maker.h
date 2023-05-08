@@ -45,6 +45,7 @@ typedef struct {
 typedef struct {
 	int (* convert_ctx)(void *ctx, size_t id, depress_flags_type flags, depress_load_image_type load_image, void *load_image_ctx);
 	bool (* merge_ctx)(void* ctx, size_t id);
+	void (* cleanup_ctx)(void *ctx, size_t id);
 	bool (* finalize_ctx)(void* ctx, depress_maker_finalize_type finalize);
 	void (* free_ctx)(void *ctx);
 } depress_maker_type;

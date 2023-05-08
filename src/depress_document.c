@@ -102,6 +102,7 @@ bool depressDocumentInitDjvu(depress_document_type *document, depress_document_f
 	memset(&djvu, 0, sizeof(depress_maker_type));
 	djvu.convert_ctx = depressMakerDjvuConvertCtx;
 	djvu.merge_ctx = depressMakerDjvuMergeCtx;
+	djvu.cleanup_ctx = depressMakerDjvuCleanupCtx;
 	djvu.finalize_ctx = depressMakerDjvuFinalizeCtx;
 	djvu.free_ctx = depressMakerDjvuFreeCtx;
 
@@ -115,6 +116,8 @@ bool depressDocumentDestroy(depress_document_type *document)
 	if(!document->is_init) return false;
 	
 	document->maker.free_ctx(document->maker_ctx);
+	memset(&(document->maker), 0, sizeof(depress_maker_type));
+	document->maker_ctx = 0;
 
 	if(document->tasks) {
 		depressDestroyTasks(document->tasks, document->tasks_num);
@@ -286,6 +289,8 @@ int depressDocumentProcessTasks(depress_document_type *document)
 				} else
 					InterlockedExchangePtr((uintptr_t *)(&document->tasks_processed), filecount);
 			}
+			if(filecount > 0)
+				document->maker.cleanup_ctx(document->maker_ctx, filecount);
 		}
 	}
 

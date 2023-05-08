@@ -230,7 +230,7 @@ int wmain(int argc, wchar_t **argv)
 			L"\t\t\t" DEPRESS_ARG_PAGETYPE_LAYERED_PARAM1_DOWNSAMPLEALL L" ratio - sets downsampling ratio for background and foreground layers\n"
 			L"\t\t\t" DEPRESS_ARG_PAGETYPE_LAYERED_PARAM2_DOWNSAMPLEFG L" fgratio - sets further foreground downsampling ratio (ratio*fgratio)\n" 
 			L"\t\t\t" DEPRESS_ARG_PAGETYPE_PALETTIZED L" - create palettized document\n"
-			L"\t\t\t" DEPRESS_ARG_PAGETYPE_PALETTIZED_PARAM1_PALCOLORS L" - number of colors between 2 and 256 (defaults to 8)\n"
+			L"\t\t\t" DEPRESS_ARG_PAGETYPE_PALETTIZED_PARAM1_PALCOLORS L" colors - number of colors between 2 and 256 (defaults to 8)\n"
 			L"\t\t\t" DEPRESS_ARG_PAGETYPE_PALETTIZED_PARAM2_QUANT L" - use quantization for palettized document\n"
 			L"\t\t\t" DEPRESS_ARG_PAGETYPE_PALETTIZED_PARAM2_NOTESHRINK L" - use noteshrink for palettized document\n"
 			L"\t\t\t" DEPRESS_ARG_PAGETITLEAUTO L" - use file name as page title\n"

@@ -39,6 +39,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "unixsupport/waccess.h"
 #include "unixsupport/wremove.h"
 #include "unixsupport/wpopen.h"
+#include <unistd.h>
 #endif
 
 int depressMakerDjvuConvertCtx(void *ctx, size_t id, depress_flags_type flags, depress_load_image_type load_image, void *load_image_ctx)
@@ -196,7 +197,7 @@ bool depressMakerDjvuFinalizeCtx(void *ctx, const depress_maker_finalize_type fi
 #if defined(WIN32)
 	swprintf(opencommand, 65622, L"\"\"%ls\" \"%ls\"\"", djvu_ctx->djvulibre_paths.djvused_path, djvu_ctx->output_file);
 #else
-	swprintf(opencommand, 65622, L"\"%ls\" \"%ls\"", djvu_ctx->djvulibre_paths.djvused_path, output_file);
+	swprintf(opencommand, 65622, L"\"%ls\" \"%ls\"", djvu_ctx->djvulibre_paths.djvused_path, djvu_ctx->output_file);
 #endif
 
 	djvused = _wpopen(opencommand, L"wt");

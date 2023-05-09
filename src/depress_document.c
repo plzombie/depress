@@ -31,13 +31,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #endif
 
 #if !defined(_WIN32)
-#include "unixsupport/pclose.h"
-#include "unixsupport/waccess.h"
-#include "unixsupport/wremove.h"
 #include "unixsupport/wfopen.h"
-#include "unixsupport/wpopen.h"
-#else
-#include <io.h>
 #endif
 
 #include "../include/depress_document.h"

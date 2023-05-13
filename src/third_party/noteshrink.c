@@ -241,7 +241,7 @@ static bool ImageKMeans(unsigned char *data, size_t dataSize, int channels, floa
     fksq = sqrtf(fk);
     pChannels = 3;
     mChannels = (channels < pChannels) ? channels : pChannels;
-    for (i = 0; i < k; i++)
+    for (i = 0; i < (size_t)k; i++)
     {
         h = ((float)i + 0.5f) * fk;
         p[0] = h;
@@ -277,7 +277,7 @@ static bool ImageKMeans(unsigned char *data, size_t dataSize, int channels, floa
     for (itr = 0; itr < maxItr; itr++)
     {
         n = 0;
-        for (i = 0; i < k; i++)
+        for (i = 0; i < (size_t)k; i++)
         {
             for (d = 0; d < mChannels; d++)
             {
@@ -299,7 +299,7 @@ static bool ImageKMeans(unsigned char *data, size_t dataSize, int channels, floa
         }
         changes = 0;
         n = 0;
-        for (i = 0; i < k; i++)
+        for (i = 0; i < (size_t)k; i++)
         {
             if (mLen[i] > 0)
             {
@@ -359,17 +359,18 @@ static bool ImageKMeans(unsigned char *data, size_t dataSize, int channels, floa
 
 static bool BGColorFind(unsigned char *image, size_t imageSize, int channels, float *palette, int paletteSize, int bitsPerChannel)
 {
-    unsigned int maxcount, maxvalue, d;
+    unsigned int maxcount, maxvalue;
+    int d;
     size_t i, j;
     unsigned int *quantized = NULL;
-    int *count = NULL;
+    unsigned int *count = NULL;
 
     if (!(quantized = (unsigned int*)malloc(imageSize * sizeof(unsigned int))))
     {
         return false;
     }
     ImageQuantize(image, imageSize, channels, bitsPerChannel, quantized);
-    if (!(count = (int*)malloc(imageSize * sizeof(int))))
+    if (!(count = (int*)malloc(imageSize * sizeof(unsigned int))))
     {
         return false;
     }

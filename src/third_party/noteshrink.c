@@ -238,7 +238,7 @@ static bool ImageKMeans(unsigned char *data, size_t dataSize, int channels, floa
     int *mLen = NULL;
 
     fk = (k > 0) ? (1.0f / (float)k) : 0.0f;
-    fksq = sqrt(fk);
+    fksq = sqrtf(fk);
     pChannels = 3;
     mChannels = (channels < pChannels) ? channels : pChannels;
     for (i = 0; i < k; i++)
@@ -404,7 +404,7 @@ static bool BGColorFind(unsigned char *image, size_t imageSize, int channels, fl
 
     for (d = 0; d < channels; d++)
     {
-        palette[channels - 1 - d] = maxvalue & 0xff;
+        palette[channels - 1 - d] = (float)(maxvalue & 0xff);
         maxvalue >>= 8;
     }
     free(quantized);

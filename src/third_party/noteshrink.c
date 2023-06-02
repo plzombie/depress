@@ -372,7 +372,7 @@ static bool BGColorFind(unsigned char *image, size_t imageSize, int channels, fl
         return false;
     }
     ImageQuantize(image, imageSize, channels, bitsPerChannel, quantized);
-    if (!(count = (int*)malloc(imageSize * sizeof(unsigned int))))
+    if (!(count = (unsigned int*)malloc(imageSize * sizeof(unsigned int))))
     {
         return false;
     }

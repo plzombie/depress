@@ -31,6 +31,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "depress_image.h"
 #include "depress_flags.h"
+#include "depress_outlines.h"
 
 typedef struct {
 	wchar_t *page_title;
@@ -40,6 +41,7 @@ typedef struct {
 typedef struct {
 	depress_maker_finalize_page_type *pages;
 	size_t max;
+	depress_outline_type *outline;
 } depress_maker_finalize_type;
 
 typedef struct {

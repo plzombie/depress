@@ -75,6 +75,9 @@
     <ClCompile Include="..\..\src\depress_maker_djvu.c">
       <Filter>Исходные файлы\core</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\depress_outlines.c">
+      <Filter>Исходные файлы\core</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Manifest Include="..\..\resources\applications.manifest" />

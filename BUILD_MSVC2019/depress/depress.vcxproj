@@ -692,6 +692,7 @@
     <ClCompile Include="..\..\src\depress_document.c" />
     <ClCompile Include="..\..\src\depress_image.c" />
     <ClCompile Include="..\..\src\depress_maker_djvu.c" />
+    <ClCompile Include="..\..\src\depress_outlines.c" />
     <ClCompile Include="..\..\src\depress_paths.c" />
     <ClCompile Include="..\..\src\depress_tasks.c" />
     <ClCompile Include="..\..\src\depress_threads.c" />

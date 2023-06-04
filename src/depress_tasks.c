@@ -97,13 +97,61 @@ void depressDestroyTasks(depress_task_type *tasks, size_t tasks_num)
 
 	for(i = 0; i < tasks_num; i++) {
 		tasks[i].load_image.free_ctx(tasks[i].load_image_ctx, i);
-		if(tasks[i].flags.page_title) free(tasks[i].flags.page_title);
+		depressFreePageFlags(&tasks[i].flags);
 
 		depressCloseEventHandle(tasks[i].finished);
 	}
 
 	free(tasks);
 }
+
+
+void depressSetDefaultPageFlags(depress_flags_type *flags)
+{
+	memset(flags, 0, sizeof(depress_flags_type));
+	flags->type = DEPRESS_PAGE_TYPE_COLOR;
+	flags->quality = 100;
+	flags->dpi = 100;
+}
+
+void depressFreePageFlags(depress_flags_type *flags)
+{
+	if(!flags->keep_data) {
+		if(flags->page_title) free(flags->page_title);
+		if(flags->nof_illrects) free(flags->illrects);
+	}
+
+	memset(flags, 0, sizeof(depress_flags_type));
+}
+
+bool depressCopyPageFlags(depress_flags_type *dst, depress_flags_type *src)
+{
+	memcpy(dst, src, sizeof(depress_flags_type));
+
+	dst->page_title = 0;
+	dst->illrects = 0;
+	dst->nof_illrects = 0;
+	if(src->page_title) {
+		dst->page_title = malloc((wcslen(src->page_title)+1)*sizeof(wchar_t));
+		if(!dst->page_title) goto FAILURE;
+		wcscpy(dst->page_title, src->page_title);
+	}
+	if(src->nof_illrects) {
+		dst->illrects = malloc(src->nof_illrects*sizeof(depress_illustration_rect_type));
+		if(!dst->illrects) goto FAILURE;
+		memcpy(dst->illrects, src->illrects, src->nof_illrects*sizeof(depress_illustration_rect_type));
+		dst->nof_illrects = src->nof_illrects;
+	}
+
+	return true;
+
+FAILURE:
+	if(dst->page_title) free(dst->page_title);
+	if(dst->illrects) free(dst->illrects);
+
+	return false;
+}
+
 
 #if defined(_WIN32)
 unsigned int __stdcall depressThreadTaskProc(void *args)

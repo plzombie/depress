@@ -126,6 +126,8 @@ bool depressDocumentDestroy(depress_document_type *document)
 		document->global_error_event = DEPRESS_INVALID_EVENT_HANDLE;
 	}
 
+	depressFreeDocumentFlags(&document->document_flags);
+
 	document->is_init = false;
 
 	return true;
@@ -503,10 +505,12 @@ void depressSetDefaultDocumentFlags(depress_document_flags_type *document_flags)
 	document_flags->page_title_type = DEPRESS_DOCUMENT_PAGE_TITLE_TYPE_NO;
 }
 
-void depressSetDefaultPageFlags(depress_flags_type *flags)
+void depressFreeDocumentFlags(depress_document_flags_type *document_flags)
 {
-	memset(flags, 0, sizeof(depress_flags_type));
-	flags->type = DEPRESS_PAGE_TYPE_COLOR;
-	flags->quality = 100;
-	flags->dpi = 100;
+	if(!document_flags->keep_data) {
+		if(document_flags->outline) depressOutlineDestroy(document_flags->outline);
+	}
+
+	memset(document_flags, 0, sizeof(depress_document_flags_type));
 }
+

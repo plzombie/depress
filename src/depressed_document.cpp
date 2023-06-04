@@ -79,6 +79,14 @@ namespace Depressed {
 			m_global_page_flags.illrects = 0;
 			m_global_page_flags.nof_illrects = 0;
 		}
+		if(m_global_page_flags.page_title) {
+			free(m_global_page_flags.page_title);
+
+			m_global_page_flags.page_title = 0;
+		}
+
+		depressFreePageFlags(&m_global_page_flags);
+		depressFreeDocumentFlags(&m_document_flags);
 
 		m_is_init = false;
 	}
@@ -99,15 +107,24 @@ namespace Depressed {
 	DocumentProcessStatus CDocument::Process(const wchar_t *outputfile)
 	{
 		DocumentProcessStatus status = DocumentProcessStatus::OK;
+		depress_document_flags_type document_flags;
 
 		if(!m_is_init) return DocumentProcessStatus::DocumentNotInit;
 
-		if(!depressDocumentInitDjvu(&m_document, m_document_flags, outputfile))
+		document_flags = m_document_flags;
+		document_flags.keep_data = true;
+
+		if(!depressDocumentInitDjvu(&m_document, document_flags, outputfile))
 			status = DocumentProcessStatus::CantInitDocument;
 
 		// Add tasks
 		for(auto page : m_pages) {
-			if(!depressDocumentAddTaskFromImageFile(&m_document, page->GetFilename(), page->GetFlags())) {
+			depress_flags_type page_flags;
+
+			page_flags = page->GetFlags();
+			page_flags.keep_data = true;
+
+			if(!depressDocumentAddTaskFromImageFile(&m_document, page->GetFilename(), page_flags)) {
 				status = DocumentProcessStatus::CantAddTask;
 
 				break;

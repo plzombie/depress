@@ -40,6 +40,7 @@ extern "C" {
 #include "depress_tasks.h"
 #include "depress_threads.h"
 #include "depress_maker.h"
+#include "depress_outlines.h"
 
 enum {
 	DEPRESS_DOCUMENT_PAGE_TITLE_TYPE_NO,
@@ -54,6 +55,8 @@ typedef struct {
 	wchar_t *userdef_temp_dir;
 	int page_title_type;
 	unsigned int page_title_type_flags;
+	depress_outline_type *outline;
+	bool keep_data;
 } depress_document_flags_type;
 
 typedef struct {
@@ -90,7 +93,7 @@ extern bool depressDocumentAddTask(depress_document_type *document, const depres
 extern bool depressDocumentAddTaskFromImageFile(depress_document_type *document, const wchar_t *inputfile, const depress_flags_type flags);
 extern bool depressDocumentCreateTasksFromTextFile(depress_document_type *document, const wchar_t *textfile, const wchar_t *textfilepath, depress_flags_type flags);
 extern void depressSetDefaultDocumentFlags(depress_document_flags_type *document_flags);
-extern void depressSetDefaultPageFlags(depress_flags_type *flags);
+extern void depressFreeDocumentFlags(depress_document_flags_type *document_flags);
 
 #ifdef __cplusplus
 }

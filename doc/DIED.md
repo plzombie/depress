@@ -42,6 +42,7 @@ Describes page flags. No body. Arguments:
 * * if type is 3 then value 0 stands for color quantization and value 1 stands for noteshrink algorithm.
 * quality - image quality between 0 and 100.
 * dpi - image dpi.
+* title - page title.
 
 ## IllRect.
 

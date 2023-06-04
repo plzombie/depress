@@ -62,11 +62,7 @@ namespace Depressed {
 
 	void CPage::Destroy(void)
 	{
-		if(m_flags.nof_illrects) {
-			free(m_flags.illrects);
-			m_flags.illrects = 0;
-			m_flags.nof_illrects = 0;
-		}
+		depressFreePageFlags(&m_flags);
 
 		if(m_filename) {
 			free(m_filename);
@@ -113,11 +109,7 @@ namespace Depressed {
 
 	void CPage::SetDefaultPageFlags(depress_flags_type *page_flags)
 	{
-		if(page_flags->nof_illrects) {
-			free(page_flags->illrects);
-			page_flags->illrects = 0;
-			page_flags->nof_illrects = 0;
-		}
+		depressFreePageFlags(page_flags);
 
 		depressSetDefaultPageFlags(page_flags);
 	}
@@ -176,11 +168,11 @@ namespace Depressed {
 
 	bool CPage::Deserialize(IXmlReader *reader, const wchar_t *basepath, depress_flags_type default_flags)
 	{
-		bool read_filename = false;
+		bool read_filename = false, flags_set = false;
 
 		if(!m_is_init) return false;
 
-		m_flags = default_flags;
+		memset(&m_flags, 0, sizeof(depress_flags_type));
 
 		while(true) {
 			const wchar_t *value;
@@ -198,6 +190,7 @@ namespace Depressed {
 
 					if(wcscmp(value, L"Flags") == 0) {
 						if(!DeserializePageFlags(reader, &m_flags)) goto PROCESSING_FAILED;
+						flags_set = true;
 					} else if(wcscmp(value, L"IllRect") == 0) {
 						depress_illustration_rect_type *_illrects;
 
@@ -230,10 +223,14 @@ namespace Depressed {
 			
 		}
 
+		if(!flags_set) {
+			if(!depressCopyPageFlags(&m_flags, &default_flags)) goto PROCESSING_FAILED;
+		}
+
 		return true;
 
 	PROCESSING_FAILED:
-		if(m_flags.nof_illrects) free(m_flags.illrects);
+		depressFreePageFlags(&m_flags);
 
 		return false;
 	}
@@ -260,6 +257,11 @@ namespace Depressed {
 
 		hr = writer->WriteAttributeString(NULL, L"dpi", NULL, _itow(flags.dpi, value, 10));
 		if(hr != S_OK) return false;
+
+		if(flags.page_title) {
+			hr = writer->WriteAttributeString(NULL, L"title", NULL, flags.page_title);
+			if(hr != S_OK) return false;
+		}
 
 		hr = writer->WriteEndElement();
 		if(hr != S_OK) return false;
@@ -297,6 +299,15 @@ namespace Depressed {
 				if(reader->GetValue(&value, NULL) != S_OK) goto PROCESSING_FAILED;
 
 				flags->dpi = _wtoi(value);
+			} else if(wcscmp(value, L"title") == 0) {
+				size_t len;
+
+				if(reader->GetValue(&value, NULL) != S_OK) goto PROCESSING_FAILED;
+
+				len = wcslen(value);
+				flags->page_title = (wchar_t *)malloc((len+1)*sizeof(wchar_t));
+				if(!flags->page_title) goto PROCESSING_FAILED;
+				wcscpy(flags->page_title, value);
 			}
 
 			if(reader->MoveToNextAttribute() != S_OK) break;
@@ -305,6 +316,7 @@ namespace Depressed {
 		return true;
 
 	PROCESSING_FAILED:
+		if(flags->page_title) free(flags->page_title);
 		memset(flags, 0, sizeof(depress_flags_type));
 		return false;
 	}

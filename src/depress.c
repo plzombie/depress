@@ -272,8 +272,11 @@ int wmain(int argc, wchar_t **argv)
 #endif
 
 	// Initialize document
-	if(!depressDocumentInitDjvu(&document, document_flags, *(argsp + 1)))
+	if(!depressDocumentInitDjvu(&document, document_flags, *(argsp + 1))) {
+		depressFreeDocumentFlags(&document_flags);
+
 		return 0;
+	}
 
 	// Creating task list from file
 	wprintf(L"Opening list: \"%ls\"\n", text_list_filename);

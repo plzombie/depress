@@ -174,6 +174,50 @@ static void depressDocumentGetTitle(wchar_t *wtitle, char *title, bool use_short
 	*p = 0;
 }
 
+static void depressMakerDjvuPrintOutline(depress_maker_djvu_ctx_type *djvu_ctx, depress_outline_type *outline, FILE *djvused)
+{
+	size_t i;
+	bool print_outline = false;
+	char *text;
+
+	if(outline->text) {
+		size_t len;
+
+		len = wcslen(outline->text);
+		if(len < 32768) {
+			text = malloc(len*4+1);
+			if(text) {
+				depressDocumentGetTitle(outline->text, text, false);
+
+				print_outline = true;
+			}
+		}
+	}
+
+	if(print_outline) {
+		fprintf(djvused, "(\"%s\" \"%llu\" ", text, (unsigned long long)(outline->page_id));
+		free(text);
+	}
+
+	for(i = 0; i < outline->nof_suboutlines; i++)
+		depressMakerDjvuPrintOutline(djvu_ctx, outline->suboutlines[i], djvused);
+
+	if(print_outline) {
+		fprintf(djvused, ")\n");
+	}
+}
+
+static void depressMakerDjvuPrintOutlines(depress_maker_djvu_ctx_type *djvu_ctx, depress_outline_type *outline, FILE *djvused)
+{
+	if(!outline) return;
+
+	fprintf(djvused, "set-outline\n(bookmarks \n");
+
+	depressMakerDjvuPrintOutline(djvu_ctx, outline, djvused);
+
+	fprintf(djvused, ")\n.\n");
+}
+
 bool depressMakerDjvuFinalizeCtx(void *ctx, const depress_maker_finalize_type finalize)
 {
 	FILE *djvused;

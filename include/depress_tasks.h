@@ -78,6 +78,7 @@ extern void depressDestroyTasks(depress_task_type *tasks, size_t tasks_num);
 extern void depressSetDefaultPageFlags(depress_flags_type *flags);
 extern void depressFreePageFlags(depress_flags_type *flags);
 extern bool depressCopyPageFlags(depress_flags_type *dst, depress_flags_type *src);
+extern bool depressArePageFlagsEqual(depress_flags_type *a, depress_flags_type *b);
 
 #if defined(_WIN32)
 extern unsigned int __stdcall depressThreadTaskProc(void *args);

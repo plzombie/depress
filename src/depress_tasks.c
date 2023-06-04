@@ -152,6 +152,24 @@ FAILURE:
 	return false;
 }
 
+bool depressArePageFlagsEqual(depress_flags_type *a, depress_flags_type *b)
+{
+	if(a->type != b->type) return false;
+	if(a->dpi != b->dpi) return false;
+	if(a->quality != b->quality) return false;
+	if(a->param1 != b->param1) return false;
+	if(a->param2 != b->param2) return false;
+	if(a->nof_illrects != b->nof_illrects) return false;
+	if(a->nof_illrects > 0) {
+		if(memcmp(a->illrects, b->illrects, a->nof_illrects*sizeof(depress_illustration_rect_type))) return false;
+	}
+	if (a->page_title > 0 && b->page_title > 0) {
+		if(wcscmp(a->page_title, b->page_title)) return false;
+	} else if(a->page_title != b->page_title) return false;
+
+	return true;
+}
+
 
 #if defined(_WIN32)
 unsigned int __stdcall depressThreadTaskProc(void *args)

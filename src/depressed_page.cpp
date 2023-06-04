@@ -123,7 +123,7 @@ namespace Depressed {
 		hr = writer->WriteStartElement(NULL, L"Page", NULL);
 		if(hr != S_OK) return false;
 
-		if(memcmp(&m_flags, &default_flags, sizeof(depress_flags_type)) || m_flags.nof_illrects)
+		if(!depressArePageFlagsEqual(&m_flags, &default_flags))
 			if(!SerializePageFlags(writer, m_flags)) return false;
 
 		// Write filename

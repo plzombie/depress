@@ -178,7 +178,7 @@ static void depressMakerDjvuPrintOutline(depress_maker_djvu_ctx_type *djvu_ctx, 
 {
 	size_t i;
 	bool print_outline = false;
-	char *text;
+	char *text = 0;
 
 	if(outline->text) {
 		size_t len;
@@ -251,6 +251,9 @@ bool depressMakerDjvuFinalizeCtx(void *ctx, const depress_maker_finalize_type fi
 
 		return false;
 	}
+
+	if(finalize.outline)
+		depressMakerDjvuPrintOutlines(djvu_ctx, finalize.outline, djvused);
 
 	for(i = 0; i < finalize.max; i++) {
 		if(!finalize.pages[i].page_title) continue;

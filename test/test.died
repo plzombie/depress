@@ -10,10 +10,10 @@
 <Page><Flags type="1" param1="2" quality="100" dpi="100"/><Filename>mask_test.png</Filename><IllRect x="128" y="64" width="256" height="256" /></Page>
 </Pages>
 <Outlines>
-<Outline text="Pages with default flags" page_id="1"/>
+<Outline text="Pages with default flags" page_id="1" />
 <Outline text="Pages with individual flags" page_id="5">
-<Outline text="Color page with individual title" page_id="5"/>
-<Outline text="BW page with adaptive binarization and color region" page_id="6"/>
+<Outline text="Color page with individual title" page_id="5" />
+<Outline text="BW page with adaptive binarization and color region" page_id="6" />
 </Outline>
 </Outlines>
 </Document>

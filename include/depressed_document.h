@@ -79,6 +79,8 @@ public:
 	bool Deserialize(IXmlReader *reader, const wchar_t *basepath);
 	static bool SerializeDocumentFlags(IXmlWriter *writer, depress_document_flags_type document_flags);
 	static bool DeserializeDocumentFlags(IXmlReader *reader, depress_document_flags_type *document_flags);
+	static bool SerializeOutline(IXmlWriter *writer, depress_outline_type *outline);
+	static bool DeserializeOutline(IXmlReader* reader, depress_outline_type* sup_outline);
 };
 
 }

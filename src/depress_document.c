@@ -333,6 +333,7 @@ bool depressDocumentFinalize(depress_document_type *document)
 	finalize.pages = malloc(document->tasks_num*sizeof(depress_maker_finalize_page_type));
 	if(!finalize.pages) return false;
 	finalize.max = document->tasks_num;
+	finalize.outline = document->document_flags.outline;
 
 	if(document->document_flags.page_title_type == DEPRESS_DOCUMENT_PAGE_TITLE_TYPE_NO) // Check if there are some post processing
 		return true; // Nothing to be done

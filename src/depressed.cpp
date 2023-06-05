@@ -66,7 +66,9 @@ INT WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine
 	CoInitializeEx(NULL, COINIT_MULTITHREADED);
 
 	if(!depressed_app.document.Create()) {
-		MessageBoxW(NULL, L"Can't create empty document, probably not enough memory", L"Depressed", MB_OK | MB_TASKMODAL | MB_ICONSTOP);
+		if(argc == 2) depressedCreateConsole(); // Create console first
+
+		depressedPrint(L"Can't create empty document, probably not enough memory", true);
 
 		return EXIT_FAILURE;
 	}
@@ -89,23 +91,23 @@ INT WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine
 				depressedPrint(L"Can't save djvu file", true);
 			else
 				depressedPrint(L"File saved");
-#if 0
+#if 1
 			wchar_t *new_fn;
 			new_fn = (wchar_t *)malloc((wcslen(default_project) + 5 + 1)*sizeof(wchar_t));
 			if(new_fn) {
 				wcscpy(new_fn, default_project);
 				wcscat(new_fn, L".copy");
 
-				if(Depressed::SaveDied(new_fn, document))
-					MessageBoxW(NULL, L"Project copy saved", L"Depressed", MB_OK | MB_TASKMODAL | MB_ICONINFORMATION);
+				if(Depressed::SaveDied(new_fn, depressed_app.document))
+					depressedPrint(L"Project copy saved", false);
 				else
-					MessageBoxW(NULL, L"Can't create project copy", L"Depressed", MB_OK | MB_TASKMODAL | MB_ICONSTOP);
+					depressedPrint(L"Can't create project copy", true);
 
 				free(new_fn);
 			}
 #endif
 		} else
-			MessageBoxW(NULL, L"Can't open project file", L"Depressed", MB_OK | MB_TASKMODAL | MB_ICONSTOP);
+			depressedPrint(L"Can't open project file", true);
 		//MessageBoxW(NULL, L"Project processing unimplemented", L"Depressed", MB_OK | MB_TASKMODAL | MB_ICONSTOP);
 	} else {
 		MessageBoxW(NULL, L"Too many arguments", L"Depressed", MB_OK | MB_TASKMODAL | MB_ICONINFORMATION);

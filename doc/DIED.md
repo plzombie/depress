@@ -21,7 +21,7 @@ Contains individual pages.
 
 ## Page
 
-Individual page. Contains Flags and Filename.
+Individual page. Contains Flags and Filename. Should always have closing tag.
 
 ## DocumentFlags
 
@@ -61,7 +61,7 @@ Describes filename. Body is a filename.
 
 ## Outlines
 
-Contains top level outlines
+Contains top level outlines.
 
 ## Outline
 

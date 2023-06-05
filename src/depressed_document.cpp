@@ -255,8 +255,13 @@ namespace Depressed {
 	{
 		depress_document_flags_type document_flags;
 		depress_flags_type flags;
-		bool success = true, read_pages = false;
+		bool success = true;
 		std::vector<CPage *> pages;
+		enum class ERead {
+			DEFAULT,
+			PAGES,
+			OUTLINES
+		} read = ERead::DEFAULT;
 
 		if(!m_is_init) return false;
 
@@ -278,7 +283,7 @@ namespace Depressed {
 					break;
 				}
 
-				if(read_pages == false) {
+				if(read == ERead::DEFAULT) {
 					if(wcscmp(value, L"DocumentFlags") == 0) {
 						if(!DeserializeDocumentFlags(reader, &document_flags)) {
 							success = false;
@@ -290,12 +295,14 @@ namespace Depressed {
 							break;
 						}
 					} else if(wcscmp(value, L"Pages") == 0) {
-						read_pages = true;
+						read = ERead::PAGES;
+					} else if(wcscmp(value, L"Outlines") == 0) {
+						read = ERead::OUTLINES;
 					} else {
 						success = false;
 						break;
 					}
-				} else {
+				} else if(read == ERead::PAGES) {
 					if(wcscmp(value, L"Page") == 0) {
 						CPage *page = new CPage();
 
@@ -312,16 +319,37 @@ namespace Depressed {
 						success = false;
 						break;
 					}
+				} else if(read == ERead::OUTLINES) {
+					if(!document_flags.outline) {
+						document_flags.outline = (depress_outline_type *)malloc(sizeof(depress_outline_type));
+						if(!document_flags.outline) {
+							success = false;
+							break;
+						}
+						memset(document_flags.outline, 0, sizeof(depress_outline_type));
+					}
+
+					if(wcscmp(value, L"Outline") == 0) {
+						if(!DeserializeOutline(reader, document_flags.outline)) {
+							success = false;
+							break;
+						}
+					} else {
+						success = false;
+						break;
+					}
 				}
 			} else if(nodetype == XmlNodeType_EndElement) {
-				if(read_pages == true) {
+				if(read != ERead::DEFAULT) {
 					if(reader->GetLocalName(&value, NULL) != S_OK) {
 						success = false;
 						break;
 					}
 
-					if(wcscmp(value, L"Pages") == 0) {
-						read_pages = false;
+					if(read == ERead::PAGES && wcscmp(value, L"Pages") == 0) {
+						read = ERead::DEFAULT;
+					} else if(read == ERead::OUTLINES && wcscmp(value, L"Outlines") == 0) {
+						read = ERead::DEFAULT;
 					} else {
 						success = false;
 						break;
@@ -342,6 +370,9 @@ namespace Depressed {
 		} else {
 			for(auto page : pages)
 				delete page;
+
+			depressFreeDocumentFlags(&document_flags);
+			depressFreePageFlags(&flags);
 		}
 
 		return success;
@@ -397,4 +428,85 @@ namespace Depressed {
 		return false;
 	}
 
+	bool CDocument::SerializeOutline(IXmlWriter *writer, depress_outline_type *outline)
+	{
+		return true;
+	}
+
+	bool CDocument::DeserializeOutline(IXmlReader *reader, depress_outline_type *sup_outline)
+	{
+		depress_outline_type *cur_outline;
+		void **suboutlines;
+		bool is_not_empty;
+
+		cur_outline = (depress_outline_type *)malloc(sizeof(depress_outline_type));
+		if(!cur_outline) return false;
+		memset(cur_outline, 0, sizeof(depress_outline_type));
+
+		suboutlines = (void **)realloc(sup_outline->suboutlines, (sup_outline->nof_suboutlines+1)*sizeof(void *));
+		if(!suboutlines) {
+			free(cur_outline);
+
+			return false;
+		}
+		sup_outline->suboutlines = suboutlines;
+		sup_outline->suboutlines[sup_outline->nof_suboutlines] = cur_outline;
+		sup_outline->nof_suboutlines++;
+
+		is_not_empty = !reader->IsEmptyElement();
+
+		if(reader->MoveToFirstAttribute() != S_OK) return true;
+		while(1) {
+			const wchar_t *value;
+
+			if(reader->GetLocalName(&value, NULL) != S_OK) goto PROCESSING_FAILED;
+				
+			if(wcscmp(value, L"text") == 0) {
+				if(reader->GetValue(&value, NULL) != S_OK) goto PROCESSING_FAILED;
+
+				cur_outline->text = _wcsdup(value);
+				if(!cur_outline->text) goto PROCESSING_FAILED;
+			} else if(wcscmp(value, L"page_id") == 0) {
+				if(reader->GetValue(&value, NULL) != S_OK) goto PROCESSING_FAILED;
+				
+				cur_outline->page_id = _wtoi(value);
+			}
+
+			if(reader->MoveToNextAttribute() != S_OK) break;
+		}
+
+		if(is_not_empty) {
+			while(true) {
+				const wchar_t *value;
+				HRESULT hr;
+				XmlNodeType nodetype;
+
+
+				hr = reader->Read(&nodetype);
+				if(hr != S_OK) break;
+
+				if(nodetype == XmlNodeType_Element) {
+					if(reader->GetLocalName(&value, NULL) != S_OK) goto PROCESSING_FAILED;
+
+					if(wcscmp(value, L"Outline") == 0) {
+						if(!CDocument::DeserializeOutline(reader, cur_outline)) goto PROCESSING_FAILED;
+					} else
+						goto PROCESSING_FAILED;
+				} else if(nodetype == XmlNodeType_EndElement) {
+					if(reader->GetLocalName(&value, NULL) != S_OK) goto PROCESSING_FAILED;
+
+					if(wcscmp(value, L"Outline") == 0)
+						break;
+					else
+						goto PROCESSING_FAILED;
+				}
+			}
+		}
+
+		return true;
+
+	PROCESSING_FAILED:
+
+		return false;
+	}
 }

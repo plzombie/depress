@@ -217,7 +217,7 @@ namespace Depressed {
 					if(wcscmp(value, L"Filename") == 0)
 						read_filename = false;
 					else
-						return false;
+						goto PROCESSING_FAILED;
 				} else if(nodetype == XmlNodeType_Element) goto PROCESSING_FAILED;
 			}
 			

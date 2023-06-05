@@ -195,7 +195,7 @@ static void depressMakerDjvuPrintOutline(depress_maker_djvu_ctx_type *djvu_ctx, 
 	}
 
 	if(print_outline) {
-		fprintf(djvused, "(\"%s\" \"%llu\" ", text, (unsigned long long)(outline->page_id));
+		fprintf(djvused, "(\"%s\" \"#%llu\" ", text, (unsigned long long)(outline->page_id));
 		free(text);
 	}
 

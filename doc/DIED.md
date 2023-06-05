@@ -8,6 +8,8 @@ Document
 - - - Flags
 - - - Filename
 - - - IllRect
+- Outlines
+- - Outline
 
 ## Document
 
@@ -57,4 +59,13 @@ Rectangular illustrations. Define color regions on image. Can be only on black a
 
 Describes filename. Body is a filename.
 
+## Outlines
 
+Contains top level outlines
+
+## Outline
+
+Describe single outline. Can contain child outlines in the body. Arguments:
+
+* text - outline title
+* page_id - page id (starting from 1)

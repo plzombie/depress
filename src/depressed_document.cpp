@@ -244,9 +244,21 @@ namespace Depressed {
 		}
 
 		hr = writer->WriteEndElement();
+		if(hr != S_OK) return false;
 		// End of pages
 
+		if(m_document_flags.outline) {
+			hr = writer->WriteStartElement(NULL, L"Outlines", NULL);
+			if(hr != S_OK) return false;
+
+			SerializeOutline(writer, m_document_flags.outline);
+
+			hr = writer->WriteEndElement();
+			if(hr != S_OK) return false;
+		}
+
 		hr = writer->WriteEndElement();
+		if(hr != S_OK) return false;
 
 		return true;
 	}
@@ -430,6 +442,29 @@ namespace Depressed {
 
 	bool CDocument::SerializeOutline(IXmlWriter *writer, depress_outline_type *outline)
 	{
+		wchar_t value[100];
+		HRESULT hr;
+
+		if(outline->text) {
+			hr = writer->WriteStartElement(NULL, L"Outline", NULL);
+			if(hr != S_OK) return false;
+
+			hr = writer->WriteAttributeString(NULL, L"text", NULL, outline->text);
+			if(hr != S_OK) return false;
+
+			hr = writer->WriteAttributeString(NULL, L"page_id", NULL, _itow(outline->page_id, value, 10));
+			if(hr != S_OK) return false;
+		}
+
+		for(size_t i = 0; i < outline->nof_suboutlines; i++) {
+			if(!SerializeOutline(writer, (depress_outline_type *)outline->suboutlines[i])) return false;
+		}
+
+		if(outline->text) {
+			hr = writer->WriteEndElement();
+			if(hr != S_OK) return false;
+		}
+
 		return true;
 	}
 

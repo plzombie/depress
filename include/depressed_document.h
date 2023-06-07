@@ -73,6 +73,7 @@ public:
 	size_t PagesCount(void);
 	CPage *PageGet(size_t id);
 	bool PageAdd(CPage *page);
+	bool PageInsert(CPage *page, size_t pos);
 	bool PageDelete(size_t id);
 	bool PageSwap(size_t id1, size_t id2);
 	bool Serialize(IXmlWriter *writer, const wchar_t *basepath);

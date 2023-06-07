@@ -32,54 +32,16 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../include/depressed_app.h"
 #include "../include/depressed_open.h"
 
-static int depressedLoadProjectCallback(Ihandle *self)
-{
-	char* cfilename;
-	size_t cfilename_length;
-	wchar_t* wfilename;
+#include <iupdraw.h>
 
-	cfilename = IupGetAttribute(depressed_app.input_filename, "VALUE");
-	cfilename_length = strlen(cfilename) + 1;
-	wfilename = (wchar_t*)malloc(cfilename_length * sizeof(wchar_t));
-
-	MultiByteToWideChar(CP_UTF8, 0, cfilename, -1, wfilename, (int)cfilename_length);
-
-	IupMessage("Project filename", cfilename);
-
-	if(!Depressed::OpenDied(wfilename, depressed_app.document))
-		IupMessage(DEPRESSED_APP_TITLE, "Can't open project");
-
-	free(wfilename);
-
-	return IUP_DEFAULT;
-}
-
-static int depressedSaveDjvuCallback(Ihandle *self)
-{
-	char* cfilename;
-	size_t cfilename_length;
-	wchar_t* wfilename;
-
-	cfilename = IupGetAttribute(depressed_app.output_filename, "VALUE");
-	cfilename_length = strlen(cfilename) + 1;
-	wfilename = (wchar_t*)malloc(cfilename_length * sizeof(wchar_t));
-
-	MultiByteToWideChar(CP_UTF8, 0, cfilename, -1, wfilename, (int)cfilename_length);
-
-	IupMessage("Project filename", cfilename);
-
-	if (depressed_app.document.Process(wfilename) == Depressed::DocumentProcessStatus::OK)
-		IupMessage(DEPRESSED_APP_TITLE, "DJVU Saved");
-	else
-		IupMessage(DEPRESSED_APP_TITLE, "Can't save DJVU");
-
-	free(wfilename);
-
-	return IUP_DEFAULT;
-}
+static char depressed_text_error_cant_show_pages_name[] = "Error: Can't show page file name";
 
 static int depressedProjectSaveCallback(Ihandle *self);
 static int depressedProjectSaveAsCallback(Ihandle *self);
+
+static void depressedSetPagesList(Ihandle *pages_list, Depressed::CDocument &document);
+
+static void depressedPreviewUpdateImage(bool preview_result);
 
 bool depressedDoBeforeNewOrSave(Ihandle *self)
 {
@@ -112,6 +74,8 @@ static int depressedProjectNewCallback(Ihandle *self)
 
 		return IUP_CLOSE;
 	}
+
+	depressedSetPagesList(depressed_app.pages_list, depressed_app.document);
 
 	return IUP_DEFAULT;
 }
@@ -150,9 +114,8 @@ static int depressedProjectOpenCallback(Ihandle *self)
 			if(depressed_app.filename) free(depressed_app.filename);
 			depressed_app.filename = wfilename;
 			depressed_app.document_changed = false;
+			depressedSetPagesList(depressed_app.pages_list, depressed_app.document);
 		}
-
-		IupDestroy(opendlg);
 	}
 
 	IupDestroy(opendlg);
@@ -205,8 +168,7 @@ static int depressedProjectSaveAsCallback(Ihandle *self)
 		IupDestroy(savedlg);
 
 		return depressedProjectSaveCallback(self);
-	} else
-		IupMessage(DEPRESSED_APP_TITLE, "Error: Can't open file dialog");
+	}
 
 	IupDestroy(savedlg);
 
@@ -239,6 +201,7 @@ static int depressedProjectDefaultPageFlagsCallback(Ihandle *self)
 
 	return IUP_DEFAULT;
 }
+
 static int depressedProjectCreateDocumentCallback(Ihandle *self)
 {
 	Ihandle *savedlg;
@@ -272,7 +235,6 @@ static int depressedProjectCreateDocumentCallback(Ihandle *self)
 			IupMessage(DEPRESSED_APP_TITLE, "Can't save DJVU");
 
 		free(wfilename);
-		IupDestroy(savedlg);
 	}
 
 	IupDestroy(savedlg);
@@ -287,12 +249,237 @@ static int depressedProjectExitCallback(Ihandle *self)
 	return IUP_CLOSE;
 }
 
+static bool depressedPagesInsert(int value)
+{
+	Ihandle *adddlg;
+	bool result = false;
+
+	adddlg = IupFileDlg();
+	if(!adddlg) {
+		IupMessage(DEPRESSED_APP_TITLE, "Error: Can't open file dialog");
+
+		return result;
+	}
+
+	IupSetAttribute(adddlg, "DIALOGTYPE", "OPEN");
+	IupSetAttribute(adddlg, "EXTFILTER", "Images (*.jpg;*.bmp;*.png)|*.jpg;*.bmp;*.png|All files (*.*)|*.*|");
+
+	IupPopup(adddlg, IUP_CENTER, IUP_CENTER);
+
+	if(IupGetInt(adddlg, "STATUS") != -1) {
+		char *cfilename;
+		size_t cfilename_length;
+		wchar_t *wfilename;
+		
+
+		cfilename = IupGetAttribute(adddlg, "VALUE");
+		cfilename_length = strlen(cfilename) + 1;
+		wfilename = (wchar_t*)malloc(cfilename_length * sizeof(wchar_t));
+
+		MultiByteToWideChar(CP_UTF8, 0, cfilename, -1, wfilename, (int)cfilename_length);
+
+		try {
+			Depressed::CPage *page;
+			depress_flags_type flags, global_flags;
+
+			page = new Depressed::CPage();
+
+			page->Create();
+
+			global_flags = depressed_app.document.GetGlobalPageFlags();
+			if(depressCopyPageFlags(&flags, &global_flags)) { // Assume page flags are empty after creation, so no free needed
+				page->SetFlags(flags);
+			}
+
+			if(page->SetFilename(wfilename, nullptr)) {
+				if(value < 1 || (size_t)value > depressed_app.document.PagesCount())
+					result = depressed_app.document.PageAdd(page);
+				else
+					result = depressed_app.document.PageInsert(page, (size_t)(value-1));
+			}
+
+			if(!result)
+				delete page;
+		} catch(std::bad_alloc) {
+		}
+
+		free(wfilename);
+	}
+
+	IupDestroy(adddlg);
+
+	if(result) {
+		char *filename;
+		Depressed::CPage *page;
+		size_t id;
+
+		if(value < 1 || (size_t)value > depressed_app.document.PagesCount()) {
+			id = depressed_app.document.PagesCount()-1;
+			value = (int)depressed_app.document.PagesCount();
+		} else {
+			id = (size_t)value - 1;
+		}
+
+		page = depressed_app.document.PageGet((size_t)(value-1));
+		if(page) {
+			filename = page->GetFilenameU8();
+			if(!filename) filename = depressed_text_error_cant_show_pages_name;
+		} else
+			filename = depressed_text_error_cant_show_pages_name;
+		IupSetAttributeId(depressed_app.pages_list, "INSERTITEM", value, filename);
+	}
+
+	return result;
+}
+
+static int depressedPagesAddCallback(Ihandle *self)
+{
+	if(!depressedPagesInsert(0)) {
+		IupMessage(DEPRESSED_APP_TITLE, "Page wasn't added");
+	}
+
+	return IUP_DEFAULT;
+}
+
+static int depressedPagesDeleteCallback(Ihandle *self)
+{
+	int value;
+	size_t id;
+
+	value = IupGetInt(depressed_app.pages_list, "VALUE");
+
+	if(value < 1 || (size_t)value > depressed_app.document.PagesCount()) return IUP_DEFAULT;
+	id = value - 1;
+
+	if(depressed_app.document.PageDelete(id)) {
+		IupSetInt(depressed_app.pages_list, "REMOVEITEM", value);
+	}
+
+	return IUP_DEFAULT;
+}
+
+static int depressedPagesInsertCallback(Ihandle *self)
+{
+	int value;
+
+	value = IupGetInt(depressed_app.pages_list, "VALUE");
+
+	if(!depressedPagesInsert(value)) {
+		IupMessage(DEPRESSED_APP_TITLE, "Page wasn't inserted");
+	}
+
+	return IUP_DEFAULT;
+}
+
+static int depressedPagesMoveUpCallback(Ihandle *self)
+{
+	int value;
+	size_t id;
+	Depressed::CPage *page;
+
+	value = IupGetInt(depressed_app.pages_list, "VALUE");
+
+	if(value <= 1 || (size_t)value > depressed_app.document.PagesCount()) return IUP_DEFAULT;
+	id = value - 1;
+
+	if(!depressed_app.document.PageSwap(id-1, id)) return IUP_DEFAULT;
+
+	page = depressed_app.document.PageGet(id);
+	if(page) {
+		char *filename;
+		filename = page->GetFilenameU8();
+		if(!filename) filename = depressed_text_error_cant_show_pages_name;
+		IupSetAttributeId(depressed_app.pages_list, "", value, filename);
+	} else
+		IupSetAttributeId(depressed_app.pages_list, "", value, depressed_text_error_cant_show_pages_name);
+
+	page = depressed_app.document.PageGet(id-1);
+	if(page) {
+		char *filename;
+		filename = page->GetFilenameU8();
+		if(!filename) filename = depressed_text_error_cant_show_pages_name;
+		IupSetAttributeId(depressed_app.pages_list, "", value-1, filename);
+	} else
+		IupSetAttributeId(depressed_app.pages_list, "", value-1, depressed_text_error_cant_show_pages_name);
+
+	IupSetInt(depressed_app.pages_list, "VALUE", value-1);
+
+	return IUP_DEFAULT;
+}
+
+static int depressedPagesMoveDownCallback(Ihandle *self)
+{
+	int value;
+	size_t id;
+	Depressed::CPage *page;
+
+	value = IupGetInt(depressed_app.pages_list, "VALUE");
+
+	if (value < 1 || (size_t)value >= depressed_app.document.PagesCount()) return IUP_DEFAULT;
+	id = value - 1;
+
+	if(!depressed_app.document.PageSwap(id, id+1)) return IUP_DEFAULT;
+
+	page = depressed_app.document.PageGet(id);
+	if(page) {
+		char *filename;
+		filename = page->GetFilenameU8();
+		if(!filename) filename = depressed_text_error_cant_show_pages_name;
+		IupSetAttributeId(depressed_app.pages_list, "", value, filename);
+	} else
+		IupSetAttributeId(depressed_app.pages_list, "", value, depressed_text_error_cant_show_pages_name);
+
+	page = depressed_app.document.PageGet(id+1);
+	if(page) {
+		char *filename;
+		filename = page->GetFilenameU8();
+		if(!filename) filename = depressed_text_error_cant_show_pages_name;
+		IupSetAttributeId(depressed_app.pages_list, "", value+1, filename);
+	} else
+		IupSetAttributeId(depressed_app.pages_list, "", value+1, depressed_text_error_cant_show_pages_name);
+
+	IupSetInt(depressed_app.pages_list, "VALUE", value+1);
+
+	return IUP_DEFAULT;
+}
+
+static int depressedPagesFlagsCallback(Ihandle *self)
+{
+	int value;
+	size_t id;
+	depress_flags_type flags;
+	Depressed::CPage *page;
+
+	value = IupGetInt(depressed_app.pages_list, "VALUE");
+
+	if(value < 1 || (size_t)value > depressed_app.document.PagesCount()) return IUP_DEFAULT;
+	id = value - 1;
+
+	page = depressed_app.document.PageGet(id);
+	if(!page) return IUP_DEFAULT;
+
+	flags = page->GetFlags();
+	if(depressedShowPageFlagsDlg(flags)) {
+		char* value;
+
+		page->SetFlags(flags);
+		depressed_app.document_changed = true;
+
+		value = IupGetAttribute(depressed_app.preview_toggle, "VALUE"); // ON, OFF
+		if(strcmp(value, "ON") == 0) depressedPreviewUpdateImage(true);
+	}
+
+	return IUP_DEFAULT;
+}
+
+
 static int depressedHelpLicenseCallback(Ihandle *self)
 {
 	IupMessage(DEPRESSED_APP_TITLE,
 		"Depress[ed] - BSD\n"
 		"Djvul - Unlicense\n"
 		"stb - Unlicense/MIT\n"
+		"noteshrink-c - MIT\n"
 		"djvulibre - GNU GPL 2"
 	);
 
@@ -305,6 +492,131 @@ static int depressedHelpAboutCallback(Ihandle *self)
 		"Depress[ed] (c) Morozov Mikhail and contributors\n\n"
 		"Software to automatize creation of djvu files"
 	);
+
+	return IUP_DEFAULT;
+}
+
+static void depressedPreviewUpdateImage(bool preview_result)
+{
+	int value;
+	Depressed::CPage *page = 0;
+	wchar_t *filename = 0;
+	Ihandle *new_image = 0;
+
+	value = IupGetInt(depressed_app.pages_list, "VALUE");
+
+	if(value > 0 && (size_t)value <= depressed_app.document.PagesCount()) {
+		size_t id;
+
+		id = (size_t)value - 1;
+		page = depressed_app.document.PageGet(id);
+	}
+
+	if(page) {
+		filename = page->GetFilename();
+	}
+
+	if(filename) {
+		unsigned char *buf;
+		int sizex, sizey, channels;
+
+		if(!preview_result) {
+			FILE* f;
+			f = _wfopen(filename, L"rb");
+			if(!f) goto FINAL;
+			buf = depressLoadImage(f, &sizex, &sizey, &channels, 3);
+			if(!buf) goto FINAL;
+		} else {
+			if(!depressLoadImageFromFileAndApplyFlags(filename, &sizex, &sizey, &channels, &buf, page->GetFlags())) goto FINAL;
+		}
+
+		if(channels == 1) {
+#if 0
+			new_image = IupImage(sizex, sizey, buf);
+			for(int i = 0; i < 256; i++) {
+				char col[16], index[16];
+
+				sprintf(index, "%d", i);
+				sprintf(col, "%d %d %d", i, i, i);
+				IupSetAttribute(new_image, index, col);
+			}
+#else
+			unsigned char *new_buf;
+
+			if(sizex*3 > INT_MAX || INT_MAX/sizey < sizex*3) {
+				free(buf);
+
+				goto FINAL;
+			}
+			new_buf = (unsigned char *)malloc(sizex*sizey*3);
+			if(!new_buf) {
+				free(buf);
+
+				goto FINAL;
+			}
+			for(int i = 0; i < sizex*sizey; i++) {
+				new_buf[i*3] = new_buf[i*3+1] = new_buf[i*3+2] = buf[i];
+			}
+			free(buf);
+			buf = new_buf;
+			new_image = IupImageRGB(sizex, sizey, buf);
+#endif
+		} else if(channels == 3) {
+			new_image = IupImageRGB(sizex, sizey, buf);
+		} else {
+			free(buf);
+			goto FINAL;
+		}
+
+		free(buf);
+	}
+
+FINAL:
+	IupSetHandle("preview_image", NULL);
+	if(depressed_app.preview_image) IupDestroy(depressed_app.preview_image);
+	auto h = IupSetHandle("preview_image", new_image);
+	IupUpdate(depressed_app.preview_canvas);
+	//if(depressed_app.preview_image) IupDestroy(depressed_app.preview_image);
+	depressed_app.preview_image = new_image;
+}
+
+static int depressedPreviewToggleCallback(Ihandle *self)
+{
+	char *value;
+	
+	value = IupGetAttribute(self, "VALUE"); // ON, OFF
+
+	depressedPreviewUpdateImage(strcmp(value, "ON") == 0);
+
+	return IUP_DEFAULT;
+}
+
+static int depressedPreviewCanvasActionCallback(Ihandle *self, float posx, float posy)
+{
+	int w, h;
+
+	IupDrawBegin(self);
+
+	IupDrawParentBackground(self);
+
+	IupDrawGetSize(self, &w, &h);
+
+	IupDrawImage(self, "preview_image", 0, 0, w, h);
+
+	IupDrawEnd(self);
+
+	return IUP_DEFAULT;
+}
+
+static int depressedPagesListValueChangedCallback(Ihandle* self)
+{
+	char *value;
+
+	(void)self;
+
+	value = IupGetAttribute(depressed_app.preview_toggle, "VALUE"); // ON, OFF
+
+	depressedPreviewUpdateImage(strcmp(value, "ON") == 0);
 
 	return IUP_DEFAULT;
 }
@@ -386,6 +698,12 @@ bool depressedCreateMainDlgMenu(void)
 	depressed_app.submenu_pages = IupSubmenu("Pages", depressed_app.menu_pages);
 	if(!depressed_app.submenu_pages) return false;
 
+	IupSetCallback(depressed_app.item_pages_add, "ACTION", (Icallback)depressedPagesAddCallback);
+	IupSetCallback(depressed_app.item_pages_delete, "ACTION", (Icallback)depressedPagesDeleteCallback);
+	IupSetCallback(depressed_app.item_pages_insert, "ACTION", (Icallback)depressedPagesInsertCallback);
+	IupSetCallback(depressed_app.item_pages_moveup, "ACTION", (Icallback)depressedPagesMoveUpCallback);
+	IupSetCallback(depressed_app.item_pages_movedown, "ACTION", (Icallback)depressedPagesMoveDownCallback);
+	IupSetCallback(depressed_app.item_pages_flags, "ACTION", (Icallback)depressedPagesFlagsCallback);
 
 	// Help menu
 	depressed_app.item_help_license = IupItem("License", NULL);
@@ -416,30 +734,71 @@ bool depressedCreateMainDlgMenu(void)
 	return true;
 }
 
+static void depressedSetPagesList(Ihandle *pages_list, Depressed::CDocument &document)
+{
+	//IupSetAttribute(pages_list, "1", NULL);
+	IupSetAttribute(pages_list, "REMOVEITEM", "ALL");
+
+	for(size_t i = 0; i < document.PagesCount(); i++) {
+		char *filename;
+		Depressed::CPage *page;
+
+		page = document.PageGet(i);
+		filename = page->GetFilenameU8();
+		if(!filename) filename = depressed_text_error_cant_show_pages_name;
+		IupSetAttributeId(pages_list, "", i+1, filename);
+	}
+}
+
 bool depressedCreateMainDlg(void)
 {
 	if(!depressedCreateMainDlgMenu()) return false;
 
-	depressed_app.input_label = IupLabel("Project file:");
-	depressed_app.input_filename = IupText(NULL);
-	IupSetAttribute(depressed_app.input_filename, "EXPAND", "YES");
-	depressed_app.input_button = IupButton("Load", NULL);
-	
-	depressed_app.input_box = IupHbox(depressed_app.input_label, depressed_app.input_filename, depressed_app.input_button, NULL);
-	
-	depressed_app.output_label = IupLabel("Djvu file:");
-	depressed_app.output_filename = IupText(NULL);
-	IupSetAttribute(depressed_app.output_filename, "EXPAND", "YES");
-	depressed_app.output_button = IupButton("Save", NULL);
-	depressed_app.output_box = IupHbox(depressed_app.output_label, depressed_app.output_filename, depressed_app.output_button, NULL);
+	if((depressed_app.pages_list = IupList(NULL)) == NULL) goto FAIL;
+	IupSetAttribute(depressed_app.pages_list, "EXPAND", "VERTICAL");
+	IupSetAttribute(depressed_app.pages_list, "SIZE", "320x");
+	IupSetCallback(depressed_app.pages_list, "VALUECHANGED_CB", depressedPagesListValueChangedCallback);
 
-	depressed_app.main_box = IupVbox(depressed_app.input_box, depressed_app.output_box, NULL);
-	depressed_app.main_dlg = IupDialog(depressed_app.main_box);
+	if((depressed_app.preview_flags_button = IupButton("Flags", NULL)) == NULL) goto FAIL;
+	IupSetCallback(depressed_app.preview_flags_button, "ACTION", depressedPagesFlagsCallback);
+
+	if((depressed_app.preview_toggle = IupToggle("Preview", NULL)) == NULL) goto FAIL;
+	IupSetCallback(depressed_app.preview_toggle, "VALUECHANGED_CB", depressedPreviewToggleCallback);
+
+	if((depressed_app.preview_canvas = IupCanvas(NULL)) == NULL) goto FAIL;
+	IupSetAttribute(depressed_app.preview_canvas, "DRAWUSEDIRECT2D", "YES");
+	IupSetCallback(depressed_app.preview_canvas, "ACTION", (Icallback)depressedPreviewCanvasActionCallback);
+
+	if((depressed_app.preview_inner_hbox = IupHbox(depressed_app.preview_toggle, depressed_app.preview_flags_button, NULL)) == NULL) goto FAIL;
+	if((depressed_app.preview_outer_vbox = IupVbox(depressed_app.preview_inner_hbox, depressed_app.preview_canvas, NULL)) == NULL) goto FAIL;
+
+	if((depressed_app.main_hbox = IupHbox(depressed_app.pages_list, depressed_app.preview_outer_vbox, NULL)) == NULL) goto FAIL;
+
+	if((depressed_app.main_dlg = IupDialog(depressed_app.main_hbox)) == NULL) goto FAIL;
 	IupSetAttribute(depressed_app.main_dlg, "TITLE", DEPRESSED_APP_TITLE);
 	IupSetAttributeHandle(depressed_app.main_dlg, "MENU", depressed_app.main_menu);
 
-	IupSetCallback(depressed_app.input_button, "ACTION", depressedLoadProjectCallback);
-	IupSetCallback(depressed_app.output_button, "ACTION", depressedSaveDjvuCallback);
+	depressedSetPagesList(depressed_app.pages_list, depressed_app.document);
 
 	return true;
+
+FAIL:
+	if(depressed_app.main_dlg) IupDestroy(depressed_app.main_dlg);
+	else {
+		if(depressed_app.main_hbox) IupDestroy(depressed_app.main_hbox);
+		else {
+			if(depressed_app.pages_list) IupDestroy(depressed_app.pages_list);
+
+			if(depressed_app.preview_outer_vbox) IupDestroy(depressed_app.preview_outer_vbox);
+			else {
+				if(depressed_app.preview_inner_hbox) IupDestroy(depressed_app.preview_inner_hbox);
+				else {
+					if(depressed_app.preview_toggle) IupDestroy(depressed_app.preview_toggle);
+					if(depressed_app.preview_flags_button) IupDestroy(depressed_app.preview_flags_button);
+				}
+			}
+		}
+	}
+
+	return false;
 }

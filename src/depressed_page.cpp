@@ -56,6 +56,7 @@ namespace Depressed {
 	{
 		memset(&m_flags, 0, sizeof(depress_flags_type));
 		m_filename = 0;
+		m_filename_u8 = 0;
 
 		m_is_init = true;
 	}
@@ -67,6 +68,11 @@ namespace Depressed {
 		if(m_filename) {
 			free(m_filename);
 			m_filename = 0;
+		}
+
+		if(m_filename_u8) {
+			free(m_filename_u8);
+			m_filename_u8 = 0;
 		}
 
 		m_is_init = false;
@@ -97,6 +103,19 @@ namespace Depressed {
 		m_filename = new_filename;
 
 		return true;
+	}
+
+	char *CPage::GetFilenameU8(void)
+	{
+		if(!m_filename_u8) m_filename_u8 = (char *)malloc(m_max_fn_len*4+1);
+		if(!m_filename_u8) return 0;
+
+		if(m_filename) {
+			WideCharToMultiByte(CP_UTF8, 0, m_filename, -1, m_filename_u8, m_max_fn_len*4+1, NULL, NULL);
+			m_filename_u8[m_max_fn_len*4] = 0;
+		} else *m_filename_u8 = 0;
+
+		return m_filename_u8;
 	}
 
 	bool CPage::LoadImageForPage(int *sizex, int *sizey, int *channels, unsigned char **buf)

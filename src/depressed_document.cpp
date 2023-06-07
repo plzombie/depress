@@ -190,6 +190,20 @@ namespace Depressed {
 		}
 	}
 
+	bool CDocument::PageInsert(CPage *page, size_t pos)
+	{
+		if(!m_is_init) return false;
+		if(pos >= m_pages.size()) return false;
+
+		try {
+			m_pages.insert(m_pages.begin() + pos, page);
+
+			return true;
+		} catch(std::bad_alloc) { // Why not ...? Because help says what it's only bad_alloc in allocator. So any others are not standard situation.
+			return false;
+		}
+	}
+
 	bool CDocument::PageDelete(size_t id)
 	{
 		if(!m_is_init) return false;

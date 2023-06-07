@@ -34,6 +34,9 @@ const char *DEPRESSED_APP_TITLE= "Depress[ed]";
 
 void depressedRunGui(void)
 {
+	IupSetGlobal("UTF8MODE", "YES");
+	IupSetGlobal("UTF8MODE_FILE", "YES");
+
 	IupOpen(0, 0);
 
 	if(!depressedCreateMainDlg()) {
@@ -47,6 +50,9 @@ void depressedRunGui(void)
 	IupShowXY(depressed_app.main_dlg, IUP_CENTER, IUP_CENTER);
 
 	IupMainLoop();
+
+	IupDestroy(depressed_app.main_dlg);
+	IupDestroy(depressed_app.preview_image);
 
 	IupClose();
 }

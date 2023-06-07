@@ -48,7 +48,7 @@ struct SDepressedApp {
 	wchar_t *filename;
 
 	// Main window
-	Ihandle *main_dlg, *main_menu, *main_box;
+	Ihandle *main_dlg, *main_menu, *main_hbox;
 	// Main dialog - Menus
 	// Project submenu
 	Ihandle *submenu_project;
@@ -71,8 +71,9 @@ struct SDepressedApp {
 	Ihandle *submenu_help, *menu_help;
 	Ihandle *item_help_license, *item_help_about;
 	// On Main dialog
-	Ihandle *input_box, *input_label, *input_filename, *input_button;
-	Ihandle *output_box, *output_label, *output_filename, *output_button;
+	Ihandle *pages_list;
+	Ihandle *preview_outer_vbox, *preview_inner_hbox, *preview_flags_button, *preview_toggle;
+	Ihandle *preview_canvas, *preview_image;
 
 	SDepressedAppGuiPageFlags gui_pageflags;
 } ;

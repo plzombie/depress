@@ -33,6 +33,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <wchar.h>
+#include <math.h>
 
 #if !defined(_WIN32)
 #include "unixsupport/pclose.h"
@@ -40,6 +42,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "unixsupport/wremove.h"
 #include "unixsupport/wpopen.h"
 #include <unistd.h>
+#else
+#include <io.h>
 #endif
 
 int depressMakerDjvuConvertCtx(void *ctx, size_t id, depress_flags_type flags, depress_load_image_type load_image, void *load_image_ctx)

@@ -2,6 +2,10 @@
 
 #define bitsPerSample 6
 
+#if defined(__WATCOMC__)
+#define sqrtf(x) ((float)sqrt((x)))
+#endif
+
 static float NSHSquareDistance(float *a, float *b, int channels)
 {
     int d, dChannels;
@@ -183,6 +187,8 @@ static size_t ImageSamplePixels(unsigned char *img, size_t imgSize, int channels
 {
     int d;
     size_t k, interval, i;
+
+    (void)o; // Unused
 
     k = 0;
     if ((samplesSize > 0) && (samplesSize < imgSize))
@@ -367,6 +373,8 @@ static bool BGColorFind(unsigned char *image, size_t imageSize, int channels, fl
     unsigned int *quantized = NULL;
     unsigned int *count = NULL;
 
+    (void)paletteSize; // Unused
+
     if (!(quantized = (unsigned int*)malloc(imageSize * sizeof(unsigned int))))
     {
         return false;
@@ -421,6 +429,8 @@ static void FGMaskCreate(unsigned char *samples, size_t samplesSize, int channel
     int d, mChannels;
     float bghsv[3], hsv[3], sd, vd;
     size_t i, k;
+
+    (void)paletteSize; // Unused
 
     mChannels = (channels < 3) ? channels : 3;
     if (mChannels < 3)

@@ -110,6 +110,8 @@ bool pbmRleSave(unsigned int sizex, unsigned int sizey, unsigned char* buf, FILE
 {
 	if(sizex || sizey) return false; // Unimplemented
 
+	(void)buf;
+
 	fprintf(f, "R4\n%u %u\n", sizex, sizey);
 
 	return true;

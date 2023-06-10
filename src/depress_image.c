@@ -43,6 +43,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 bool depressImageLoadFromCtx(void *ctx, size_t id, int *sizex, int *sizey, int *channels, unsigned char **buf, depress_flags_type flags)
 {
+	(void)id;
+
 	return depressLoadImageFromFileAndApplyFlags((wchar_t *)ctx, sizex, sizey, channels, buf, flags);
 }
 

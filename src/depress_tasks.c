@@ -164,7 +164,7 @@ bool depressArePageFlagsEqual(depress_flags_type *a, depress_flags_type *b)
 	if(a->nof_illrects > 0) {
 		if(memcmp(a->illrects, b->illrects, a->nof_illrects*sizeof(depress_illustration_rect_type))) return false;
 	}
-	if (a->page_title > 0 && b->page_title > 0) {
+	if (a->page_title != 0 && b->page_title != 0) {
 		if(wcscmp(a->page_title, b->page_title)) return false;
 	} else if(a->page_title != b->page_title) return false;
 

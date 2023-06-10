@@ -4,7 +4,7 @@ https://github.com/plzombie/depress/issues/2
 
 #ifndef DJVUL_H_
 #define DJVUL_H_
-#define DJVUL_VERSION "3.0"
+#define DJVUL_VERSION "3.1"
 
 #include <stdbool.h>
 #include <math.h>
@@ -34,6 +34,7 @@ DJVULAPI int ImageDjvulSelect(unsigned char* buf, bool* bufmask, unsigned char* 
 #define TBIMOD 1
 #define TSAUVOLA 2
 #define TBLUR 3
+#define TEDGEPLUS 4
 
 #ifdef DJVUL_IMPLEMENTATION
 
@@ -994,6 +995,10 @@ DJVULAPI int ImageDjvulSelect(unsigned char* buf, bool* bufmask, unsigned char* 
         break;
     case TBLUR:
         (void)ImageThresholdBlur(buf, bufmask, width, height, channels, radius, fbscale, delta, sensitivity);
+        return ImageDjvulGround(buf, bufmask, bufbg, buffg, width, height, channels, bgs, level, doverlay);
+        break;
+    case TEDGEPLUS:
+        (void)ImageThresholdEdgePlus(buf, bufmask, width, height, channels, radius, fbscale, delta, sensitivity);
         return ImageDjvulGround(buf, bufmask, bufbg, buffg, width, height, channels, bgs, level, doverlay);
         break;
     default:

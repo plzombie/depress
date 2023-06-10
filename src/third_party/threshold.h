@@ -4,7 +4,7 @@ https://github.com/plzombie/depress/issues/2
 
 #ifndef THRESHOLD_H_
 #define THRESHOLD_H_
-#define THRESHOLD_VERSION "3.0"
+#define THRESHOLD_VERSION "3.1"
 
 #include <stdbool.h>
 #include <math.h>
@@ -23,6 +23,7 @@ THRESHOLDAPI int ImageThreshold(unsigned char* buf, bool* bufmask, unsigned int 
 THRESHOLDAPI int ImageThresholdBimod(unsigned char* buf, bool* bufmask, unsigned int width, unsigned int height, unsigned int channels, float part, float delta);
 THRESHOLDAPI int ImageThresholdSauvola(unsigned char* buf, bool* bufmask, unsigned int width, unsigned int height, unsigned int channels, int radius, float sensitivity, float part, int lower_bound, int upper_bound, float delta);
 THRESHOLDAPI int ImageThresholdBlur(unsigned char* buf, bool* bufmask, unsigned int width, unsigned int height, unsigned int channels, float raduis, float part, float delta, float sensitivity);
+THRESHOLDAPI int ImageThresholdEdgePlus(unsigned char* buf, bool* bufmask, unsigned int width, unsigned int height, unsigned int channels, float raduis, float part, float delta, float sensitivity);
 
 #ifdef __cplusplus
 }
@@ -627,6 +628,64 @@ THRESHOLDAPI int ImageThresholdBlur(unsigned char* buf, bool* bufmask, unsigned 
             }
         }
         ImageMathDivide(buf, bufb, bufb, width, height, channels, -127.0f);
+        threshold = ImageThresholdBimod(bufb, bufmask, width, height, channels, part, delta);
+        free(bufb);
+    }
+    else
+    {
+        threshold = ImageThresholdBimod(buf, bufmask, width, height, channels, part, delta);
+    }
+
+    return threshold;
+}
+
+/*
+ImageThresholdEdgePlus()
+
+input:
+buf - unsigned char* image (height * width * channels)
+part = 1.0f [1:1]
+delta = 0.0f [off, regulator]
+sensitivity = 0.2;
+
+output:
+bufmask - bool* image mask (height * width)
+threshold - threshold value
+
+Use:
+int threshold = ImageThresholdEdgePlus(buf, bufmask, width, height, channels, raduis, part, delta, sensitivity);
+*/
+
+THRESHOLDAPI int ImageThresholdEdgePlus(unsigned char* buf, bool* bufmask, unsigned int width, unsigned int height, unsigned int channels, float raduis, float part, float delta, float sensitivity)
+{
+    int threshold = 0;
+    unsigned int y, x, d;
+    float imo, imx, edge, edgeplus;
+    unsigned long int k;
+    unsigned char *bufb = NULL;
+
+    if ((bufb = (unsigned char*)malloc(height * width * channels * sizeof(unsigned char))))
+    {
+        ImageCopy(buf, bufb, width, height, channels);
+        (void)GaussBlurFilter(bufb, width, height, channels, raduis, raduis);
+        k = 0;
+        for (y = 0; y < height; y++)
+        {
+            for (x = 0; x < width; x++)
+            {
+                for (d = 0; d < channels; d++)
+                {
+                    imo = (float)buf[k];
+                    imx = (float)bufb[k];
+                    edge = (imo + 1.0f) / (imx + 1.0f) - 0.5f;
+                    edgeplus = imo * edge;
+                    imx = sensitivity * edgeplus + (1.0f - sensitivity) * imo;
+                    imx = (imx < 0.0f) ? 0.0f : (imx < 255.0f) ? imx : 255.0f;
+                    bufb[k] = (unsigned char)imx;
+                    k++;
+                }
+            }
+        }
         threshold = ImageThresholdBimod(bufb, bufmask, width, height, channels, part, delta);
         free(bufb);
     }

@@ -527,7 +527,7 @@ static void depressedPreviewUpdateImage(bool preview_result)
 			buf = depressLoadImage(f, &sizex, &sizey, &channels, 3);
 			if(!buf) goto FINAL;
 		} else {
-			if(!depressLoadImageFromFileAndApplyFlags(filename, &sizex, &sizey, &channels, &buf, page->GetFlags())) goto FINAL;
+			if(!depressLoadImageForPreview(filename, &sizex, &sizey, &channels, &buf, page->GetFlags())) goto FINAL;
 		}
 
 		if(channels == 1) {

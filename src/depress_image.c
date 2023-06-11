@@ -61,6 +61,41 @@ wchar_t *depressImageGetNameCtx(void *ctx, size_t id)
 
 	return (wchar_t *)ctx;
 }
+#include <time.h>
+#include <Windows.h>
+bool depressLoadImageForPreview(wchar_t *filename, int *sizex, int *sizey, int *channels, unsigned char **buf, depress_flags_type flags)
+{
+	bool result = false;
+	//clock_t c0, c1, c2; wchar_t tempstr[256];
+
+	if(flags.type == 3) flags.param2 = 1; // We don't have default quantization algorithm here we will use noteshrink
+
+	//c0 = clock();
+
+	result = depressLoadImageFromFileAndApplyFlags(filename, sizex, sizey, channels, buf, flags);
+	if(!result) return result;
+
+	//c1 = clock();
+	
+	if(flags.type == 1 && flags.nof_illrects == 0) { // Need to binarize image
+		size_t i, len;
+		unsigned char *p;
+
+		p = *buf;
+		len = (size_t)(*sizex)*(size_t)(*sizey);
+		for(i = 0; i < len; i++) {
+			if(*p > 127) *p = 255; else *p = 0;
+			p++;
+		}
+	}
+
+	//c2 = clock();
+
+	//swprintf(tempstr, 256, L"%u %u %u (%u %u)", c0, c1, c2, (c1 - c0), (c2 - c0));
+	//MessageBoxW(NULL, tempstr, L"Measurement", MB_OK);
+
+	return result;
+}
 
 bool depressLoadImageFromFileAndApplyFlags(wchar_t *filename, int *sizex, int *sizey, int *channels, unsigned char **buf, depress_flags_type flags)
 {

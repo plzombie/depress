@@ -48,6 +48,7 @@ extern bool depressImageLoadFromCtx(void *ctx, size_t id, int *sizex, int *sizey
 extern void depressImageFreeCtx(void *ctx, size_t id);
 extern wchar_t *depressImageGetNameCtx(void *ctx, size_t id);
 
+extern bool depressLoadImageForPreview(wchar_t *filename, int *sizex, int *sizey, int *channels, unsigned char **buf, depress_flags_type flags);
 extern bool depressLoadImageFromFileAndApplyFlags(wchar_t *filename, int *sizex, int *sizey, int *channels, unsigned char **buf, depress_flags_type flags);
 extern unsigned char *depressLoadImage(FILE *f, int *sizex, int *sizey, int *channels, int desired_channels);
 extern void depressImageApplyErrorDiffusion(unsigned char* buf, int sizex, int sizey);

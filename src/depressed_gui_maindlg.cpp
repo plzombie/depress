@@ -770,6 +770,7 @@ bool depressedCreateMainDlg(void)
 	IupSetCallback(depressed_app.preview_canvas, "ACTION", (Icallback)depressedPreviewCanvasActionCallback);
 
 	if((depressed_app.preview_inner_hbox = IupHbox(depressed_app.preview_toggle, depressed_app.preview_flags_button, NULL)) == NULL) goto FAIL;
+	IupSetAttributes(depressed_app.preview_inner_hbox, "NORMALIZESIZE=VERTICAL");
 	if((depressed_app.preview_outer_vbox = IupVbox(depressed_app.preview_inner_hbox, depressed_app.preview_canvas, NULL)) == NULL) goto FAIL;
 
 	if((depressed_app.main_hbox = IupHbox(depressed_app.pages_list, depressed_app.preview_outer_vbox, NULL)) == NULL) goto FAIL;

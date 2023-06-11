@@ -61,8 +61,8 @@ wchar_t *depressImageGetNameCtx(void *ctx, size_t id)
 
 	return (wchar_t *)ctx;
 }
-#include <time.h>
-#include <Windows.h>
+//#include <time.h>
+//#include <Windows.h>
 bool depressLoadImageForPreview(wchar_t *filename, int *sizex, int *sizey, int *channels, unsigned char **buf, depress_flags_type flags)
 {
 	bool result = false;
@@ -199,7 +199,7 @@ void depressImageApplyErrorDiffusion(unsigned char* buf, int sizex, int sizey)
 bool depressImageApplyAdaptiveBinarization(unsigned char* buf, int sizex, int sizey)
 {
 	int window_size = 33, window_size_half = 16;
-	int i, j, k;
+	int i;
 	unsigned char *old_buf, *p, *p1;
 	//clock_t time_start;
 
@@ -218,6 +218,7 @@ bool depressImageApplyAdaptiveBinarization(unsigned char* buf, int sizex, int si
 	p = buf;
 	p1 = old_buf;
 	for(i = -window_size_half; i < sizey+window_size_half; i++) {
+		int k;
 		unsigned char b;
 		
 		for(k = 0; k < window_size_half; k++) {
@@ -238,16 +239,23 @@ bool depressImageApplyAdaptiveBinarization(unsigned char* buf, int sizex, int si
 	}
 
 	// Perform adaptive binarization
-	p = buf; // New buffer
-	p1 = old_buf; // Buffer with old data
+	
+#pragma omp parallel for
 	for(i = 0; i < sizey; i++) {
+		unsigned char *p, *p1;
+		int j;
+
+		p = buf+(size_t)i*(size_t)sizex; // New buffer
+		p1 = old_buf+(size_t)i*((size_t)sizex+2*window_size_half); // Buffer with old data
 		for(j = 0; j < sizex; j++) {
 			unsigned int sum = 0;
-			int l;
+			int k;
 			unsigned char *p2;
 
 			p2 = p1; // Window buffer with old data
 			for(k = 0; k < window_size; k++) {
+				int l;
+
 				for(l = 0; l < window_size; l++) {
 					int b;
 

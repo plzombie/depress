@@ -91,7 +91,7 @@ INT WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine
 				depressedPrint(L"Can't save djvu file", true);
 			else
 				depressedPrint(L"File saved");
-#if 1
+#if 0
 			wchar_t *new_fn;
 			new_fn = (wchar_t *)malloc((wcslen(default_project) + 5 + 1)*sizeof(wchar_t));
 			if(new_fn) {

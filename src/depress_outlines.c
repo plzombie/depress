@@ -30,6 +30,42 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <stdlib.h>
 
+bool depressOutlineAdd(depress_outline_type **outline_source, depress_outline_type *outline_add, unsigned int nesting)
+{
+	size_t nof_suboutlines;
+
+	if(*outline_source == 0) return false;
+	if(!outline_add) return false;
+
+	nof_suboutlines = (*outline_source)->nof_suboutlines;
+
+	if(nesting == 0) {
+		depress_outline_type **_suboutlines;
+		
+		if(nof_suboutlines == SIZE_MAX) return false;
+		nof_suboutlines++;
+
+		if(nof_suboutlines == 1)
+			_suboutlines = malloc(sizeof(depress_outline_type *));
+		else
+			_suboutlines = realloc((*outline_source)->suboutlines, sizeof(depress_outline_type *)*nof_suboutlines);
+		
+		if(!_suboutlines) return false;
+
+		_suboutlines[nof_suboutlines-1] = outline_add;
+		(*outline_source)->nof_suboutlines = nof_suboutlines;
+		(*outline_source)->suboutlines = _suboutlines;
+
+		return true;
+	} else {
+		if(nof_suboutlines == 0) return false; // No nesting
+
+		return depressOutlineAdd((depress_outline_type **)((*outline_source)->suboutlines+nof_suboutlines-1), outline_add, nesting-1);
+	}
+
+	return false;
+}
+
 void depressOutlineDestroy(depress_outline_type *outline)
 {
 	size_t i;

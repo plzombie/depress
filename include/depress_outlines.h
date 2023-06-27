@@ -30,6 +30,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define DEPRESS_OUTLINES_H
 
 #include <wchar.h>
+#include <stdbool.h>
 
 typedef struct {
 	wchar_t *text; // If null - no outline produced. It's just a container for other outlines

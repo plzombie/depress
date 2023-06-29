@@ -35,6 +35,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdint.h>
 #include <string.h>
 
 bool depressOutlineLoadFromFile(depress_outline_type **outline, wchar_t *filename)
@@ -142,7 +143,7 @@ bool depressOutlineAdd(depress_outline_type **outline_source, depress_outline_ty
 		if(!_suboutlines) return false;
 
 		_suboutlines[nof_suboutlines-1] = outline_add;
-		(*outline_source)->nof_suboutlines = nof_suboutlines;
+		(*outline_source)->nof_suboutlines = (void **)nof_suboutlines;
 		(*outline_source)->suboutlines = _suboutlines;
 
 		return true;

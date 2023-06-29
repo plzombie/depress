@@ -143,8 +143,8 @@ bool depressOutlineAdd(depress_outline_type **outline_source, depress_outline_ty
 		if(!_suboutlines) return false;
 
 		_suboutlines[nof_suboutlines-1] = outline_add;
-		(*outline_source)->nof_suboutlines = (void **)nof_suboutlines;
-		(*outline_source)->suboutlines = _suboutlines;
+		(*outline_source)->nof_suboutlines = nof_suboutlines;
+		(*outline_source)->suboutlines = (void **)_suboutlines;
 
 		return true;
 	} else {

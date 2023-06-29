@@ -39,6 +39,8 @@ typedef struct {
 	void **suboutlines;
 } depress_outline_type;
 
+bool depressOutlineLoadFromFile(depress_outline_type **outline, wchar_t *filename);
+bool depressOutlineAdd(depress_outline_type **outline_source, depress_outline_type *outline_add, unsigned int nesting);
 void depressOutlineDestroy(depress_outline_type *outline);
 
 #endif

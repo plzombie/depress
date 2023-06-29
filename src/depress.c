@@ -66,6 +66,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define DEPRESS_ARG_TEMP L"-temp"
 #define DEPRESS_ARG_QUALITY L"-quality"
 #define DEPRESS_ARG_DPI L"-dpi"
+#define DEPRESS_ARG_OUTLINE L"-outline"
 
 #if !defined(_WIN32)
 #include "unixsupport/wtoi.h"
@@ -73,7 +74,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 int wmain(int argc, wchar_t **argv)
 {
-	wchar_t **argsp;
+	wchar_t **argsp, *outline_fname = 0;
 	int argsc;
 	wchar_t text_list_filename[32768], text_list_path[32768], *text_list_name_start;
 	depress_flags_type flags;
@@ -212,7 +213,14 @@ int wmain(int argc, wchar_t **argv)
 					wprintf(L"Warning: dpi must be greater than\n");
 					flags.dpi = 300;
 				}
-			}
+			} else
+				wprintf(L"Warning: argument " DEPRESS_ARG_QUALITY L" should have parameter\n");
+		} else if(!wcscmp(*argsp, DEPRESS_ARG_OUTLINE)) {
+			if(argsc > 0) {
+				argsc--;
+				outline_fname = *(++argsp);
+			} else
+				wprintf(L"Warning: argument " DEPRESS_ARG_OUTLINE L" should have parameter\n");
 		} else
 			wprintf(L"Warning: unknown argument %ls\n", *argsp);
 
@@ -238,7 +246,8 @@ int wmain(int argc, wchar_t **argv)
 			L"\t\t\t" DEPRESS_ARG_TEMP L" tempdir - use tempdir as directory for temporary files\n"
 			L"\t\t\t" DEPRESS_ARG_QUALITY L" percents - sets image quality in percents\n"
 			L"\t\t\t\t100 is lossless for BW and good for PHOTO\n"
-			L"\t\t\t" DEPRESS_ARG_DPI L" - DPI parameter (default to 100)\n\n"
+			L"\t\t\t" DEPRESS_ARG_DPI L" - DPI parameter (default to 100)\n"
+			L"\t\t\t" DEPRESS_ARG_OUTLINE L" outline_file - sets file with outlines\n\n"
 		);
 
 		return 0;
@@ -272,6 +281,11 @@ int wmain(int argc, wchar_t **argv)
 #endif
 
 	// Initialize document
+	if(outline_fname) {
+		if(!depressOutlineLoadFromFile(&document_flags.outline, outline_fname))
+			wprintf(L"Warning: Can't load outlines\n");
+	}
+
 	if(!depressDocumentInitDjvu(&document, document_flags, *(argsp + 1))) {
 		depressFreeDocumentFlags(&document_flags);
 

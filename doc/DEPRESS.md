@@ -21,6 +21,7 @@ depress [options] inputfile.txt outputfile.djvu
 * `-temp path` - defines temporary directory.
 * `-quality n` - defines quality from 1 to 100 (defaults to 100).
 * `-dpi n` - defines dpi (defaults to 100).
+* `-outline outline_file` - sets file with outlines. File contains rows in format `page_no|level|text`. `page_no` is page number starting from 1, `level` is outline level (0 - chapter, 1 - subchapter and so one), `text` is outline text.
 
 ## Example
 

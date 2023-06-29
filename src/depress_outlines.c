@@ -28,7 +28,96 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "../include/depress_outlines.h"
 
+#if !defined(_WIN32)
+#include "unixsupport/wfopen.h"
+#include "unixsupport/wtoi.h"
+#endif
+
+#include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
+
+bool depressOutlineLoadFromFile(depress_outline_type **outline, wchar_t *filename)
+{
+	FILE *f = 0;
+	depress_outline_type *o = 0;
+	wchar_t *s = 0;
+
+	f = _wfopen(filename, L"r");
+	if(!f) goto FAILURE;
+
+	o = malloc(sizeof(depress_outline_type));
+	if(!o) goto FAILURE;
+
+	memset(o, 0, sizeof(depress_outline_type));
+
+	s = malloc(32768*sizeof(wchar_t));
+	if(!s) goto FAILURE;
+
+	while(!feof(f)) {
+		depress_outline_type *new_o;
+		wchar_t *sep, *sep2;
+		size_t page_id, text_len;
+		unsigned int nesting;
+
+		if(!fgetws(s, 32768, f)) {
+			if(feof(f))
+				break;
+			else
+				goto FAILURE;
+		}
+		if(wcslen(s) == 32767) goto FAILURE;
+
+		sep = wcschr(s, '\n');
+		if(sep) *sep = 0;
+		if(wcslen(s) == 0) continue;
+
+		sep = wcschr(s, '|');
+		if(!sep) goto FAILURE;
+		*sep = 0;
+		page_id = _wtoi(s);
+
+		sep++;
+		sep2 = wcschr(sep, '|');
+		if(!sep2) goto FAILURE;
+		*sep2 = 0;
+		nesting = _wtoi(sep);
+		sep2++;
+
+		new_o = malloc(sizeof(depress_outline_type));
+		if(!new_o) goto FAILURE;
+		memset(new_o, 0, sizeof(depress_outline_type));
+		new_o->page_id = page_id;
+		text_len = wcslen(sep2)+1;
+		new_o->text = malloc(text_len*sizeof(wchar_t));
+		if(!new_o->text) {
+			free(new_o);
+
+			goto FAILURE;
+		}
+		memcpy(new_o->text, sep2, text_len*sizeof(wchar_t));
+
+		if(!depressOutlineAdd(&o, new_o, nesting)) {
+			depressOutlineDestroy(new_o);
+
+			goto FAILURE;
+		}
+	}
+
+	fclose(f);
+	free(s);
+	*outline = o;
+
+	return true;
+
+FAILURE:
+
+	if(f) fclose(f);
+	if(o) depressOutlineDestroy(o);
+	if(s) free(s);
+
+	return false;
+}
 
 bool depressOutlineAdd(depress_outline_type **outline_source, depress_outline_type *outline_add, unsigned int nesting)
 {

@@ -6,8 +6,8 @@ Software to automatize creation of djvu files.
 
 * Compile software (or download binaries from [release page](https://github.com/plzombie/depress/releases))
 * Install [djvulibre](https://sourceforge.net/projects/djvu/files/)
-* Copy `depress.exe` to djvulibre folder (i.e. "c:\Program Files (x86)\DjVuLibre\")
 * Run `depress.exe pictures_list.txt output.djvu`
+* Normally *depress* should detect *djvulibre* installation. In case of error you can copy `depress.exe` to djvulibre folder (i.e. "c:\Program Files (x86)\DjVuLibre\") and run it from there
 
 See [documentation](doc/DEPRESS.md).
 

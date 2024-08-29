@@ -222,7 +222,12 @@ LABEL_ERROR:
 void depressWaitForMultipleThreads(unsigned int threads_num, depress_thread_handle_t *threads)
 {
 #if defined(_WIN32)
-	WaitForMultipleObjects(threads_num, threads, TRUE, DEPRESS_WAIT_TIME_INFINITE);
+	for(unsigned int i = 0; i < threads_num; i+=MAXIMUM_WAIT_OBJECTS) {
+		if(threads_num-i < MAXIMUM_WAIT_OBJECTS)
+			WaitForMultipleObjects(threads_num-i, threads+i, TRUE, DEPRESS_WAIT_TIME_INFINITE);
+		else
+			WaitForMultipleObjects(MAXIMUM_WAIT_OBJECTS, threads+i, TRUE, DEPRESS_WAIT_TIME_INFINITE);
+	}
 #else
 	unsigned int i;
 

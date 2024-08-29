@@ -172,6 +172,68 @@ unsigned char *depressLoadImage(FILE *f, int *sizex, int *sizey, int *channels, 
 	return buf;
 }
 
+int depressImageDetectType(int sizex, int sizey, int channels, const unsigned char *buf)
+{
+	int type = DEPRESS_PAGE_TYPE_COLOR;
+	
+	if(sizex < 1 || sizey < 1 || channels < 1) return type;
+	if(SIZE_MAX/(size_t)sizex < (size_t)sizey) return type;
+	if(SIZE_MAX/((size_t)sizex*(size_t)sizey) < (size_t)channels) return type;
+
+	if(channels == 1) {
+		type = DEPRESS_PAGE_TYPE_BW;
+		for(size_t i = 0; i < (size_t)sizex*(size_t)sizey; i++) {
+			if(buf[i] != 0 && buf[i] != 255) {
+				type = DEPRESS_PAGE_TYPE_COLOR;
+				break;
+			}
+		}
+	} else {
+		
+
+		type = DEPRESS_PAGE_TYPE_BW;
+		for(size_t i = 0; i < (size_t)sizex*(size_t)sizey; i++) {
+			unsigned char first_comp;
+			size_t j;
+
+			first_comp = buf[i*(size_t)channels];
+
+			if(first_comp != 0 && first_comp != 255) {
+				type = DEPRESS_PAGE_TYPE_COLOR;
+				break;
+			}
+
+			for(j = 1; j < (size_t)channels; j++) {
+				if(buf[i*(size_t)channels+j] != first_comp) {
+					type = DEPRESS_PAGE_TYPE_COLOR;
+					break;
+				}
+			}
+			if(j != channels) break;
+		}
+	}
+
+	return type;
+}
+
+void depressImageSimplyBinarize(unsigned char **buf, int sizex, int sizey, int channels)
+{
+	unsigned char *orig_buf, *new_buf;
+
+	if(sizex < 1 || sizey < 1 || channels < 2) return;
+	if(SIZE_MAX/(size_t)sizex < (size_t)sizey) return;
+	if(SIZE_MAX/((size_t)sizex*(size_t)sizey) < (size_t)channels) return;
+
+	orig_buf = *buf;
+	for(size_t i = 1; i < (size_t)sizex*(size_t)sizey; i++) {
+		orig_buf[i] = orig_buf[i*(size_t)channels];
+		if(orig_buf[i] >= 128) orig_buf[i] = 255; else orig_buf[i] = 0;
+	}
+
+	new_buf = realloc(orig_buf, (size_t)sizex*(size_t)sizey);
+	if(new_buf) *buf = new_buf;
+}
+
 void depressImageApplyErrorDiffusion(unsigned char* buf, int sizex, int sizey)
 {
 	int i, j, acc = 0;

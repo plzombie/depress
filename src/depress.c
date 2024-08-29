@@ -61,6 +61,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define DEPRESS_ARG_PAGETYPE_PALETTIZED_PARAM1_PALCOLORS L"-palcolors"
 #define DEPRESS_ARG_PAGETYPE_PALETTIZED_PARAM2_QUANT L"-quant"
 #define DEPRESS_ARG_PAGETYPE_PALETTIZED_PARAM2_NOTESHRINK L"-noteshrink"
+#define DEPRESS_ARG_PAGETYPE_AUTO L"-auto"
 #define DEPRESS_ARG_PAGETITLEAUTO L"-pta"
 #define DEPRESS_ARG_PAGETITLEAUTO_SHORTNAME L"-shortfntitle"
 #define DEPRESS_ARG_TEMP L"-temp"
@@ -185,6 +186,10 @@ int wmain(int argc, wchar_t **argv)
 				flags.param2 = DEPRESS_PAGE_TYPE_PALETTIZED_PARAM2_NOTESHRINK;
 			else
 				wprintf(L"Warning: argument %ls can be set only with %ls\n", DEPRESS_ARG_PAGETYPE_PALETTIZED_PARAM2_NOTESHRINK, DEPRESS_ARG_PAGETYPE_PALETTIZED);
+		} else if(!wcscmp(*argsp, DEPRESS_ARG_PAGETYPE_AUTO)) {
+			flags.type = DEPRESS_PAGE_TYPE_AUTO;
+			flags.param1 = 0;
+			flags.param2 = 0;
 		} else if(!wcscmp(*argsp, DEPRESS_ARG_PAGETITLEAUTO)) {
 			document_flags.page_title_type = DEPRESS_DOCUMENT_PAGE_TITLE_TYPE_AUTOMATIC;
 		} else if(!wcscmp(*argsp, DEPRESS_ARG_PAGETITLEAUTO_SHORTNAME)) {
@@ -241,6 +246,7 @@ int wmain(int argc, wchar_t **argv)
 			L"\t\t\t" DEPRESS_ARG_PAGETYPE_PALETTIZED_PARAM1_PALCOLORS L" colors - number of colors between 2 and 256 (defaults to 8)\n"
 			L"\t\t\t" DEPRESS_ARG_PAGETYPE_PALETTIZED_PARAM2_QUANT L" - use quantization for palettized document\n"
 			L"\t\t\t" DEPRESS_ARG_PAGETYPE_PALETTIZED_PARAM2_NOTESHRINK L" - use noteshrink for palettized document\n"
+			L"\t\t\t" DEPRESS_ARG_PAGETYPE_AUTO L" - try to autodetect page type"
 			L"\t\t\t" DEPRESS_ARG_PAGETITLEAUTO L" - use file name as page title\n"
 			L"\t\t\t" DEPRESS_ARG_PAGETITLEAUTO_SHORTNAME L" - use short file name as page title (when using previous)\n"
 			L"\t\t\t" DEPRESS_ARG_TEMP L" tempdir - use tempdir as directory for temporary files\n"

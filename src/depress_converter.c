@@ -92,6 +92,11 @@ int depressDjvuConvertPage(depress_flags_type flags, depress_load_image_type loa
 		goto EXIT;
 	}
 
+	if(flags.type == DEPRESS_PAGE_TYPE_AUTO) {
+		flags.type = depressImageDetectType(sizex, sizey, channels, buffer);
+		if(flags.type == DEPRESS_PAGE_TYPE_BW) depressImageSimplyBinarize(&buffer, sizex, sizey, channels);
+	}
+
 	if(flags.type == DEPRESS_PAGE_TYPE_BW) {
 		if(!flags.nof_illrects) {
 			if(!pbmSave(sizex, sizey, buffer, f_temp)) {

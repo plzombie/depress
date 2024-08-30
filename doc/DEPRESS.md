@@ -16,6 +16,7 @@ depress [options] inputfile.txt outputfile.djvu
 * `-palcolors n` - number of colors between 2 and 256 (defaults to 8).
 * `-quant` - use quantization for palettized document.
 * `-noteshrink` - use noteshrink for palettized document.
+* `-auto` - tries to guess type of every page (`-bw` or `-photo`).
 * `-pta` - Generates page title from full file name.
 * `-shortfntitle` - Uses only file name (without path and extension) for page title (in combination with `-pta`).
 * `-temp path` - defines temporary directory.

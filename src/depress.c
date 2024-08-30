@@ -246,7 +246,7 @@ int wmain(int argc, wchar_t **argv)
 			L"\t\t\t" DEPRESS_ARG_PAGETYPE_PALETTIZED_PARAM1_PALCOLORS L" colors - number of colors between 2 and 256 (defaults to 8)\n"
 			L"\t\t\t" DEPRESS_ARG_PAGETYPE_PALETTIZED_PARAM2_QUANT L" - use quantization for palettized document\n"
 			L"\t\t\t" DEPRESS_ARG_PAGETYPE_PALETTIZED_PARAM2_NOTESHRINK L" - use noteshrink for palettized document\n"
-			L"\t\t\t" DEPRESS_ARG_PAGETYPE_AUTO L" - try to autodetect page type"
+			L"\t\t\t" DEPRESS_ARG_PAGETYPE_AUTO L" - try to autodetect page type\n"
 			L"\t\t\t" DEPRESS_ARG_PAGETITLEAUTO L" - use file name as page title\n"
 			L"\t\t\t" DEPRESS_ARG_PAGETITLEAUTO_SHORTNAME L" - use short file name as page title (when using previous)\n"
 			L"\t\t\t" DEPRESS_ARG_TEMP L" tempdir - use tempdir as directory for temporary files\n"

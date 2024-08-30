@@ -1,7 +1,7 @@
 /*
 BSD 2-Clause License
 
-Copyright (c) 2021-2023, Mikhail Morozov
+Copyright (c) 2021-2024, Mikhail Morozov
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without

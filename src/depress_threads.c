@@ -1,7 +1,7 @@
 /*
 BSD 2-Clause License
 
-Copyright (c) 2021-2023, Mikhail Morozov
+Copyright (c) 2021-2024, Mikhail Morozov
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -222,7 +222,9 @@ LABEL_ERROR:
 void depressWaitForMultipleThreads(unsigned int threads_num, depress_thread_handle_t *threads)
 {
 #if defined(_WIN32)
-	for(unsigned int i = 0; i < threads_num; i+=MAXIMUM_WAIT_OBJECTS) {
+	unsigned int i;
+	
+	for(i = 0; i < threads_num; i+=MAXIMUM_WAIT_OBJECTS) {
 		if(threads_num-i < MAXIMUM_WAIT_OBJECTS)
 			WaitForMultipleObjects(threads_num-i, threads+i, TRUE, DEPRESS_WAIT_TIME_INFINITE);
 		else

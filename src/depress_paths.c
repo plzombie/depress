@@ -1,7 +1,7 @@
 /*
 BSD 2-Clause License
 
-Copyright (c) 2021-2023, Mikhail Morozov
+Copyright (c) 2021-2024, Mikhail Morozov
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -31,6 +31,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #endif
 
 #include "../include/depress_paths.h"
+
+#include <stdint.h>
 
 #if defined(_WIN32)
 #include <Windows.h>
@@ -131,7 +133,7 @@ void depressGetFilenamePath(const wchar_t *filename, const wchar_t *filename_sta
 
 #if defined(_WIN32)
 
-// Следующие два есть только в Windows10
+// РЎР»РµРґСѓСЋС‰РёРµ РґРІР° РµСЃС‚СЊ С‚РѕР»СЊРєРѕ РІ Windows10
 #ifndef RRF_SUBKEY_WOW6464KEY
 #define RRF_SUBKEY_WOW6464KEY 0x00010000
 #endif
@@ -155,7 +157,7 @@ static LSTATUS depressRegGetValueW(HKEY hkey, LPCWSTR subkey, LPCWSTR value_name
 	status = RegQueryValueExW(result_key, value_name, NULL, type, data, data_size);
 	if(status != ERROR_SUCCESS) goto DEPRESS_RETURN_REG_VALUE;
 
-	// Проверяем типы
+	// РџСЂРѕРІРµСЂСЏРµРј С‚РёРїС‹
 	switch(*type) {
 		case REG_BINARY:
 			if(flags & RRF_RT_REG_BINARY) break;
@@ -219,30 +221,30 @@ static LPWSTR depressGetProgramInstallPath(LPCWSTR reg_subkey, int registry_view
 			return 0;
 	}
 
-	// Сначала смотрим, есть ли InstallLocation
+	// РЎРЅР°С‡Р°Р»Р° СЃРјРѕС‚СЂРёРј, РµСЃС‚СЊ Р»Рё InstallLocation
 	status = depressRegGetValueW(HKEY_LOCAL_MACHINE, reg_subkey, reg_key_value_name_install_location, flags, &reg_key_value_type, NULL, &reg_key_value_size);
 	if(status == ERROR_SUCCESS) {
-		// Вычисляем размер под строку
+		// Р’С‹С‡РёСЃР»СЏРµРј СЂР°Р·РјРµСЂ РїРѕРґ СЃС‚СЂРѕРєСѓ
 		reg_key_value = malloc(reg_key_value_size);
 		if(!reg_key_value) return 0;
 
-		// Получаем саму строку
+		// РџРѕР»СѓС‡Р°РµРј СЃР°РјСѓ СЃС‚СЂРѕРєСѓ
 		status = depressRegGetValueW(HKEY_LOCAL_MACHINE, reg_subkey, reg_key_value_name_install_location, flags, &reg_key_value_type, reg_key_value, &reg_key_value_size);
 		if(status != ERROR_SUCCESS) {
 			free(reg_key_value);
 			return 0;
 		}
-	} else if(status == ERROR_FILE_NOT_FOUND) { // Если нет, то смотрим UninstallString и из неё будем вытаскивать путь
+	} else if(status == ERROR_FILE_NOT_FOUND) { // Р•СЃР»Рё РЅРµС‚, С‚Рѕ СЃРјРѕС‚СЂРёРј UninstallString Рё РёР· РЅРµС‘ Р±СѓРґРµРј РІС‹С‚Р°СЃРєРёРІР°С‚СЊ РїСѓС‚СЊ
 		WCHAR *delimeter, *delimeter2;
 
-		// Получаем размер строки из реестра
+		// РџРѕР»СѓС‡Р°РµРј СЂР°Р·РјРµСЂ СЃС‚СЂРѕРєРё РёР· СЂРµРµСЃС‚СЂР°
 		status = depressRegGetValueW(HKEY_LOCAL_MACHINE, reg_subkey, reg_key_value_name_uninstall_string, flags, &reg_key_value_type, NULL, &reg_key_value_size);
 		if(status == ERROR_SUCCESS) {
-			// Вычисляем размер под строку
+			// Р’С‹С‡РёСЃР»СЏРµРј СЂР°Р·РјРµСЂ РїРѕРґ СЃС‚СЂРѕРєСѓ
 			reg_key_value = malloc(reg_key_value_size);
 			if(!reg_key_value) return 0;
 
-			// Получаем саму строку
+			// РџРѕР»СѓС‡Р°РµРј СЃР°РјСѓ СЃС‚СЂРѕРєСѓ
 			status = depressRegGetValueW(HKEY_LOCAL_MACHINE, reg_subkey, reg_key_value_name_uninstall_string, flags, &reg_key_value_type, reg_key_value, &reg_key_value_size);
 			if(status != ERROR_SUCCESS) {
 				free(reg_key_value);

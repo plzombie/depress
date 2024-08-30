@@ -1,7 +1,7 @@
 /*
 BSD 2-Clause License
 
-Copyright (c) 2021-2023, Mikhail Morozov
+Copyright (c) 2021-2024, Mikhail Morozov
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -181,18 +181,19 @@ int depressImageDetectType(int sizex, int sizey, int channels, const unsigned ch
 	if(SIZE_MAX/((size_t)sizex*(size_t)sizey) < (size_t)channels) return type;
 
 	if(channels == 1) {
+		size_t i;
 		type = DEPRESS_PAGE_TYPE_BW;
-		for(size_t i = 0; i < (size_t)sizex*(size_t)sizey; i++) {
+		for(i = 0; i < (size_t)sizex*(size_t)sizey; i++) {
 			if(buf[i] != 0 && buf[i] != 255) {
 				type = DEPRESS_PAGE_TYPE_COLOR;
 				break;
 			}
 		}
 	} else {
-		
+		size_t i;
 
 		type = DEPRESS_PAGE_TYPE_BW;
-		for(size_t i = 0; i < (size_t)sizex*(size_t)sizey; i++) {
+		for(i = 0; i < (size_t)sizex*(size_t)sizey; i++) {
 			unsigned char first_comp;
 			size_t j;
 
@@ -219,13 +220,14 @@ int depressImageDetectType(int sizex, int sizey, int channels, const unsigned ch
 void depressImageSimplyBinarize(unsigned char **buf, int sizex, int sizey, int channels)
 {
 	unsigned char *orig_buf, *new_buf;
+	size_t i;
 
 	if(sizex < 1 || sizey < 1 || channels < 2) return;
 	if(SIZE_MAX/(size_t)sizex < (size_t)sizey) return;
 	if(SIZE_MAX/((size_t)sizex*(size_t)sizey) < (size_t)channels) return;
 
 	orig_buf = *buf;
-	for(size_t i = 1; i < (size_t)sizex*(size_t)sizey; i++) {
+	for(i = 1; i < (size_t)sizex*(size_t)sizey; i++) {
 		orig_buf[i] = orig_buf[i*(size_t)channels];
 		if(orig_buf[i] >= 128) orig_buf[i] = 255; else orig_buf[i] = 0;
 	}

@@ -87,9 +87,24 @@ static void depressedPageChangeTextsByType(SDepressedAppGuiPageFlags &gui_pagefl
 
 }
 
+static int depressedPageTypeConvertFromView(int view_type)
+{
+	switch(view_type) {
+		case 1:
+		case 2:
+		case 3:
+		case 4:
+			return view_type-1;
+		case 5:
+			return DEPRESS_PAGE_TYPE_AUTO;
+		default:
+			return 0;
+	}
+}
+
 static int depressedPageTypeChangedCallback(Ihandle *self)
 {
-	int type = IupGetInt(self, "VALUE")-1;
+	int type = depressedPageTypeConvertFromView(IupGetInt(self, "VALUE"));
 
 	depressedPageChangeTextsByType(depressed_app.gui_pageflags, type);
 
@@ -124,6 +139,7 @@ bool depressedShowPageFlagsDlg(depress_flags_type &flags)
 	IupSetAttribute(type, "2", "Black&White");
 	IupSetAttribute(type, "3", "Layered");
 	IupSetAttribute(type, "4", "Palettized");
+	IupSetAttribute(type, "5", "Auto");
 	IupSetCallback(type, "VALUECHANGED_CB", (Icallback)depressedPageTypeChangedCallback);
 	IupSetAttribute(type, "VISIBLECOLUMNS", "10");
 
@@ -204,7 +220,19 @@ bool depressedShowPageFlagsDlg(depress_flags_type &flags)
 		NULL);
 
 	// Set default values
-	IupSetInt(type, "VALUE", flags.type+1);
+	switch(flags.type) {
+		case DEPRESS_PAGE_TYPE_COLOR:
+		case DEPRESS_PAGE_TYPE_BW:
+		case DEPRESS_PAGE_TYPE_LAYERED:
+		case DEPRESS_PAGE_TYPE_PALETTIZED:
+			IupSetInt(type, "VALUE", flags.type+1);
+			break;
+		case DEPRESS_PAGE_TYPE_AUTO:
+			IupSetInt(type, "VALUE", 5);
+			break;
+		default:
+			IupSetInt(type, "VALUE", 1);
+	}
 	IupSetInt(depressed_app.gui_pageflags.param1, "VALUE", flags.param1);
 	IupSetInt(depressed_app.gui_pageflags.param2, "VALUE", flags.param2);
 	IupSetInt(quality, "VALUE", flags.quality);
@@ -223,7 +251,7 @@ bool depressedShowPageFlagsDlg(depress_flags_type &flags)
 	if(IupGetInt(dlg, "STATUS") == 1) {
 		result = true;
 
-		flags.type = IupGetInt(type, "VALUE")-1;
+		flags.type = depressedPageTypeConvertFromView(IupGetInt(type, "VALUE"));
 		flags.param1 = IupGetInt(depressed_app.gui_pageflags.param1, "VALUE");
 		flags.param2 = IupGetInt(depressed_app.gui_pageflags.param2, "VALUE");
 		flags.quality = IupGetInt(quality, "VALUE");

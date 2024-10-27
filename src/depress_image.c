@@ -175,6 +175,12 @@ unsigned char *depressLoadImage(FILE *f, int *sizex, int *sizey, int *channels, 
 int depressImageDetectType(int sizex, int sizey, int channels, const unsigned char *buf)
 {
 	int type = DEPRESS_PAGE_TYPE_COLOR;
+	const unsigned char v_in_bw_min = 5, v_in_bw_max = 250;
+	const double s_in_bw_min = 1.0/48.0;
+	const double v_out_in_percentage = 1.0/256.0;
+	const double s_out_in_percentage = 1.0/128.0;
+	size_t v_in_bw_ranges = 0, v_out_bw_ranges = 0; // Количество значений Value (HSV) в пределах диапазона для ЧБ изображений и за пределами диапазона
+	size_t s_in_bw_ranges = 0, s_out_bw_ranges = 0; // Количество значений Saturation (HSV) в пределах диапазона для ЧБ изображений и за пределами диапазона
 	
 	if(sizex < 1 || sizey < 1 || channels < 1) return type;
 	if(SIZE_MAX/(size_t)sizex < (size_t)sizey) return type;
@@ -184,34 +190,45 @@ int depressImageDetectType(int sizex, int sizey, int channels, const unsigned ch
 		size_t i;
 		type = DEPRESS_PAGE_TYPE_BW;
 		for(i = 0; i < (size_t)sizex*(size_t)sizey; i++) {
-			if(buf[i] != 0 && buf[i] != 255) {
-				type = DEPRESS_PAGE_TYPE_COLOR;
-				break;
-			}
+			if(buf[i] <= v_in_bw_min || buf[i] >= v_in_bw_max) v_in_bw_ranges++; else v_out_bw_ranges++;
 		}
 	} else {
 		size_t i;
 
 		type = DEPRESS_PAGE_TYPE_BW;
 		for(i = 0; i < (size_t)sizex*(size_t)sizey; i++) {
-			unsigned char first_comp;
+			unsigned char min, max;
 			size_t j;
+			double s = 0.0;
 
-			first_comp = buf[i*(size_t)channels];
-
-			if(first_comp != 0 && first_comp != 255) {
-				type = DEPRESS_PAGE_TYPE_COLOR;
-				break;
-			}
+			min = max = buf[i*(size_t)channels];
 
 			for(j = 1; j < (size_t)channels; j++) {
-				if(buf[i*(size_t)channels+j] != first_comp) {
-					type = DEPRESS_PAGE_TYPE_COLOR;
-					break;
+				if(buf[i*(size_t)channels+j] < min) {
+					min = buf[i*(size_t)channels+j];
+				} else if(buf[i*(size_t)channels+j] > max) {
+					max = buf[i*(size_t)channels+j];
 				}
 			}
-			if(j != channels) break;
+
+			if(max != 0) s = 1.0 - (double)min/(double)max;
+
+			if(max <= v_in_bw_min || max >= v_in_bw_max) v_in_bw_ranges++; else v_out_bw_ranges++;
+			if(s <= s_in_bw_min) s_in_bw_ranges++; else s_out_bw_ranges++;
 		}
+	}
+
+	//wprintf(L"v in %u v out %u s in %u s out %u\n", (unsigned int)v_in_bw_ranges, (unsigned int)v_out_bw_ranges, (unsigned int)s_in_bw_ranges, (unsigned int)s_out_bw_ranges);
+
+	if(v_in_bw_ranges == 0)
+		type = DEPRESS_PAGE_TYPE_COLOR;
+	else if((double)v_out_bw_ranges > (double)v_in_bw_ranges*v_out_in_percentage)
+		type = DEPRESS_PAGE_TYPE_COLOR;
+	else if(s_in_bw_ranges != 0 || s_out_bw_ranges != 0) {
+		if(s_in_bw_ranges == 0)
+			type = DEPRESS_PAGE_TYPE_COLOR;
+		else if((double)s_out_bw_ranges > (double)s_in_bw_ranges*s_out_in_percentage)
+			type = DEPRESS_PAGE_TYPE_COLOR;
 	}
 
 	return type;

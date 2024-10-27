@@ -330,7 +330,14 @@ namespace Depressed {
 					}
 				} else if(read == ERead::PAGES) {
 					if(wcscmp(value, L"Page") == 0) {
-						CPage *page = new CPage();
+						CPage *page;
+
+						try {
+							page = new CPage();
+						} catch (std::bad_alloc) {
+							success = false;
+							break;
+						}
 
 						page->Create();
 

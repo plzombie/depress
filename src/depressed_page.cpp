@@ -153,15 +153,17 @@ namespace Depressed {
 			hr = writer->WriteString(m_filename);
 		else {
 			size_t basepath_len;
-			wchar_t *filename;
+			wchar_t *filename = m_filename;
 
 			basepath_len = wcslen(basepath);
-			filename = m_filename + basepath_len;
-			while(*filename) {
-				if(*filename == '\\' || *filename == '/')
-					filename++;
-				else
-					break;
+			if(wcsncmp(basepath, filename, basepath_len) == 0) {
+				filename += basepath_len;
+				while(*filename) {
+					if(*filename == '\\' || *filename == '/')
+						filename++;
+					else
+						break;
+				}
 			}
 
 			hr = writer->WriteString(filename);

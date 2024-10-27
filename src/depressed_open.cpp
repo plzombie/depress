@@ -152,15 +152,15 @@ namespace Depressed {
 		IXmlWriter *writer;
 		IStream *filestream;
 
-		dirptr = wcschr(filename, '/');
+		dirptr = wcsrchr(filename, '/');
 		if(dirptr) {
 			wchar_t *dirptr2;
 
-			dirptr2 = wcschr(dirptr, '\\');
+			dirptr2 = wcsrchr(dirptr, '\\');
 			if(dirptr2)
 				dirptr = dirptr2;
 		} else
-			dirptr = wcschr(filename, '\\');
+			dirptr = wcsrchr(filename, '\\');
 		if(dirptr) {
 			size_t len;
 

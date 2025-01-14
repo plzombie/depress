@@ -151,6 +151,9 @@ bool depressDocumentRunTasks(depress_document_type *document)
 	document->threads_num = depressGetNumberOfThreads();
 	if(document->threads_num == 0) document->threads_num = 1;
 	if(document->threads_num > 64) document->threads_num = 64;
+#if defined(__WATCOMC__)
+	document->threads_num = 1;
+#endif
 
 	document->threads = malloc(sizeof(depress_thread_handle_t) * document->threads_num);
 	document->thread_args = malloc(sizeof(depress_thread_task_arg_type) * document->threads_num);

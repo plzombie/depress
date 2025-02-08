@@ -105,8 +105,6 @@ int wmain(int argc, wchar_t **argv)
 			break;
 
 		argsc--;
-		
-		wprintf(L"%ls %u\n", *argsp, wcscmp(*argsp, DEPRESS_ARG_PAGETYPE_LAYERED));
 
 		if(!wcscmp(*argsp, DEPRESS_ARG_PAGETYPE_BW)) {
 			flags.type = DEPRESS_PAGE_TYPE_BW;

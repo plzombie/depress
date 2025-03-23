@@ -15,7 +15,7 @@
 
 FILE *_wpopen(const wchar_t *filename, const wchar_t *mode)
 {
-	char *cfilename, *cmode;
+	char *cfilename, cmode[2];
 	FILE *result;
 	size_t strsize;
 
@@ -29,9 +29,7 @@ FILE *_wpopen(const wchar_t *filename, const wchar_t *mode)
 
 
 	// Преобразование mode
-	cmode = malloc(2);
 	cmode[0] = 0;
-	if(!cmode) { free(cfilename); return 0; }
 	while(*mode) {
 		if(*mode == 'r' || *mode == 'w')
 			cmode[0] = *mode;
@@ -43,7 +41,6 @@ FILE *_wpopen(const wchar_t *filename, const wchar_t *mode)
 	result = popen(cfilename, cmode);
 
 	free(cfilename);
-	free(cmode);
 
 	return result;
 }

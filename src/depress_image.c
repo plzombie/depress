@@ -1,7 +1,7 @@
 /*
 BSD 2-Clause License
 
-Copyright (c) 2021-2024, Mikhail Morozov
+Copyright (c) 2021-2025, Mikhail Morozov
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -108,6 +108,8 @@ bool depressLoadImageFromFileAndApplyFlags(wchar_t *filename, int *sizex, int *s
 
 	if(flags.type == DEPRESS_PAGE_TYPE_BW) {
 		if(!flags.nof_illrects) desired_channels = 1;
+	} else if(flags.type == DEPRESS_PAGE_TYPE_PALETTIZED) {
+		desired_channels = 3;
 	}
 
 	*buf = depressLoadImage(f, sizex, sizey, channels, desired_channels);

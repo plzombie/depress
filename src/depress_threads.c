@@ -41,6 +41,7 @@ SetThreadGroupAffinity_type SetThreadGroupAffinity_funcptr;
 
 #include <process.h>
 #else
+#include <limits.h>
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/wait.h>
@@ -129,7 +130,7 @@ void depressWaitForProcess(depress_process_handle_t handle)
 #if defined(_WIN32)
 	WaitForSingleObject(handle, INFINITE);
 #else
-	size_t set_closed = 1, size_t prev_closed;
+	size_t set_closed = 1, prev_closed;
 	__atomic_exchange(&handle->is_closed, &set_closed, &prev_closed, __ATOMIC_SEQ_CST);
 	if(!prev_closed) waitpid(handle->handle, 0, 0);
 #endif

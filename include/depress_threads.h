@@ -65,7 +65,11 @@ typedef unsigned (__stdcall * depress_threadfunc_t)(void *args);
 #define DEPRESS_INVALID_THREAD_HANDLE INVALID_HANDLE_VALUE
 #define DEPRESS_WAIT_TIME_INFINITE INFINITE
 #else
-typedef pid_t depress_process_handle_t;
+typedef struct {
+    pid_t handle;
+    size_t is_closed;
+} depress_process_handle_int_t;
+typedef depress_process_handle_int_t *depress_process_handle_t;
 typedef size_t *depress_event_handle_t;
 typedef pthread_t *depress_thread_handle_t;
 

@@ -84,13 +84,21 @@ depress_process_handle_t depressSpawn(wchar_t *filename, wchar_t *args, bool wai
 #else
 	pid_t handle;
 	char *cargs;
+	depress_process_handle_t depress_handle = 0;
 	size_t args_len;
 
-	args_len = wcslen(args)*4;
+	args_len = wcslen(args);
+	if((SIZE_MAX-1)/MB_LEN_MAX < args_len) return DEPRESS_INVALID_PROCESS_HANDLE;
+	args_len *= MB_LEN_MAX;
+
+	depress_handle = malloc(sizeof(depress_process_handle_int_t));
+	if(!depress_handle) {
+		return DEPRESS_INVALID_PROCESS_HANDLE;
+	}
 
 	cargs = malloc(args_len+1);
 	if(!cargs) {
-		if(cargs) free(cargs);
+		free(depress_handle);
 
 		return DEPRESS_INVALID_PROCESS_HANDLE;
 	}
@@ -101,16 +109,18 @@ depress_process_handle_t depressSpawn(wchar_t *filename, wchar_t *args, bool wai
 
 	if(handle) {
 		free(cargs);
+		depress_handle->handle = handle;
+		depress_handle->is_closed = 0;
 
-		if(wait) depressWaitForProcess(handle);
-		if(close_handle) depressCloseProcessHandle(handle);
+		if(wait) depressWaitForProcess(depress_handle);
+		if(close_handle) depressCloseProcessHandle(depress_handle);
 
-		return handle;
+		return depress_handle;
 	}
 
 	execlp("/bin/sh", "/bin/sh", "-c", cargs, NULL);
 
-	return handle;
+	return DEPRESS_INVALID_PROCESS_HANDLE;
 #endif
 }
 
@@ -119,7 +129,9 @@ void depressWaitForProcess(depress_process_handle_t handle)
 #if defined(_WIN32)
 	WaitForSingleObject(handle, INFINITE);
 #else
-	waitpid(handle, 0, 0);
+	size_t set_closed = 1, size_t prev_closed;
+	__atomic_exchange(&handle->is_closed, &set_closed, &prev_closed, __ATOMIC_SEQ_CST);
+	if(!prev_closed) waitpid(handle->handle, 0, 0);
 #endif
 }
 
@@ -129,6 +141,7 @@ void depressCloseProcessHandle(depress_process_handle_t handle)
 	CloseHandle(handle);
 #else
 	depressWaitForProcess(handle);
+	free(handle);
 #endif
 }
 
